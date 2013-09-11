@@ -1822,7 +1822,6 @@ public class MHRProcess extends X_HR_Process implements DocAction
 	 * */
 	public double getFamilyCharge (boolean bpfilter)
 	{
-	
 		MHREmployee e = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID, get_TrxName());
 		
 		ArrayList<Object> params = new ArrayList<Object>();

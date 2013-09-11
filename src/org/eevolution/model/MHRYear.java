@@ -95,6 +95,7 @@ public class MHRYear extends X_HR_Year
 			return false;
 		Timestamp StartDate = null;
 		Timestamp EndDate = null ;
+		Timestamp EndDateg = null ;
 		MHRPayroll payroll = new MHRPayroll(getCtx(), getHR_Payroll_ID(), get_TrxName());
 		for (int period = 1; period <= getQty(); period++)
 		{
@@ -104,7 +105,8 @@ public class MHRYear extends X_HR_Year
 			{
 				if (period >1)
 				{
-					StartDate = TimeUtil.addDays(EndDate, 1);
+					 StartDate = TimeUtil.addDays(EndDate, 1);
+					
 				}
 				else 
 				{
@@ -113,6 +115,28 @@ public class MHRYear extends X_HR_Year
 				EndDate   = TimeUtil.getMonthLastDay(StartDate);
 				
 			}	
+			if (24 == getQty()&& 15 == getNetDays())
+			  {
+				
+				if(period%2==0)
+				{
+					
+					StartDate=TimeUtil.addDays(EndDate, 1);
+					EndDate   = TimeUtil.getMonthLastDay(StartDate);
+					
+				}
+				else
+				{
+					if (period==1)
+						StartDate = TimeUtil.addDays(getStartDate(),0);	
+					else
+					  StartDate = TimeUtil.getMonthFirstDay(EndDateg);
+					EndDate =TimeUtil.addDays(StartDate, 14);
+					
+				}
+				EndDateg=TimeUtil.addDays(EndDate, 1);
+			  }
+			
 			else
 			{
 				sumDays   =  period == 1 ? 0 : (period-1) * (getNetDays()) ;

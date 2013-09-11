@@ -49,7 +49,8 @@ public class HRCreateConcept extends SvrProcess
 		int count = 0;
 		for(MHRConcept concept : MHRConcept.getConcepts(p_HR_Payroll_ID, 0, null))
 		{
-			if (concept.isPaid()) {
+			if (concept.isPaid() && concept.getType().equals("E")) {
+				
 				if(!existsPayrollConcept(concept.get_ID())) 
 				{
 					MHRPayrollConcept payrollConcept = new MHRPayrollConcept (concept, p_HR_Payroll_ID, get_TrxName());
