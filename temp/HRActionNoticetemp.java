@@ -44,12 +44,12 @@ import org.eevolution.model.MHRProcess;
  *  @author victor.perez@e-evolution.com, www.e-evolution.com
  *  @author alberto.juarez@e-evolution.com, www.e-evolution.com
  */
-public class HRActionNotice
+public class HRActionNoticetemp
 {
 
 	
 	/**	Logger			*/
-	protected static CLogger log = CLogger.getCLogger(HRActionNotice.class);
+	protected static CLogger log = CLogger.getCLogger(HRActionNoticetemp.class);
 	//
 	/**	Window No			*/
 	public int         	m_WindowNo = 0;
