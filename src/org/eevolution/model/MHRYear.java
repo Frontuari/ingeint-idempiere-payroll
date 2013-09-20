@@ -101,20 +101,6 @@ public class MHRYear extends X_HR_Year
 		{
 			//arhipac: Cristina Ghita It is need this condition for a good generation periods
 			//in case of correspondence between period and month
-			if ((12 == getQty())&& (28 == getNetDays() || 29 == getNetDays() || 30 == getNetDays() || 31 == getNetDays()))
-			{
-				if (period >1)
-				{
-					 StartDate = TimeUtil.addDays(EndDate, 1);
-					
-				}
-				else 
-				{
-					StartDate = TimeUtil.addDays(getStartDate(),0);	
-				}
-				EndDate   = TimeUtil.getMonthLastDay(StartDate);
-				
-			}	
 			if (24 == getQty()&& 15 == getNetDays())
 			  {
 				
@@ -137,11 +123,29 @@ public class MHRYear extends X_HR_Year
 				EndDateg=TimeUtil.addDays(EndDate, 1);
 			  }
 			
+			else {
+			if ((12 == getQty())&& (28 == getNetDays() || 29 == getNetDays() || 30 == getNetDays() || 31 == getNetDays()))
+			{
+				if (period >1)
+				{
+					 StartDate = TimeUtil.addDays(EndDate, 1);
+					
+				}
+				else 
+				{
+					StartDate = TimeUtil.addDays(getStartDate(),0);	
+				}
+				EndDate   = TimeUtil.getMonthLastDay(StartDate);
+				
+			}	
 			else
 			{
 				sumDays   =  period == 1 ? 0 : (period-1) * (getNetDays()) ;
 				StartDate = TimeUtil.addDays(getStartDate(),sumDays);
 				EndDate   = TimeUtil.addDays(StartDate,getNetDays()-1);
+			}
+			
+			
 			}
 			int C_Period_ID     = DB.getSQLValueEx(get_TrxName(),
 					"SELECT C_Period_ID FROM C_Period p "
