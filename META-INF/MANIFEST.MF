@@ -1,8 +1,8 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: LiberoHR_VE
-Bundle-SymbolicName: org.eevolution.LiberoHR_VE;singleton:=true
-Bundle-Version: 2.0.0.B
+Bundle-SymbolicName: ve.net.dcs.LiberoHR_VE;singleton:=true
+Bundle-Version: 2.1.0.B
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Require-Bundle: org.adempiere.ui;bundle-version="1.0.0",
  org.adempiere.base;bundle-version="1.0.0",
@@ -12,9 +12,9 @@ Require-Bundle: org.adempiere.ui;bundle-version="1.0.0",
  org.eclipse.equinox.util;bundle-version="1.0.300",
  org.zkoss.zk.library;bundle-version="6.0.0",
  org.adempiere.ui.zk;bundle-version="1.0.0"
-Bundle-Activator: org.adempiere.plugin.utils.AdempiereActivator
 Bundle-ActivationPolicy: lazy
 Service-Component: OSGI-INF/org.idempiere.component.HRDocFactory.xml, OSGI-INF/org.idempiere.component.HRModelFactory.xml, 
  OSGI-INF/HRZKFormFactory.xml
+Bundle-Activator: org.adempiere.plugin.utils.AdempiereActivator
 
 

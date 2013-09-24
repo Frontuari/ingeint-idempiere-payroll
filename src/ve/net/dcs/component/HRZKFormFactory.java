@@ -24,6 +24,7 @@ public class HRZKFormFactory implements IFormFactory {
 			clazz = Class.forName(formName);
 		} catch (Exception e) {
 			log.warning(String.format("Class not found for Form: %s", formName));
+			e.printStackTrace();
 			return null;
 		}
 
@@ -31,6 +32,7 @@ public class HRZKFormFactory implements IFormFactory {
 			form = clazz.newInstance();
 		} catch (Exception e) {
 			log.warning(String.format("Class cannot be instantiated for Form: %s", formName));
+			e.printStackTrace();
 			return null;
 		}
 
@@ -47,6 +49,7 @@ public class HRZKFormFactory implements IFormFactory {
 			}
 		} catch (Exception e) {
 			log.warning(String.format("Class cannot be cast to Form: %s", formName));
+			e.printStackTrace();
 			return null;
 		}
 	}
