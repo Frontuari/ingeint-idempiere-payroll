@@ -374,7 +374,7 @@ public class HRActionNoticeForm implements IFormController, EventListener {
 
 		ArrayList<Object> parameters = new ArrayList<Object>();
 		parameters.add(partner.get_ID());
-		parameters.add(Env.getAD_Org_ID(Env.getCtx()));
+		parameters.add(process.getAD_Org_ID());
 		parameters.add(process.getHR_Payroll_ID());
 
 		employee = new Query(Env.getCtx(), MHREmployee.Table_Name, " C_BPartner_ID=? AND AD_Org_ID=? AND HR_Payroll_ID=? ", null).setParameters(parameters).firstOnly();
@@ -597,7 +597,7 @@ public class HRActionNoticeForm implements IFormController, EventListener {
 			MHRAttribute attribute = listAttribute.get(miniTable.getSelectedIndex());
 			attribute.deleteEx(true);
 		}
-		
+
 		fieldConcept.setSelectedIndex(0);
 		this.concept = null;
 
