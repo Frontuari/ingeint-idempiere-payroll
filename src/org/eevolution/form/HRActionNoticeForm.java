@@ -277,7 +277,13 @@ public class HRActionNoticeForm implements IFormController, EventListener {
 	}
 
 	private void loadPayrollProcces() {
-		String sql = "SELECT HRP.HR_Process_ID, HRP.DocumentNo ||'-'|| HRP.Name, HRP.DocumentNo, HRP.Name FROM HR_Process HRP WHERE HRP.IsActive = 'Y'  AND HRP.DocStatus IN ('DR', 'PR', 'IP') ORDER BY HRP.DocumentNo, HRP.Name";
+		String sql = "SELECT HRP.HR_Process_ID, HRP.DocumentNo ||'-'|| HRP.Name, HRP.DocumentNo, HRP.Name FROM HR_Process HRP WHERE HRP.IsActive = 'Y' AND HRP.DocStatus IN ('DR', 'PR', 'IP') ";
+
+		if (AD_Org_ID > 0) {
+			sql += " AND HRP.AD_Org_ID = " + AD_Org_ID;
+		}
+
+		sql += " ORDER BY HRP.DocumentNo, HRP.Name";
 		KeyNamePair[] processData = DB.getKeyNamePairs(sql, true);
 		for (KeyNamePair item : processData)
 			fieldProcess.appendItem(item.getName(), item);
