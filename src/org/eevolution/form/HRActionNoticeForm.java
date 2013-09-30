@@ -27,6 +27,7 @@ import org.adempiere.webui.component.Button;
 import org.adempiere.webui.component.Grid;
 import org.adempiere.webui.component.GridFactory;
 import org.adempiere.webui.component.Label;
+import org.adempiere.webui.component.ListModelTable;
 import org.adempiere.webui.component.Listbox;
 import org.adempiere.webui.component.ListboxFactory;
 import org.adempiere.webui.component.Row;
@@ -42,6 +43,7 @@ import org.compiere.minigrid.ColumnInfo;
 import org.compiere.model.MBPartner;
 import org.compiere.model.MOrg;
 import org.compiere.model.MTable;
+import org.compiere.model.PO;
 import org.compiere.model.Query;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
@@ -263,10 +265,10 @@ public class HRActionNoticeForm implements IFormController, EventListener {
 		buttonDelete.setEnabled(false);
 		fieldDescription.setReadWrite(false);
 
-		ColumnInfo[] layout = { new ColumnInfo(Msg.translate(Env.getCtx(), "AD_Org_ID"), "", String.class), new ColumnInfo(Msg.translate(Env.getCtx(), "HR_Concept_ID"), "", String.class), new ColumnInfo(Msg.translate(Env.getCtx(), "ValidFrom"), "", Timestamp.class),
-				new ColumnInfo(Msg.translate(Env.getCtx(), "ValidTo"), "", Timestamp.class), new ColumnInfo(Msg.translate(Env.getCtx(), "ColumnType"), "", String.class), new ColumnInfo(Msg.getElement(Env.getCtx(), "Qty"), "", BigDecimal.class),
-				new ColumnInfo(Msg.getElement(Env.getCtx(), "Amount"), "", BigDecimal.class), new ColumnInfo(Msg.translate(Env.getCtx(), "ServiceDate"), "", Timestamp.class), new ColumnInfo(Msg.translate(Env.getCtx(), "Text"), "", String.class),
-				new ColumnInfo(Msg.translate(Env.getCtx(), "Description"), "", String.class) };
+		ColumnInfo[] layout = { new ColumnInfo("ID", "", String.class), new ColumnInfo(Msg.translate(Env.getCtx(), "AD_Org_ID"), "", String.class), new ColumnInfo(Msg.translate(Env.getCtx(), "HR_Concept_ID"), "", String.class),
+				new ColumnInfo(Msg.translate(Env.getCtx(), "ValidFrom"), "", Timestamp.class), new ColumnInfo(Msg.translate(Env.getCtx(), "ValidTo"), "", Timestamp.class), new ColumnInfo(Msg.translate(Env.getCtx(), "ColumnType"), "", String.class),
+				new ColumnInfo(Msg.getElement(Env.getCtx(), "Qty"), "", BigDecimal.class), new ColumnInfo(Msg.getElement(Env.getCtx(), "Amount"), "", BigDecimal.class), new ColumnInfo(Msg.translate(Env.getCtx(), "ServiceDate"), "", Timestamp.class),
+				new ColumnInfo(Msg.translate(Env.getCtx(), "Text"), "", String.class), new ColumnInfo(Msg.translate(Env.getCtx(), "Description"), "", String.class) };
 
 		miniTable.prepareTable(layout, "", "", false, "");
 	}
@@ -438,20 +440,23 @@ public class HRActionNoticeForm implements IFormController, EventListener {
 		listAttribute = new Query(Env.getCtx(), I_HR_Attribute.Table_Name, " C_BPartner_ID = ? AND (ValidTo between ? AND ? OR ValidTo IS NULL) ", null).setParameters(parameters).setOrderBy("ValidTo").setOnlyActiveRecords(true).list();
 
 		int row = 0;
+		int c = 0;
 		miniTable.setRowCount(row);
 		for (MHRAttribute mhrAttribute : listAttribute) {
 			miniTable.setRowCount(row + 1);
-			miniTable.setValueAt(new MOrg(Env.getCtx(), mhrAttribute.getAD_Org_ID(), null).getName(), row, 0); // AD_Org_ID
-			miniTable.setValueAt(mhrAttribute.getHR_Concept().getName(), row, 1); // HR_Concept_ID
-			miniTable.setValueAt(mhrAttribute.getValidFrom(), row, 2); // ValidFrom
-			miniTable.setValueAt(mhrAttribute.getValidTo(), row, 3); // ValidTo
-			miniTable.setValueAt(getColumnType(mhrAttribute.getColumnType()), row, 4); // ColumnType
-			miniTable.setValueAt(mhrAttribute.getQty() != null ? mhrAttribute.getQty() : Env.ZERO, row, 5); // Qty
-			miniTable.setValueAt(mhrAttribute.getAmount() != null ? mhrAttribute.getAmount() : Env.ZERO, row, 6); // Amount
-			miniTable.setValueAt(mhrAttribute.getServiceDate(), row, 7); // ServiceDate
-			miniTable.setValueAt(mhrAttribute.getTextMsg(), row, 8); // TextMsg
-			miniTable.setValueAt(mhrAttribute.getDescription(), row, 9); // Description
+			miniTable.setValueAt(String.valueOf(mhrAttribute.getHR_Attribute_ID()), row, c++); // ID
+			miniTable.setValueAt(new MOrg(Env.getCtx(), mhrAttribute.getAD_Org_ID(), null).getName(), row, c++); // AD_Org_ID
+			miniTable.setValueAt(mhrAttribute.getHR_Concept().getName(), row, c++); // HR_Concept_ID
+			miniTable.setValueAt(mhrAttribute.getValidFrom(), row, c++); // ValidFrom
+			miniTable.setValueAt(mhrAttribute.getValidTo(), row, c++); // ValidTo
+			miniTable.setValueAt(getColumnType(mhrAttribute.getColumnType()), row, c++); // ColumnType
+			miniTable.setValueAt(mhrAttribute.getQty() != null ? mhrAttribute.getQty() : Env.ZERO, row, c++); // Qty
+			miniTable.setValueAt(mhrAttribute.getAmount() != null ? mhrAttribute.getAmount() : Env.ZERO, row, c++); // Amount
+			miniTable.setValueAt(mhrAttribute.getServiceDate(), row, c++); // ServiceDate
+			miniTable.setValueAt(mhrAttribute.getTextMsg(), row, c++); // TextMsg
+			miniTable.setValueAt(mhrAttribute.getDescription(), row, c++); // Description
 			row++;
+			c = 0;
 		}
 		miniTable.repaint();
 		miniTable.autoSize();
@@ -465,8 +470,10 @@ public class HRActionNoticeForm implements IFormController, EventListener {
 
 	private void selectAttribute() {
 		int index = miniTable.getSelectedIndex();
+
 		if (index >= 0) {
-			MHRAttribute attribute = listAttribute.get(index);
+			MHRAttribute attribute = new MHRAttribute(Env.getCtx(), Integer.parseInt(miniTable.getValueAt(index, 0).toString()), null);
+
 			fieldConcept.setSelectedIndex(0);
 			fieldColumnType.setValue(getColumnType(attribute.getColumnType()));
 			concept = null;
@@ -523,7 +530,7 @@ public class HRActionNoticeForm implements IFormController, EventListener {
 
 		int index = miniTable.getSelectedIndex();
 		if (index >= 0 && this.concept == null) {
-			attribute = listAttribute.get(index);
+			attribute = new MHRAttribute(Env.getCtx(), Integer.parseInt(miniTable.getValueAt(index, 0).toString()), null);
 			concept = (MHRConcept) attribute.getHR_Concept();
 		} else {
 			attribute = new MHRAttribute(Env.getCtx(), 0, null);
