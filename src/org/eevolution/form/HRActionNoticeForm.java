@@ -366,8 +366,8 @@ public class HRActionNoticeForm implements IFormController, EventListener {
 		fieldDate.setVisible(false);
 		fieldText.setVisible(false);
 
-		String sql = "SELECT DISTINCT HRC.HR_Concept_ID, HRC.Name, HRC.Value " + " FROM HR_Concept HRC " + " JOIN HR_Attribute HRA ON (HRA.HR_Concept_ID = HRC.HR_Concept_ID) WHERE HRC.AD_Client_ID = " + Env.getAD_Client_ID(Env.getCtx())
-				+ " AND HRC.IsActive = 'Y' AND HRC.Type = 'C' AND (HRA.HR_Payroll_ID = " + process.getHR_Payroll_ID() + " OR HRA.HR_Payroll_ID IS NULL) ORDER BY HRC.Name";
+		String sql = "SELECT DISTINCT HRC.HR_Concept_ID, HRC.Name, HRC.Value FROM HR_Concept HRC WHERE HRC.AD_Client_ID = " + Env.getAD_Client_ID(Env.getCtx())
+				+ " AND HRC.IsActive = 'Y' AND HRC.Type = 'C' ORDER BY HRC.Name";
 
 		KeyNamePair[] processData = DB.getKeyNamePairs(sql, true);
 		for (KeyNamePair item : processData)
@@ -436,8 +436,7 @@ public class HRActionNoticeForm implements IFormController, EventListener {
 		ArrayList<Object> parameters = new ArrayList<Object>();
 		parameters.add(employee.getC_BPartner_ID());
 		parameters.add(period.getStartDate());
-		parameters.add(period.getEndDate());
-		listAttribute = new Query(Env.getCtx(), I_HR_Attribute.Table_Name, " C_BPartner_ID = ? AND (ValidTo between ? AND ? OR ValidTo IS NULL) ", null).setParameters(parameters).setOrderBy("ValidTo").setOnlyActiveRecords(true).list();
+		listAttribute = new Query(Env.getCtx(), I_HR_Attribute.Table_Name, " C_BPartner_ID = ? AND (ValidTo >= ? OR ValidTo IS NULL) ", null).setParameters(parameters).setOrderBy("ValidTo").setOnlyActiveRecords(true).list();
 
 		int row = 0;
 		int c = 0;
