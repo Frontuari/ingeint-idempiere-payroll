@@ -27,7 +27,6 @@ import org.adempiere.webui.component.Button;
 import org.adempiere.webui.component.Grid;
 import org.adempiere.webui.component.GridFactory;
 import org.adempiere.webui.component.Label;
-import org.adempiere.webui.component.ListModelTable;
 import org.adempiere.webui.component.Listbox;
 import org.adempiere.webui.component.ListboxFactory;
 import org.adempiere.webui.component.Row;
@@ -43,7 +42,6 @@ import org.compiere.minigrid.ColumnInfo;
 import org.compiere.model.MBPartner;
 import org.compiere.model.MOrg;
 import org.compiere.model.MTable;
-import org.compiere.model.PO;
 import org.compiere.model.Query;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
@@ -71,7 +69,7 @@ import org.zkoss.zul.Space;
  * @author Double Click Sistemas C.A. - http://dcs.net.ve
  * @author Saul Pina - spina@dcs.net.ve
  */
-public class HRActionNoticeForm implements IFormController, EventListener {
+public class HRActionNoticeForm implements IFormController, EventListener<Event> {
 
 	private CustomForm form;
 	private Borderlayout mainLayout;
@@ -144,7 +142,7 @@ public class HRActionNoticeForm implements IFormController, EventListener {
 		buttonAdd = new Button();
 		buttonDelete = new Button();
 		miniTable = ListboxFactory.newDataTable();
-		gridPanel = new GridFactory().newGridLayout();
+		gridPanel = GridFactory.newGridLayout();
 
 		// CONFIGURATION
 
@@ -265,10 +263,12 @@ public class HRActionNoticeForm implements IFormController, EventListener {
 		buttonDelete.setEnabled(false);
 		fieldDescription.setReadWrite(false);
 
-		ColumnInfo[] layout = { new ColumnInfo("ID", "", String.class), new ColumnInfo(Msg.translate(Env.getCtx(), "AD_Org_ID"), "", String.class), new ColumnInfo(Msg.translate(Env.getCtx(), "HR_Concept_ID"), "", String.class),
-				new ColumnInfo(Msg.translate(Env.getCtx(), "ValidFrom"), "", Timestamp.class), new ColumnInfo(Msg.translate(Env.getCtx(), "ValidTo"), "", Timestamp.class), new ColumnInfo(Msg.translate(Env.getCtx(), "ColumnType"), "", String.class),
-				new ColumnInfo(Msg.getElement(Env.getCtx(), "Qty"), "", BigDecimal.class), new ColumnInfo(Msg.getElement(Env.getCtx(), "Amount"), "", BigDecimal.class), new ColumnInfo(Msg.translate(Env.getCtx(), "ServiceDate"), "", Timestamp.class),
-				new ColumnInfo(Msg.translate(Env.getCtx(), "Text"), "", String.class), new ColumnInfo(Msg.translate(Env.getCtx(), "Description"), "", String.class) };
+		ColumnInfo[] layout = {
+				new ColumnInfo("ID", "", String.class), new ColumnInfo(Msg.translate(Env.getCtx(), "AD_Org_ID"), "", String.class), new ColumnInfo(Msg.translate(Env.getCtx(), "HR_Concept_ID"), "", String.class), new ColumnInfo(Msg.translate(Env.getCtx(), "ValidFrom"), "", Timestamp.class),
+				new ColumnInfo(Msg.translate(Env.getCtx(), "ValidTo"), "", Timestamp.class), new ColumnInfo(Msg.translate(Env.getCtx(), "ColumnType"), "", String.class), new ColumnInfo(Msg.getElement(Env.getCtx(), "Qty"), "", BigDecimal.class),
+				new ColumnInfo(Msg.getElement(Env.getCtx(), "Amount"), "", BigDecimal.class), new ColumnInfo(Msg.translate(Env.getCtx(), "ServiceDate"), "", Timestamp.class), new ColumnInfo(Msg.translate(Env.getCtx(), "Text"), "", String.class),
+				new ColumnInfo(Msg.translate(Env.getCtx(), "Description"), "", String.class)
+		};
 
 		miniTable.prepareTable(layout, "", "", false, "");
 	}
@@ -366,8 +366,7 @@ public class HRActionNoticeForm implements IFormController, EventListener {
 		fieldDate.setVisible(false);
 		fieldText.setVisible(false);
 
-		String sql = "SELECT DISTINCT HRC.HR_Concept_ID, HRC.Name, HRC.Value FROM HR_Concept HRC WHERE HRC.AD_Client_ID = " + Env.getAD_Client_ID(Env.getCtx())
-				+ " AND HRC.IsActive = 'Y' AND HRC.Type = 'C' ORDER BY HRC.Name";
+		String sql = "SELECT DISTINCT HRC.HR_Concept_ID, HRC.Name, HRC.Value FROM HR_Concept HRC WHERE HRC.AD_Client_ID = " + AD_Client_ID + " AND HRC.IsActive = 'Y' AND HRC.Type = 'C' ORDER BY HRC.Name";
 
 		KeyNamePair[] processData = DB.getKeyNamePairs(sql, true);
 		for (KeyNamePair item : processData)
