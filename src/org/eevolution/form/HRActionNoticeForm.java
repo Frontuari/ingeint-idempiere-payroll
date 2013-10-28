@@ -535,7 +535,7 @@ public class HRActionNoticeForm implements IFormController, EventListener<Event>
 			concept = this.concept;
 		}
 
-		attribute.setAD_Org_ID(AD_Org_ID);
+		attribute.setAD_Org_ID(process.getAD_Org_ID());
 		attribute.setC_BPartner_ID(partner.get_ID());
 		attribute.setHR_Concept_ID(concept.get_ID());
 		attribute.setDescription(fieldDescription.getValue().toString());
