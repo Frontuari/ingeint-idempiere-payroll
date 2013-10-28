@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: LiberoHR_VE
 Bundle-SymbolicName: ve.net.dcs.LiberoHR_VE;singleton:=true
-Bundle-Version: 2.2.2.Bqualifier
+Bundle-Version: 2.2.3.Bqualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Require-Bundle: org.adempiere.ui;bundle-version="1.0.0",
  org.adempiere.base;bundle-version="1.0.0",
