@@ -153,7 +153,7 @@ public class MHRYear extends X_HR_Year
 					+ " WHERE "
 					+ " ? BETWEEN p.startdate AND p.endDate"
 					+ " AND y.C_Calendar_ID=?",
-					EndDate, C_Calendar_ID);
+					StartDate, C_Calendar_ID);
 			if(C_Period_ID <= 0)
 				return false;
 
