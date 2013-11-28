@@ -115,7 +115,7 @@ public class GeneratePayrollInvoices  extends SvrProcess {
 		p_DocAction = DocAction.ACTION_Complete;
 		
 		List<Object> parameters = new ArrayList<Object>();
-		StringBuilder whereClause = new StringBuilder("HR_Process_ID=? AND HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept WHERE IsActive='Y')"); //red1  AND C_Charge_ID>0
+		StringBuilder whereClause = new StringBuilder("HR_Process_ID=? AND HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept WHERE IsActive='Y' AND IsPrinted='Y')"); //red1  AND C_Charge_ID>0
 		parameters.add(p_HR_Process_ID);
 		if (p_C_BPartner_ID > 0) {
 			whereClause.append(" AND C_BPartner_ID=?");
