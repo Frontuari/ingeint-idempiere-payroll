@@ -333,8 +333,29 @@ public class HRActionNoticeForm implements IFormController, EventListener<Event>
 			throw new AdempiereException(Msg.translate(Env.getCtx(), "PeriodNotFound"));
 		}
 
-		String sql = "SELECT BP.C_BPartner_ID, BP.Name FROM HR_Employee HRE JOIN C_BPartner BP ON (BP.C_BPartner_ID = HRE.C_BPartner_ID) WHERE HRE.IsActive = 'Y'  AND HRE.HR_Payroll_ID = " + process.getHR_Payroll_ID() + " ORDER BY BP.Name";
-		KeyNamePair[] processData = DB.getKeyNamePairs(sql, true);
+		StringBuilder sql = new StringBuilder("SELECT BP.C_BPartner_ID, BP.Name FROM HR_Employee HRE JOIN C_BPartner BP ON "
+				+ "(BP.C_BPartner_ID = HRE.C_BPartner_ID) WHERE HRE.IsActive = 'Y'  ");
+				
+		// This payroll not content periods, NOT IS a Regular Payroll > ogi-cd 28Nov2007
+		if(process.getHR_Payroll_ID() != 0 && process.getHR_Period_ID() != 0)
+		{
+			sql.append(" AND HRE.HR_Payroll_ID="+process.getHR_Payroll_ID()+" AND HRE.AD_Org_ID = "+process.getAD_Org_ID());
+		}
+		
+		// Selected Department
+		if (process.getHR_Department_ID() != 0) 
+		{
+			sql.append(" AND HRE.HR_Department_ID = "+process.getHR_Department_ID());
+		}
+		
+		// Selected Employee
+		if (process.getC_BPartner_ID() != 0)
+		{
+			sql.append(" AND BP.C_BPartner_ID = "+process.getC_BPartner_ID());
+		}
+				
+		sql.append(" ORDER BY BP.Name");
+		KeyNamePair[] processData = DB.getKeyNamePairs(sql.toString(), true);
 		for (KeyNamePair item : processData)
 			fieldEmployee.appendItem(item.getName(), item);
 		fieldEmployee.setSelectedIndex(0);
