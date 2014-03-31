@@ -769,6 +769,9 @@ public class MHRProcess extends X_HR_Process implements DocAction
 				boolean printed = pc.isPrinted() || concept.isPrinted();
 				MHRMovement movement = m_movement.get(concept.get_ID()); // as it's now recursive, it can happen that the concept is already generated
 				if (movement == null) {
+					if (concept.getName().equalsIgnoreCase("Sueldo por Hora")){
+						log.info("Prueba Angel Concepto: "+concept.getName()+" Empleado: "+ bp.getName());
+					}
 					movement = createMovementFromConcept(concept, printed);
 					movement = m_movement.get(concept.get_ID());
 				}

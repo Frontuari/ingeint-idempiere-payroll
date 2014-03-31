@@ -66,9 +66,10 @@ public class MHREmployee extends X_HR_Employee
 	{
 		List<Object> params = new ArrayList<Object>();
 		StringBuilder whereClause = new StringBuilder();
-		whereClause.append(" C_BPartner.C_BPartner_ID IN (SELECT e.C_BPartner_ID FROM HR_Employee e WHERE e.IsActive=?");
+		whereClause.append(" C_BPartner.C_BPartner_ID IN (SELECT e.C_BPartner_ID FROM HR_Employee e WHERE e.IsActive=? AND e.AD_Org_ID = ?");
 		// Just active employee
 		params.add(true);
+		params.add(p.getAD_Org_ID());
 
 		// This payroll not content periods, NOT IS a Regular Payroll > ogi-cd 28Nov2007
 		if(p.getHR_Payroll_ID() != 0 && p.getHR_Period_ID() != 0)
