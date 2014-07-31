@@ -769,8 +769,8 @@ public class MHRProcess extends X_HR_Process implements DocAction
 				boolean printed = pc.isPrinted() || concept.isPrinted();
 				MHRMovement movement = m_movement.get(concept.get_ID()); // as it's now recursive, it can happen that the concept is already generated
 				if (movement == null) {
-					if (concept.getName().equalsIgnoreCase("Sueldo por Hora")){
-						log.info("Prueba Angel Concepto: "+concept.getName()+" Empleado: "+ bp.getName());
+					if (concept.getDescription().equalsIgnoreCase("R25")){
+						log.info("Prueba Angel Concept: "+concept.getName()+" Empleado: "+ bp.getName());
 					}
 					movement = createMovementFromConcept(concept, printed);
 					movement = m_movement.get(concept.get_ID());
@@ -1182,7 +1182,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		whereClause.append(" AND AD_Client_ID = ?");
 		params.add(getAD_Client_ID());
 		//check concept
-		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID" 
+		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' " 
 				+ " AND c.Value = ?)");
 		params.add(pConcept);
 		//
@@ -1236,7 +1236,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		whereClause.append(" AD_Client_ID = ?");
 		params.add(getAD_Client_ID());
 		//check concept
-		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND c.Value = ? AND ((? >= HR_Attribute.validfrom AND HR_Attribute.validto IS NULL) OR (? >= HR_Attribute.validfrom AND ? <= HR_Attribute.validto)))");
+		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID  AND HR_Attribute.IsActive='Y' AND c.Value = ? AND ((? >= HR_Attribute.validfrom AND HR_Attribute.validto IS NULL) OR (? >= HR_Attribute.validfrom AND ? <= HR_Attribute.validto)))");
 		params.add(pConcept);
 		params.add(date);
 		params.add(date);
@@ -1295,7 +1295,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		whereClause.append(" AND AD_Client_ID = ?");
 		params.add(getAD_Client_ID());
 		//check concept
-		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND c.Value = ? " 
+		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? " 
 		+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
 		params.add(pConcept);
 		params.add(date1);
