@@ -122,6 +122,7 @@ public class Doc_HRProcess extends Doc
 			int AD_OrgTrx_ID = line.getAD_Org_ID();
 			int C_Activity_ID = line.getC_Activity_ID();
 			int C_BPartner_ID = line.getC_BPartner_ID();
+			int C_BP_Group_ID = line.getC_BP_Group_ID();
 			//
 			if (AccountSign != null && AccountSign.length() > 0 
 					&& (MHRConcept.ACCOUNTSIGN_Debit.equals(AccountSign) 
@@ -134,11 +135,13 @@ public class Doc_HRProcess extends Doc
 					debit.setAD_OrgTrx_ID(AD_OrgTrx_ID);
 					debit.setC_Activity_ID(C_Activity_ID);
 					debit.setC_BPartner_ID(C_BPartner_ID);
+					debit.setC_BP_Group_ID(C_BP_Group_ID);
 					MAccount accountBPC = MAccount.get (getCtx(),this.getAccountBalancing(as.getC_AcctSchema_ID(),HR_Concept_ID, MHRConcept.ACCOUNTSIGN_Credit));
 					FactLine credit = fact.createLine(docLine,accountBPC ,as.getC_Currency_ID(),null,sumAmount);
 					credit.setAD_OrgTrx_ID(AD_OrgTrx_ID);
 					credit.setC_Activity_ID(C_Activity_ID);
 					credit.setC_BPartner_ID(C_BPartner_ID);
+					credit.setC_BP_Group_ID(C_BP_Group_ID);
 				}
 				else
 				{
@@ -149,6 +152,8 @@ public class Doc_HRProcess extends Doc
 						debit.setAD_OrgTrx_ID(AD_OrgTrx_ID);
 						debit.setC_Activity_ID(C_Activity_ID);
 						debit.setC_BPartner_ID(C_BPartner_ID);
+						debit.setC_BP_Group_ID(C_BP_Group_ID);
+
 						sumAmount = sumAmount.abs();
 					}
 					else if (MHRConcept.ACCOUNTSIGN_Credit.equals(AccountSign))
@@ -158,6 +163,7 @@ public class Doc_HRProcess extends Doc
 						credit.setAD_OrgTrx_ID(AD_OrgTrx_ID);
 						credit.setC_Activity_ID(C_Activity_ID);
 						credit.setC_BPartner_ID(C_BPartner_ID);
+						credit.setC_BP_Group_ID(C_BP_Group_ID);
 						sumAmount = sumAmount.abs().negate();
 					}
 					totalamt = totalamt.add(sumAmount);
