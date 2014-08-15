@@ -135,13 +135,13 @@ public class Doc_HRProcess extends Doc
 					debit.setAD_OrgTrx_ID(AD_OrgTrx_ID);
 					debit.setC_Activity_ID(C_Activity_ID);
 					debit.setC_BPartner_ID(C_BPartner_ID);
-					debit.setC_BP_Group_ID(C_BP_Group_ID);
+					debit.set_ValueOfColumn("C_BP_Group_ID", C_BP_Group_ID);
 					MAccount accountBPC = MAccount.get (getCtx(),this.getAccountBalancing(as.getC_AcctSchema_ID(),HR_Concept_ID, MHRConcept.ACCOUNTSIGN_Credit));
 					FactLine credit = fact.createLine(docLine,accountBPC ,as.getC_Currency_ID(),null,sumAmount);
 					credit.setAD_OrgTrx_ID(AD_OrgTrx_ID);
 					credit.setC_Activity_ID(C_Activity_ID);
 					credit.setC_BPartner_ID(C_BPartner_ID);
-					credit.setC_BP_Group_ID(C_BP_Group_ID);
+					credit.set_ValueOfColumn("C_BP_Group_ID", C_BP_Group_ID);
 				}
 				else
 				{
@@ -152,7 +152,7 @@ public class Doc_HRProcess extends Doc
 						debit.setAD_OrgTrx_ID(AD_OrgTrx_ID);
 						debit.setC_Activity_ID(C_Activity_ID);
 						debit.setC_BPartner_ID(C_BPartner_ID);
-						debit.setC_BP_Group_ID(C_BP_Group_ID);
+						debit.set_ValueOfColumn("C_BP_Group_ID", C_BP_Group_ID);
 
 						sumAmount = sumAmount.abs();
 					}
@@ -163,7 +163,7 @@ public class Doc_HRProcess extends Doc
 						credit.setAD_OrgTrx_ID(AD_OrgTrx_ID);
 						credit.setC_Activity_ID(C_Activity_ID);
 						credit.setC_BPartner_ID(C_BPartner_ID);
-						credit.setC_BP_Group_ID(C_BP_Group_ID);
+						credit.set_ValueOfColumn("C_BP_Group_ID", C_BP_Group_ID);
 						sumAmount = sumAmount.abs().negate();
 					}
 					totalamt = totalamt.add(sumAmount);
