@@ -130,13 +130,13 @@ public class Doc_HRProcess extends Doc
 			{
 				if (isBalancing)
 				{
-					MAccount accountBPD = MAccount.get (getCtx(), getAccountBalancing(as.getC_AcctSchema_ID(),HR_Concept_ID,MHRConcept.ACCOUNTSIGN_Debit));
+					MAccount accountBPD = MAccount.get (getCtx(), getAccountBalancingBPG(as.getC_AcctSchema_ID(),HR_Concept_ID,MHRConcept.ACCOUNTSIGN_Debit,C_BP_Group_ID));
 					FactLine debit=fact.createLine(docLine, accountBPD,as.getC_Currency_ID(),sumAmount, null);
 					debit.setAD_OrgTrx_ID(AD_OrgTrx_ID);
 					debit.setC_Activity_ID(C_Activity_ID);
 					debit.setC_BPartner_ID(C_BPartner_ID);
 					debit.set_ValueOfColumn("C_BP_Group_ID", C_BP_Group_ID);
-					MAccount accountBPC = MAccount.get (getCtx(),this.getAccountBalancing(as.getC_AcctSchema_ID(),HR_Concept_ID, MHRConcept.ACCOUNTSIGN_Credit));
+					MAccount accountBPC = MAccount.get (getCtx(),this.getAccountBalancingBPG(as.getC_AcctSchema_ID(),HR_Concept_ID, MHRConcept.ACCOUNTSIGN_Credit,C_BP_Group_ID));
 					FactLine credit = fact.createLine(docLine,accountBPC ,as.getC_Currency_ID(),null,sumAmount);
 					credit.setAD_OrgTrx_ID(AD_OrgTrx_ID);
 					credit.setC_Activity_ID(C_Activity_ID);
@@ -147,7 +147,7 @@ public class Doc_HRProcess extends Doc
 				{
 					if (MHRConcept.ACCOUNTSIGN_Debit.equals(AccountSign))
 					{
-						MAccount accountBPD = MAccount.get (getCtx(), getAccountBalancing(as.getC_AcctSchema_ID(),HR_Concept_ID,MHRConcept.ACCOUNTSIGN_Debit));
+						MAccount accountBPD = MAccount.get (getCtx(), getAccountBalancingBPG(as.getC_AcctSchema_ID(),HR_Concept_ID,MHRConcept.ACCOUNTSIGN_Debit,C_BP_Group_ID));
 						FactLine debit=fact.createLine(docLine, accountBPD,as.getC_Currency_ID(),sumAmount, null);
 						debit.setAD_OrgTrx_ID(AD_OrgTrx_ID);
 						debit.setC_Activity_ID(C_Activity_ID);
@@ -158,7 +158,7 @@ public class Doc_HRProcess extends Doc
 					}
 					else if (MHRConcept.ACCOUNTSIGN_Credit.equals(AccountSign))
 					{
-						MAccount accountBPC = MAccount.get (getCtx(),this.getAccountBalancing(as.getC_AcctSchema_ID(),HR_Concept_ID,MHRConcept.ACCOUNTSIGN_Credit));
+						MAccount accountBPC = MAccount.get (getCtx(),this.getAccountBalancingBPG(as.getC_AcctSchema_ID(),HR_Concept_ID,MHRConcept.ACCOUNTSIGN_Credit,C_BP_Group_ID));
 						FactLine credit = fact.createLine(docLine,accountBPC ,as.getC_Currency_ID(),null,sumAmount);
 						credit.setAD_OrgTrx_ID(AD_OrgTrx_ID);
 						credit.setC_Activity_ID(C_Activity_ID);
@@ -224,5 +224,36 @@ public class Doc_HRProcess extends Doc
 		String isBalancing = DB.getSQLValueStringEx(getTrxName(), sqlAccount, HR_Concept_ID, AcctSchema_ID);		
 		return "Y".equals(isBalancing);
 	}
-
+	/**
+	 * get account balancing
+	 * @param AcctSchema_ID
+	 * @param HR_Concept_ID
+	 * @param AccountSign Debit or Credit only
+	 * @return Account ID 
+	 */
+	private int getAccountBalancingBPG (int AcctSchema_ID, int HR_Concept_ID, String AccountSign, int p_C_BP_Group_ID)
+	{
+		String field;
+		if (MElementValue.ACCOUNTSIGN_Debit.equals(AccountSign))
+		{
+			field = X_HR_Concept_Acct.COLUMNNAME_HR_Expense_Acct;
+		}
+		else if (MElementValue.ACCOUNTSIGN_Credit.equals(AccountSign))
+		{
+			field = X_HR_Concept_Acct.COLUMNNAME_HR_Revenue_Acct;
+		}
+		else
+		{
+			throw new IllegalArgumentException("Invalid value for AccountSign="+AccountSign);
+		}
+		StringBuilder sqlAccount = new StringBuilder("SELECT COALESCE(").append(field).append(",0) FROM HR_Concept_Acct")
+											.append(" WHERE HR_Concept_ID=? AND C_AcctSchema_ID=? AND C_BP_Group_ID=? ");
+		int Account_ID = DB.getSQLValueEx(getTrxName(), sqlAccount.toString(), HR_Concept_ID, AcctSchema_ID,p_C_BP_Group_ID);
+		if (Account_ID==0){
+			sqlAccount = new StringBuilder("SELECT COALESCE(").append(field).append(",0) FROM HR_Concept_Acct")
+					.append(" WHERE HR_Concept_ID=? AND C_AcctSchema_ID=? ");
+			Account_ID = DB.getSQLValueEx(getTrxName(), sqlAccount.toString(), HR_Concept_ID, AcctSchema_ID);
+		}
+		return Account_ID;
+	}
 }   //  Doc_Payroll
