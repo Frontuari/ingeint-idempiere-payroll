@@ -432,11 +432,16 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 			conceptTest.setScriptText(m_txbSqlField.getValue());
 		conceptTest.setHR_Department_ID(0);
 		conceptTest.loadParameter();
-		
-		if (!concept.getType().equals(MHRConcept.TYPE_RuleEngine))
-			resultField.setText(String.valueOf(conceptTest.testConcept(concept.getValue())));
-		else
+		if (concept!=null){
+			if (!concept.getType().equals(MHRConcept.TYPE_RuleEngine)){
+				resultField.setText(String.valueOf(conceptTest.testConcept(concept.getValue())));
+			}else{
+				resultField.setText(String.valueOf(conceptTest.executeScriptManual(0, "")));
+			}	
+		}else{
 			resultField.setText(String.valueOf(conceptTest.executeScriptManual(0, "")));
+		}
+			
 		descriptionField.setValue(conceptTest.getM_description()!=null?conceptTest.getM_description().toString():"");
 		m_evalField.setValue(conceptTest.getM_eval().toString());
 		
