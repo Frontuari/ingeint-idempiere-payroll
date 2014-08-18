@@ -16,5 +16,6 @@ Bundle-ActivationPolicy: lazy
 Service-Component: OSGI-INF/org.idempiere.component.HRDocFactory.xml, OSGI-INF/org.idempiere.component.HRModelFactory.xml, 
  OSGI-INF/HRZKFormFactory.xml
 Bundle-Activator: org.adempiere.plugin.utils.AdempiereActivator
+Export-Package: org.eevolution.model
 
 
