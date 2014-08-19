@@ -175,12 +175,9 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 				scriptText = rulee.getScript().trim().replaceAll("\\bget", "process.get")
 				.replace(".process.get", ".get");
 			}else{
-				scriptText =scriptText.replace("getAttribute", "process.getAttribute");
-				scriptText = scriptText.replace("getConcept", "process.getConcept");
-				scriptText = scriptText.replace(" getHR_Payroll()", " process.getHR_Payroll()");
-				scriptText = scriptText.replace(" getHR_Contract()", " process.getHR_Contract()");
-				scriptText = scriptText.replace("=getHR_Payroll()", "=process.getHR_Payroll()");
-				scriptText = scriptText.replace("=getHR_Contract()", "=process.getHR_Contract()");
+				scriptText = scriptText.trim().replaceAll("\\bget", "process.get")
+				.replace(".process.get", ".get");
+				
 			}
 			
 			String resultType = "double";
@@ -381,7 +378,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			m_description = "N/A";
 		log.info("Result: "+result.toString()+", Descripcion: "+m_description);
 		
-		return (double) result;
+		return Double.parseDouble(result.toString());
 	}
 
 

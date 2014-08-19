@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Product: iDempiere ERP & CRM Smart Business Solution                       *
+ * This program is free software; you can redistribute it and/or modify it    *
+ * under the terms version 2 of the GNU General Public License as published   *
+ * by the Free Software Foundation. This program is distributed in the hope   *
+ * that it will be useful, but WITHOUT ANY WARRANTY; without even the implied *
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.           *
+ * See the GNU General Public License for more details.                       *
+ * You should have received a copy of the GNU General Public License along    *
+ * with this program; if not, write to the Free Software Foundation, Inc.,    *
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.                     *
+ * For the text or an alternative of this public license, you may reach us    *
+ * Copyright (C) 2003-2007 Double Click Systemas C.A.. All Rights Reserved.   *
+ * @author(s): Freddy Heredia Double Click Systemas C.A.                      *
+ *****************************************************************************/
+
 package ve.net.dcs.form;
 
 import java.math.BigDecimal;
@@ -59,6 +75,8 @@ import org.zkoss.zul.North;
 import org.zkoss.zul.South;
 
 import ve.net.dcs.process.*;
+
+
 
 public class WConceptTest 
 implements IFormController,EventListener<Event>, WTableModelListener,  ValueChangeListener{
@@ -418,14 +436,14 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 		
 		
 		if (fieldBPartner.getValue()!=null)
-			conceptTest.setC_BPartner_ID((int) fieldBPartner.getValue());
+			conceptTest.setC_BPartner_ID(Integer.parseInt(fieldBPartner.getValue().toString()));
 		if (fieldPayroll.getValue()!=null)
-			conceptTest.setHR_Payroll_ID((int)fieldPayroll.getValue());
+			conceptTest.setHR_Payroll_ID(Integer.parseInt(fieldPayroll.getValue().toString()));
 		if (fieldHRPeriod.getValue()!=null)
-			conceptTest.setHR_Period_ID((int)fieldHRPeriod.getValue());
+			conceptTest.setHR_Period_ID(Integer.parseInt(fieldHRPeriod.getValue().toString()));
 		if (fieldConcept.getValue()!=null){
-			conceptTest.setM_HR_Concept_ID((int)fieldConcept.getValue());
-			concept = MHRConcept.get(Env.getCtx(), (int)fieldConcept.getValue());
+			conceptTest.setM_HR_Concept_ID(Integer.parseInt(fieldConcept.getValue().toString()));
+			concept = MHRConcept.get(Env.getCtx(), Integer.parseInt(fieldConcept.getValue().toString()));
 			
 		}
 		if (m_txbSqlField.getValue()!=null)
