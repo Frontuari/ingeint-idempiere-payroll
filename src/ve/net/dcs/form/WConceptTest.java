@@ -11,7 +11,8 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.                     *
  * For the text or an alternative of this public license, you may reach us    *
  * Copyright (C) 2003-2007 Double Click Systemas C.A.. All Rights Reserved.   *
- * @author(s): Freddy Heredia Double Click Systemas C.A.                      *
+ * @author(s): Freddy Heredia Double Click Systemas C.A.   
+ * @author ocurieles Double Click Sistemas C.A.                   *
  *****************************************************************************/
 
 package ve.net.dcs.form;
@@ -93,9 +94,11 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 	/**
 	 *	Initialize Panel
 	 */
+	 // 2014-08-19 Change IsSOTrx to "" to show only employee -- ocurieles 
+	  
 	public WConceptTest()
 	{
-		Env.setContext(Env.getCtx(), form.getWindowNo(), "IsSOTrx", "Y");   //  defaults to no
+		Env.setContext(Env.getCtx(), form.getWindowNo(), "IsSOTrx", "");   //  defaults to no
 		try
 		{
 			m_AD_Client_ID = Env.getAD_Client_ID(Env.getCtx());
