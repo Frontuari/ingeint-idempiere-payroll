@@ -552,6 +552,56 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 	} // getAttribute
 
 
+	public double getAttribute (String pConcept,String pDescription)
+	{
+		MHRConcept concept = MHRConcept.forValue(getCtx(), pConcept);
+		if (concept == null)
+			return 0;
+
+		ArrayList<Object> params = new ArrayList<Object>();
+		StringBuilder whereClause = new StringBuilder();
+		// check ValidFrom:
+		whereClause.append(MHRAttribute.COLUMNNAME_ValidFrom + "<=?");
+		params.add(m_dateFrom);
+		//check client
+		whereClause.append(" AND AD_Client_ID = ?");
+		params.add(getAD_Client_ID());
+		//check concept
+		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' " 
+				+ " AND c.Value = ? AND HR_Attribute.Description = ?)");
+		params.add(pConcept);
+		params.add(pDescription);
+		//
+		if (!concept.getType().equals(MHRConcept.TYPE_Information))
+		{
+			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
+			params.add(getC_BPartner_ID());
+		}
+		// LVE Localización Venezuela
+		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
+		if (concept.isEmployee()){
+			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
+			params.add(getAD_Org_ID());
+		}
+
+		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
+		.setParameters(params)
+		.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+		.first();
+		if (attribute == null)
+			return 0.0;
+
+		// if column type is Quantity return quantity
+		if (concept.getColumnType().equals(MHRConcept.COLUMNTYPE_Quantity))
+			return attribute.getQty().doubleValue();
+
+		// if column type is Amount return amount
+		if (concept.getColumnType().equals(MHRConcept.COLUMNTYPE_Amount))
+			return attribute.getAmount().doubleValue();
+
+		//something else
+		return 0.0; //TODO throw exception ?? 
+	} // getAttribute
 	// LVE Localización Venezuela - RTSC: 14/03/2011
 	/**
 	 * Helper Method : Get Attribute [get Attribute to search key concept and date ]
@@ -1042,6 +1092,26 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 		
 	} // getConcept
 	
+	public double getConceptGroup (String pconcept)
+	{
+		final MHRConceptCategory category = MHRConceptCategory.forValue(getCtx(), pconcept);
+		if (category == null)
+		{
+			return 0.0; // TODO: need to throw exception ?
+		}
+		//
+		double value = 0.0;
+		for(MHRPayrollConcept pc : linesConcept)
+		{
+			MHRConcept con = MHRConcept.get(getCtx(), pc.getHR_Concept_ID());
+			if(con.getHR_Concept_Category_ID() == category.get_ID())
+			{
+				value += getConcept(con.getValue());
+				
+			}
+		}
+		return value;
+	} // getConceptGroup
 	/** TODO QSS Reviewme
 	 * Helper Method: gets Concept value of payrroll(s) between 2 dates
 	 * if payrollValue is null then sum all payrolls between 2 dates
@@ -1614,6 +1684,16 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			m_scriptCtx.put("_To", period.getEndDate());
 			m_scriptCtx.put("_Days", org.compiere.util.TimeUtil.getDaysBetween(period.getStartDate(),period.getEndDate())+1);
 		}
+	}
+	public void setHR_Payroll_ID (int HR_Payroll_ID)
+	{
+		if (HR_Payroll_ID < 1) 
+			set_ValueNoCheck (COLUMNNAME_HR_Payroll_ID, null);
+		else {
+			set_ValueNoCheck (COLUMNNAME_HR_Payroll_ID, Integer.valueOf(HR_Payroll_ID));
+			linesConcept = MHRPayrollConcept.getPayrollConcepts(this);
+		}
+		
 	}
 	
 }	//	MHRProcess_ConceptTest

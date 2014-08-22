@@ -104,9 +104,9 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 			m_AD_Client_ID = Env.getAD_Client_ID(Env.getCtx());
 			dynInit();
 			zkInit();
-			//calculate();
-			//southPanel.appendChild(new Separator());
-			//southPanel.appendChild(statusBar);
+
+
+			
 		}
 		catch(Exception e)
 		{
@@ -150,10 +150,9 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 	private Button bZoom = cp.createButton(ConfirmPanel.A_ZOOM);
 	private Grid commandLayout = GridFactory.newGridLayout();
 	private Button bRefresh = cp.createButton(ConfirmPanel.A_REFRESH);
-	private Label labelDateFrom = new Label();
-	private WDateEditor  fieldDateAcct = new WDateEditor();
-	private Label labelDateFrom2 = new Label();
-	private WDateEditor  fieldDateAcct2 = new WDateEditor();
+	
+
+	
 	private Textbox m_txbSqlField = new Textbox();
 	private Textbox m_evalField = new Textbox();
 	
@@ -165,8 +164,10 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 	private WStringEditor scripField = new WStringEditor();;
 	public int m_C_BPartner_ID = 0;
 	public int m_HRPayroll_ID = 0;
-	public int m_HRPeriod_ID = 0;
+	private int m_HRPeriod_ID = 0;
+	private int columnPeriod_ID =54913;
 	public int m_HR_Concept_ID = 0;
+	private MLookup lookupP = null;
 	/**
 	 *  Static Init
 	 *  @throws Exception
@@ -195,8 +196,7 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 		labelHRPeriod.setText(Msg.translate(Env.getCtx(), "HR_Period_ID"));
 		
 		labelBPartner.setText(Msg.translate(Env.getCtx(), "C_BPartner_ID"));
-		labelDateFrom.setText(Msg.translate(Env.getCtx(), "DateFrom"));
-		labelDateFrom2.setText("-");
+		
 		labelHRConcept.setText(Msg.translate(Env.getCtx(), "HR_Concept_ID"));
 		labelPayRoll.setText(Msg.translate(Env.getCtx(), "HR_Payroll_ID"));
 		//
@@ -250,17 +250,21 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 		rows = parameterLayout.newRows();
 		row = rows.newRow();
 		
-		row.appendCellChild(labelHRPeriod.rightAlign());
-		fieldHRPeriod.getComponent().setHflex("true");
-		row.appendCellChild(fieldHRPeriod.getComponent(), 2);
+		row.appendCellChild(labelPayRoll.rightAlign());
+		fieldPayroll.getComponent().setWidth("100%");	
+		row.appendCellChild(fieldPayroll.getComponent(), 2);
+		
+
 		row.appendCellChild(labelOrg.rightAlign());
 		fieldOrg.getComponent().setHflex("true");
 		row.appendCellChild(fieldOrg.getComponent(), 2);
 		row = rows.newRow();
-		row.appendCellChild(labelPayRoll.rightAlign());
 		
-		fieldPayroll.getComponent().setWidth("100%");	
-		row.appendCellChild(fieldPayroll.getComponent(), 2);
+		row.appendCellChild(labelHRPeriod.rightAlign());
+		fieldHRPeriod.getComponent().setHflex("true");
+		fieldHRPeriod.dynamicDisplay();
+		row.appendCellChild(fieldHRPeriod.getComponent(), 2);
+		
 
 		row = rows.newRow();
 		row.appendCellChild(labelBPartner.rightAlign());
@@ -270,13 +274,8 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 		fieldConcept.getComponent().setHflex("true");
 		row.appendCellChild(fieldConcept.getComponent(), 2);
 		row = rows.newRow();
-		row.appendCellChild(labelDateFrom.rightAlign());
-		fieldDateAcct.getComponent().setHflex("true");
-		row.appendCellChild(fieldDateAcct.getComponent(), 2);
-		row.appendCellChild(labelDateFrom2.rightAlign());
-		fieldDateAcct2.getComponent().setHflex("true");
-		row.appendCellChild(fieldDateAcct2.getComponent(), 2);
-		row = rows.newRow();
+		
+
 		row.appendChild(bRefresh);
 		
 	
@@ -346,12 +345,8 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 
 		m_AD_Client_ID = Env.getAD_Client_ID(Env.getCtx());
 
-		//  Period  //  HR_Process.HR_Period_ID
-		int AD_Column_ID =54913;
-		MLookup lookupAS = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.TableDir);
-		fieldHRPeriod = new WTableDirEditor("HR_Period_ID", true, false, true, lookupAS);
-//		fieldHRPeriod.setValue(MClient.get(Env.getCtx()).getAcctSchema().getC_AcctSchema_ID());
-//		fieldHRPeriod.addValueChangeListener(this);
+		
+
 		
 		// Organization
 		
@@ -363,21 +358,30 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 			fieldOrg.setValue(0);
 		
 		//  BPartner
-		AD_Column_ID = SystemIDs.COLUMN_C_INVOICE_C_BPARTNER_ID;        //  C_Invoice.C_BPartner_ID
-		MLookup lookupBP = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.Search);
+		
+		MLookup lookupBP = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, SystemIDs.COLUMN_C_INVOICE_C_BPARTNER_ID, DisplayType.Search);
 		fieldBPartner = new WSearchEditor("C_BPartner_ID", false, false, true, lookupBP);
 		
 		// Concept
-		AD_Column_ID = 54945;        //  HR_PayrollConcept.HR_Concept_ID
-		MLookup lookupConcept = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID, DisplayType.Search);
+		//AD_Column_ID = 54945;        //  HR_PayrollConcept.HR_Concept_ID
+		MLookup lookupConcept = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, 54945, DisplayType.Search);
 		fieldConcept = new WSearchEditor("HR_Concept_ID", false, false, true, lookupConcept);
 		fieldConcept.setValue(null);
 		
 		//  Payroll
-		AD_Column_ID =54872;
-		MLookup lookupPayroll = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, AD_Column_ID,  DisplayType.TableDir);
+		//AD_Column_ID =54872;
+		MLookup lookupPayroll = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, 54872,  DisplayType.TableDir);
 		fieldPayroll = new WTableDirEditor("HR_Payroll_ID", false, false, true, lookupPayroll);
-				
+		if (fieldPayroll.getLookup().getSize()>0){
+			//fieldPayroll.setValue(Integer.parseInt(fieldPayroll.getComponent().getItemAtIndex(1).getValue().toString()));
+
+		}
+	//  Period  //  HR_Process.HR_Period_ID
+		//lookupP = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, DisplayType.TableDir, Env.getLanguage(Env.getCtx()), "HR_Period_ID", 0, false, "(HR_Period.HR_Payroll_ID = "+fieldPayroll.getComponent().getSelectedItem().getValue()+")");
+		lookupP = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, DisplayType.TableDir, Env.getLanguage(Env.getCtx()), "HR_Period_ID", 0, false, "");
+		//lookupP = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 0, columnPeriod_ID, DisplayType.TableDir);
+		fieldHRPeriod = new WTableDirEditor("HR_Period_ID", true, false, true, lookupP);
+		//fieldHRPeriod.setReadWrite(true);
 	}
 	
 	
@@ -394,9 +398,32 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 			if (evt.getNewValue()!=null){
 				m_HRPeriod_ID = Integer.valueOf(evt.getNewValue().toString());
 			}
-		}else if (evt.getSource().equals(fieldPayroll.getValue())){
+		}else if (evt.getSource().equals(fieldPayroll)){
 			if (evt.getNewValue()!=null){
 				m_HRPayroll_ID =Integer.valueOf(evt.getNewValue().toString());
+				
+				
+				
+				lookupP = (MLookup) fieldHRPeriod.getLookup();
+				fieldHRPeriod.getComponent().setDisabled(false);
+				try {
+					lookupP = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 54872, DisplayType.TableDir, Env.getLanguage(Env.getCtx()), "HR_Period_ID", 0, false, "(HR_Period.HR_Payroll_ID = "+m_HRPayroll_ID+")");
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				//fieldHRPeriod = new WTableDirEditor("HR_Period_ID", true, true, true, lookupP);
+				//fieldHRPeriod.getComponent().setSelectedItem(fieldHRPeriod.getComponent().getItemAtIndex(1));
+				lookupP.refresh();
+				lookupP.loadComplete();
+				lookupP.fillComboBox(true);
+				lookupP.fillComboBox(true,true,true, false,false);
+				fieldHRPeriod.getComponent().removeAllItems();
+				fieldHRPeriod.contentsChanged(null);
+				fieldHRPeriod.actionRefresh();
+				//fieldHRPeriod.setReadWrite(true);
+				//fieldHRPeriod.getComponent().setEnabled(true);
+				fieldHRPeriod.getComponent().setDisabled(false);
 			}
 		}else if (evt.getSource().equals(fieldConcept)){
 			if (evt.getNewValue()!=null){
