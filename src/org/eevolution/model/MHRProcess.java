@@ -748,8 +748,10 @@ public class MHRProcess extends X_HR_Process implements DocAction
 			log.info("Employee " + count + "  ---------------------- " + bp.getName());
 			count++;
 			m_C_BPartner_ID = bp.get_ID();
-
-			m_employee = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID, get_TrxName());
+			if (getHR_Payroll_ID()>0)
+				m_employee = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID, get_TrxName(),getHR_Payroll_ID());
+			else 
+				m_employee = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID, get_TrxName());
 			m_scriptCtx.remove("_DateStart");
 			m_scriptCtx.remove("_DateEnd");
 			m_scriptCtx.remove("_Days");
@@ -769,8 +771,8 @@ public class MHRProcess extends X_HR_Process implements DocAction
 				boolean printed = pc.isPrinted() || concept.isPrinted();
 				MHRMovement movement = m_movement.get(concept.get_ID()); // as it's now recursive, it can happen that the concept is already generated
 				if (movement == null) {
-					if (concept.getDescription().equalsIgnoreCase("R25")){
-						log.info("Prueba Angel Concept: "+concept.getName()+" Empleado: "+ bp.getName());
+					if (concept.getDescription().equalsIgnoreCase("A020")){
+						log.info("Prueba  Concept: "+concept.getName()+" Empleado: "+ bp.getName());
 					}
 					movement = createMovementFromConcept(concept, printed);
 					movement = m_movement.get(concept.get_ID());
