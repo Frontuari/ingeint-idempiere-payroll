@@ -16,7 +16,7 @@
 package ve.net.dcs.process;
 
 import java.io.File;
-import java.math.BigDecimal;
+import java.math.*;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -38,6 +38,7 @@ import org.compiere.model.MInvoice;
 import org.compiere.model.MPeriod;
 import org.compiere.model.MPeriodControl;
 import org.compiere.model.MRule;
+import org.compiere.model.MUser;
 import org.compiere.model.ModelValidationEngine;
 import org.compiere.model.ModelValidator;
 import org.compiere.model.Query;
@@ -73,7 +74,7 @@ import bsh.Interpreter;
  * @contributor Freddy Heredia. - fheredia@dcs.net.ve, Double Click Sistemas http://www.dcsla.com
  *			<li> 
  */
-public class ConceptTest extends MHRProcess implements DocAction
+public class ConceptTest extends MHRProcess_ConceptTest implements DocAction
 {
 	
 	private int _Process_Period,_Payroll,_Department,_Days,	_C_BPartner_ID;
@@ -111,11 +112,10 @@ public class ConceptTest extends MHRProcess implements DocAction
 
 	public void test(){
 		
-		double sueldoQ = getAttribute("A_SUELDO_MENSUAL");
-		sueldoQ = sueldoQ / 15; 
-		result= sueldoQ;
-		description = "Dias Base : 15";
 		
-	}
+	
+
+
+}
 	
 }	//ConceptTest

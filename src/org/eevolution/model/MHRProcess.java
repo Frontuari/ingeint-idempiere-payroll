@@ -1818,7 +1818,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		params.add(concept.get_ID());
 		//check partner
 		whereClause.append(" AND " + MHRMovement.COLUMNNAME_C_BPartner_ID  + "=?");
-		params.add(m_C_BPartner_ID);
+		params.add(getC_BPartner_ID());
 		//Adding dates 
 		whereClause.append(" AND validTo BETWEEN ? AND ?");
 		if (from == null)
