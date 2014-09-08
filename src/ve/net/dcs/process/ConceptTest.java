@@ -65,15 +65,13 @@ import bsh.Interpreter;
  * 			<li> FR [ 2520591 ] Support multiple calendar for Org 
  *			@see http://sourceforge.net/tracker2/?func=detail&atid=879335&aid=2520591&group_id=176962
  * @contributor Cristina Ghita, www.arhipac.ro
- * 
- * @contributor Jenny Rodriguez - jrodriguez@dcsla.com, Double Click Sistemas http://www.dcsla.com
- *			<li> 
- * @contributor Rafael Salazar C. - rsalazar@dcsla.com, Double Click Sistemas http://www.dcsla.com
- *			<li> 
- *			<li> 
+ * 			<li> 
  * @contributor Freddy Heredia. - fheredia@dcs.net.ve, Double Click Sistemas http://www.dcsla.com
  *			<li> 
- */
+ *  @contributor Orlando Curieles - ocurieles@dcs.net.ve Double Click Sistemas CA www.dcsla.com
+ *          <li> 
+ */	
+ 
 public class ConceptTest extends MHRProcess_ConceptTest implements DocAction
 {
 	

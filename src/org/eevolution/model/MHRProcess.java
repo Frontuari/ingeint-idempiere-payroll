@@ -1193,7 +1193,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
 			params.add(m_C_BPartner_ID);
 		}
-		// LVE Localización Venezuela
+		// LVE Localizacion Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
 		if (concept.isEmployee()){
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
@@ -1220,7 +1220,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 	} // getAttribute
 
 
-	// LVE Localización Venezuela - RTSC: 14/03/2011
+	// LVE Localizacio	n Venezuela - RTSC: 14/03/2011
 	/**
 	 * Helper Method : Get Attribute [get Attribute to search key concept and date ]
 	 * @param pConcept - Value to Concept
@@ -1249,7 +1249,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
 			params.add(m_C_BPartner_ID);
 		}
-		// LVE Localización Venezuela
+		// LVE Localizacion Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
 		if (concept.isEmployee()){
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
@@ -1275,7 +1275,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		return 0.0; //TODO throw exception ?? 
 	} // getAttribute
 
-	// LVE Localización Venezuela - JCRA: 14/03/2011
+	// LVE Localizacion Venezuela - JCRA: 14/03/2011
     /**
 	* Helper Method : Get Attribute [get Attribute to search key concept and date ] 
 	* @param pConcept - Value to Concept
@@ -1307,7 +1307,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
 			params.add(m_C_BPartner_ID);
 		}
-		// LVE Localización Venezuela
+		// LVE Localizacion Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
 		if (concept.isEmployee()){
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
@@ -1358,7 +1358,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
 			params.add(getC_BPartner_ID());
 		}
-		// LVE Localización Venezuela
+		// LVE Localizacion Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
 		if (concept.isEmployee()){
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
@@ -1412,7 +1412,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
 			params.add(m_C_BPartner_ID);
 		}
-         // LVE Localización Venezuela
+         // LVE Localizacion Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
 		if (concept.isEmployee()){
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
@@ -1455,7 +1455,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
 			params.add(m_C_BPartner_ID);
 		}
-         // LVE Localización Venezuela
+         // LVE Localizaci��n Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
 		if (concept.isEmployee()){
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
@@ -1498,7 +1498,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
 			params.add(m_C_BPartner_ID);
 		}
-		// LVE Localización Venezuela
+		// LVE Localizaci��n Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
 		if (concept.isEmployee()){
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
@@ -1818,7 +1818,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		params.add(concept.get_ID());
 		//check partner
 		whereClause.append(" AND " + MHRMovement.COLUMNNAME_C_BPartner_ID  + "=?");
-		params.add(getC_BPartner_ID());
+		params.add(m_C_BPartner_ID);
 		//Adding dates 
 		whereClause.append(" AND validTo BETWEEN ? AND ?");
 		if (from == null)
@@ -1895,7 +1895,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 			params.add(m_C_BPartner_ID);
 		}
 		whereClause.append(" AND IsInPayroll = 'Y' AND IsActive = 'Y'");
-		// TODO Needed for Sismode customisation
+		// TODO Needed for Sismode customization
 		// whereClause.append(" AND IsFamilyCharge = 'Y'");		
 		StringBuffer sql = new StringBuffer("SELECT COUNT(*) FROM AD_User ").append(" WHERE ").append(whereClause);
 		
@@ -1982,7 +1982,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
 			params.add(m_C_BPartner_ID);
 		}
-		// LVE Localización Venezuela
+		// LVE Localizaci��n Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
 		if (concept.isEmployee()){
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
@@ -2030,7 +2030,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
 			params.add(m_C_BPartner_ID);
 		}
-		// LVE Localización Venezuela
+		// LVE Localizaci��n Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
 		if (concept.isEmployee()){
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
