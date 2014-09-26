@@ -900,7 +900,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 	public double getConcept (String pconcept)
 	{
 		MHRConcept concept = MHRConcept.forValue(getCtx(), pconcept.trim());
-
+		
 		if (concept == null)
 		{   //red1  - return 0;
 			throw new AdempiereException("Oh no! " + pconcept + " does not exist. Please create it first in Payroll Concept");
@@ -1219,7 +1219,109 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		return 0.0; //TODO throw exception ?? 
 	} // getAttribute
 
-
+	
+	/**
+	 * Helper Method : Get Attribute [get Attribute to search key concept ]
+	 * @param pConcept - Value to Concept
+	 * @return	Max Value of concept, applying to employee
+	 */ 
+	
+	public double getAttributeMax (String pConcept, Timestamp date1, Timestamp date2)
+	{
+		MHRConcept concept = MHRConcept.forValue(getCtx(), pConcept);
+		if (concept == null)
+			return 0;
+		ArrayList<Object> params = new ArrayList<Object>();
+		StringBuilder whereClause = new StringBuilder();
+		// check ValidFrom:
+		whereClause.append(MHRAttribute.COLUMNNAME_ValidFrom + "<=?");
+		params.add(date2);
+		//check client
+		whereClause.append(" AND AD_Client_ID = ?");
+		params.add(getAD_Client_ID());
+		//check concept
+		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? " 
+		+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
+		params.add(pConcept);
+		params.add(date1);
+		//
+		if (!concept.getType().equals(MHRConcept.TYPE_Information))
+		{
+			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
+			params.add(getC_BPartner_ID());
+		}
+		// LVE Localizacion Venezuela
+		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
+		if (concept.isEmployee()){
+			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
+			params.add(getAD_Org_ID());
+		}
+		
+		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
+		.setParameters(params)
+		.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+		.first();
+		if (attribute == null)
+			return 0.0;
+	
+		BigDecimal bd = (BigDecimal)attribute.get_Value(I_HR_Attribute.COLUMNNAME_MaxValue);
+		if (bd == null)
+			 return 0.0;
+		return bd.doubleValue();
+	
+		
+	} // getAttribute MAX
+	/**
+	 * Helper Method : Get Attribute [get Attribute to search key concept ]
+	 * @param pConcept - Value to Concept
+	 * @return	Min Value of concept, applying to employee
+	 */ 
+	
+	public double getAttributeMin (String pConcept, Timestamp date1, Timestamp date2)
+	{
+		MHRConcept concept = MHRConcept.forValue(getCtx(), pConcept);
+		if (concept == null)
+			return 0;
+		ArrayList<Object> params = new ArrayList<Object>();
+		StringBuilder whereClause = new StringBuilder();
+		// check ValidFrom:
+		whereClause.append(MHRAttribute.COLUMNNAME_ValidFrom + "<=?");
+		params.add(date2);
+		//check client
+		whereClause.append(" AND AD_Client_ID = ?");
+		params.add(getAD_Client_ID());
+		//check concept
+		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? " 
+		+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
+		params.add(pConcept);
+		params.add(date1);
+		//
+		if (!concept.getType().equals(MHRConcept.TYPE_Information))
+		{
+			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
+			params.add(getC_BPartner_ID());
+		}
+		// LVE Localizacion Venezuela
+		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
+		if (concept.isEmployee()){
+			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
+			params.add(getAD_Org_ID());
+		}
+		
+		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
+		.setParameters(params)
+		.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+		.first();
+		if (attribute == null)
+			return 0.0;
+	
+		BigDecimal bd = (BigDecimal)attribute.get_Value(I_HR_Attribute.COLUMNNAME_MinValue);
+		if (bd == null)
+			 return 0.0;
+		return bd.doubleValue();
+	
+		
+	} // getAttribute Min
 	// LVE Localizacio	n Venezuela - RTSC: 14/03/2011
 	/**
 	 * Helper Method : Get Attribute [get Attribute to search key concept and date ]
@@ -1767,7 +1869,9 @@ public class MHRProcess extends X_HR_Process implements DocAction
 	 * */
 	public double getConceptRangeOfPeriod (String conceptValue, String payrollValue, String dateFrom, String dateTo)
 	{
-		
+		if (conceptValue.equals("CC_BASE_IMPUESTO_RENTA")){
+			System.out.println("");
+		}
 		int payroll_id = -1;
 		if (payrollValue == null)
 		{
@@ -1818,7 +1922,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		params.add(concept.get_ID());
 		//check partner
 		whereClause.append(" AND " + MHRMovement.COLUMNNAME_C_BPartner_ID  + "=?");
-		params.add(m_C_BPartner_ID);
+		params.add(getM_C_BPartner_ID());
 		//Adding dates 
 		whereClause.append(" AND validTo BETWEEN ? AND ?");
 		if (from == null)
@@ -2219,5 +2323,12 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		return tsdate.toString();
 	} // getTimestampToString
 
-	
+	public int getM_C_BPartner_ID() {
+		return m_C_BPartner_ID;
+		
+	}
+
+	public void setM_C_BPartner_ID(int m_C_BPartner_ID) {
+		this.m_C_BPartner_ID = m_C_BPartner_ID;
+	}
 }	//	MHRProcess

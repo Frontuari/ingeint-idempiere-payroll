@@ -314,13 +314,11 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			params.add(concept.getHR_Concept_ID());
 			whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept conc WHERE conc.HR_Concept_ID = HR_Attribute.HR_Concept_ID )");
 
-			// Check the concept is within a valid range for the attribute
-			if (concept.isEmployee())
-			{
+
 				whereClause.append(" AND C_BPartner_ID = ? AND (HR_Employee_ID = ? OR HR_Employee_ID IS NULL)");
 				params.add(m_employee.getC_BPartner_ID());
 				params.add(m_employee.get_ID());
-			}
+			
 
 			att = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
 			.setParameters(params)
@@ -1401,6 +1399,108 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 		 
 	} // getAttributeDocType
 
+	/**
+	 * Helper Method : Get Attribute [get Attribute to search key concept ]
+	 * @param pConcept - Value to Concept
+	 * @return	Max Value of concept, applying to employee
+	 */ 
+	
+	public double getAttributeMax (String pConcept, Timestamp date1, Timestamp date2)
+	{
+		MHRConcept concept = MHRConcept.forValue(getCtx(), pConcept);
+		if (concept == null)
+			return 0;
+		ArrayList<Object> params = new ArrayList<Object>();
+		StringBuilder whereClause = new StringBuilder();
+		// check ValidFrom:
+		whereClause.append(MHRAttribute.COLUMNNAME_ValidFrom + "<=?");
+		params.add(date2);
+		//check client
+		whereClause.append(" AND AD_Client_ID = ?");
+		params.add(getAD_Client_ID());
+		//check concept
+		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? " 
+		+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
+		params.add(pConcept);
+		params.add(date1);
+		//
+		if (!concept.getType().equals(MHRConcept.TYPE_Information))
+		{
+			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
+			params.add(getC_BPartner_ID());
+		}
+		// LVE Localizacion Venezuela
+		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
+		if (concept.isEmployee()){
+			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
+			params.add(getAD_Org_ID());
+		}
+		
+		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
+		.setParameters(params)
+		.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+		.first();
+		if (attribute == null)
+			return 0.0;
+	
+		BigDecimal bd = (BigDecimal)attribute.get_Value(I_HR_Attribute.COLUMNNAME_MaxValue);
+		if (bd == null)
+			 return 0.0;
+		return bd.doubleValue();
+	
+		
+	} // getAttribute MAX
+	/**
+	 * Helper Method : Get Attribute [get Attribute to search key concept ]
+	 * @param pConcept - Value to Concept
+	 * @return	Min Value of concept, applying to employee
+	 */ 
+	
+	public double getAttributeMin (String pConcept, Timestamp date1, Timestamp date2)
+	{
+		MHRConcept concept = MHRConcept.forValue(getCtx(), pConcept);
+		if (concept == null)
+			return 0;
+		ArrayList<Object> params = new ArrayList<Object>();
+		StringBuilder whereClause = new StringBuilder();
+		// check ValidFrom:
+		whereClause.append(MHRAttribute.COLUMNNAME_ValidFrom + "<=?");
+		params.add(date2);
+		//check client
+		whereClause.append(" AND AD_Client_ID = ?");
+		params.add(getAD_Client_ID());
+		//check concept
+		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? " 
+		+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
+		params.add(pConcept);
+		params.add(date1);
+		//
+		if (!concept.getType().equals(MHRConcept.TYPE_Information))
+		{
+			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
+			params.add(getC_BPartner_ID());
+		}
+		// LVE Localizacion Venezuela
+		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
+		if (concept.isEmployee()){
+			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
+			params.add(getAD_Org_ID());
+		}
+		
+		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
+		.setParameters(params)
+		.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+		.first();
+		if (attribute == null)
+			return 0.0;
+	
+		BigDecimal bd = (BigDecimal)attribute.get_Value(I_HR_Attribute.COLUMNNAME_MinValue);
+		if (bd == null)
+			 return 0.0;
+		return bd.doubleValue();
+	
+		
+	} // getAttribute Min
 	/**
 	 * Helper Method : get days from specific period
 	 * @param period

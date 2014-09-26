@@ -176,7 +176,7 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 	{
 		//
 		 final int noColumns = 60;
-	     final int maxStatementLength = 2000;
+	     final int maxStatementLength = 10000;
 	     final int noStatementRows = 10;
 	     final int noResultRows = 20;
 		form.appendChild(mainLayout);
