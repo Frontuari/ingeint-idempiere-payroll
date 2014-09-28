@@ -598,6 +598,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		MRule rulee = MRule.get(getCtx(), AD_Rule_ID);
 		Object result = null;
 		m_description = null;
+		String errorMsg="";
 		try
 		{
 			String text = "";
@@ -618,16 +619,26 @@ public class MHRProcess extends X_HR_Process implements DocAction
 				+ text;
 			Scriptlet engine = new Scriptlet (Scriptlet.VARIABLE, script, m_scriptCtx);	
 			Exception ex = engine.execute();
+			m_description = engine.getDescription();
+			if (m_description!=null){
+				if (m_description.toString().length()>="AdempiereException".length())
+					if (m_description.toString().contains("AdempiereException")){
+						errorMsg = m_description.toString();
+						throw ex;
+					}
+						
+			}
 			if (ex != null)
 			{
+				
 				throw ex;
 			}
 			result = engine.getResult(false);
-			m_description = engine.getDescription();
+			
 		}
 		catch (Exception e)
 		{
-			throw new AdempiereException("Execution error - @AD_Rule_ID@="+rulee.getValue());
+			throw new AdempiereException("Execution error - @AD_Rule_ID@="+rulee.getValue()+ " \n "+errorMsg);
 		}
 		return result;
 	}
@@ -2194,6 +2205,24 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		firstdayofperiod.set(Calendar.DAY_OF_MONTH, 1);
 		datefromofperiod.setTime(firstdayofperiod.getTimeInMillis());
 		return datefromofperiod;
+		
+	} // getFirstDayOfPeriod
+
+	/**
+	 * Helper Method : Date of the first period of the employee in the system
+	 * @param period
+	 * @return date from
+	 */
+	public Timestamp getFirstDayOfFistPeriodOfEmployee (int employeeId,int payrollID)
+	{
+		Timestamp date = null;
+		String sQuery = "Select COALESCE((Select pd.StartDate From HR_Period pd Where pd.HR_Period_ID = "
+					+ " COALESCE((Select MIN(pr.HR_Period_ID) from HR_Process pr " 
+					+ " JOIN HR_Movement m ON pr.HR_Process_ID = m.HR_Process_ID AND m.C_BPartner_ID = ? "
+					+ " where pr.HR_Payroll_ID = ?),0)),now())";
+		date = DB.getSQLValueTS(get_TrxName(),sQuery,new Object[] {employeeId,payrollID});
+
+		return date;
 		
 	} // getFirstDayOfPeriod
 

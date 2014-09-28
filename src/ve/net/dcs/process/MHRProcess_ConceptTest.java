@@ -1546,6 +1546,23 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 	} // getFirstDayOfPeriod
 
 	/**
+	 * Helper Method : Date of the first period of the employee in the system
+	 * @param period
+	 * @return date from
+	 */
+	public Timestamp getFirstDayOfFistPeriodOfEmployee (int employeeId,int payrollID)
+	{
+		Timestamp date = null;
+		String sQuery = "Select COALESCE((Select pd.StartDate From HR_Period pd Where pd.HR_Period_ID = "
+					+ " COALESCE((Select MIN(pr.HR_Period_ID) from HR_Process pr " 
+					+ " JOIN HR_Movement m ON pr.HR_Process_ID = m.HR_Process_ID AND m.C_BPartner_ID = ? "
+					+ " where pr.HR_Payroll_ID = ?),0)),now())";
+		date = DB.getSQLValueTS(get_TrxName(),sQuery,new Object[] {employeeId,payrollID});
+
+		return date;
+		
+	} // getFirstDayOfPeriod
+	/**
 	 * Helper Method : get last date to specific period
 	 * @param period
 	 * @return date to
