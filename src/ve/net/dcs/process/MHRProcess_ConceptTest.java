@@ -315,7 +315,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept conc WHERE conc.HR_Concept_ID = HR_Attribute.HR_Concept_ID )");
 
 
-				whereClause.append(" AND C_BPartner_ID = ? AND (HR_Employee_ID = ? OR HR_Employee_ID IS NULL)");
+				whereClause.append(" AND (C_BPartner_ID = ? OR C_BPartner_ID IS NULL) AND (HR_Employee_ID = ? OR HR_Employee_ID IS NULL)");
 				params.add(m_employee.getC_BPartner_ID());
 				params.add(m_employee.get_ID());
 			

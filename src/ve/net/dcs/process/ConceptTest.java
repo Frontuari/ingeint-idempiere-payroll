@@ -110,111 +110,47 @@ public class ConceptTest extends MHRProcess_ConceptTest implements DocAction
 
 
 	public void test(){
-//		
-//result = 0.0;
-//Timestamp FechaIniv=_From;
-//Timestamp FechaIng=_DateStart;
-//Timestamp fechaInicioVacacionesActual = null;
-//double mesesTrabajadosVacacionesActual=0;
-//Timestamp FechaActual =  Env.getContextAsDate(getCtx(), "#Date");
-//
-//String anioActual ="";
-//String sConsultai = ""
-//		+ "SELECT a.validfrom FROM HR_Attribute a " 
-//		+ " inner join HR_Concept c ON a.hr_concept_id = c.hr_concept_id "
-//		+ "WHERE a.c_bpartner_id = ? AND a.ad_org_id = ? "
-//		+ " AND c.value = ? AND a.validfrom >= ? AND COALESCE(a.validto,now()) <= ? ";
-//String fechaIniVac = DB.getSQLValueString(get_TrxName(),sConsultai,new Object[] {_C_BPartner_ID,getAD_Org_ID(),"A_DIAS_VACACIONES_TRABAJADOR", _From, _To});
-//if (fechaIniVac !=null){
-//	fechaInicioVacacionesActual =Timestamp.valueOf(fechaIniVac);
-//}else{
-//	fechaInicioVacacionesActual =FechaActual;
-//	throw new AdempiereException("El Empleado no tiene Registros en A_DIAS_VACACIONES_TRABAJADOR");
-//}
-//	
-//
-//
-//sConsultai ="SELECT COALESCE((select SUM(amount) from HR_Movement m "
-//		+ " JOIN HR_Process p ON p.HR_Process_ID = m.HR_Process_ID "
-//		+ " JOIN HR_Payroll py ON py.HR_Payroll_ID = p.HR_Payroll_ID "
-//		+ " JOIN HR_Period pr ON pr.HR_Period_ID = p.HR_Period_ID"
-//		+ " where py.HR_Contract_ID IN (Select c.HR_Contract_ID From HR_Contract c where c.Value = ?)"
-//		+ " AND m.HR_Concept_ID = (Select cp.HR_Concept_ID From HR_Concept cp where cp.value = ? )"
-//		+ " AND m.C_BPartner_ID=?"
-//		+ " AND pr.C_Year_ID IN (Select y.C_Year_ID From C_Year y where y.FiscalYear= ? )),	0)";
-//
-//anioActual = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
-//Object[] para  = new Object[] {"Vacaciones","CC_MESES_TRAB_VACACIONES",getM_C_BPartner_ID(),anioActual};
-//mesesTrabajadosVacacionesActual = DB.getSQLValueBD(get_TrxName(),sConsultai,para).doubleValue();
-//
-//if (fechaInicioVacacionesActual.getTime()>= FechaActual.getTime() && mesesTrabajadosVacacionesActual == 0){
-//	Calendar fechaAnioAnterior = Calendar.getInstance();
-//	fechaAnioAnterior.setTime(fechaInicioVacacionesActual);
-//	fechaAnioAnterior.roll(Calendar.YEAR, -1);
-//	Timestamp fechaInicioVacacionesAnterior = new Timestamp (fechaAnioAnterior.getTimeInMillis());
-//	result = getMonths(fechaInicioVacacionesAnterior,FechaActual);
-//	description="Fecha Desde: " +fechaInicioVacacionesAnterior.toString()+", Fecha Hasta: "+FechaActual;
-//}
-//if (fechaInicioVacacionesActual.getTime()< FechaActual.getTime() && mesesTrabajadosVacacionesActual == 0){
-//	result = 12;
-//	description="Vacaciones completas Hasta: "+_From;
-//}
-//	
-//String contrato = getHR_Payroll().getHR_Contract().getValue();
-//if (fechaInicioVacacionesActual.getTime()< FechaActual.getTime() && mesesTrabajadosVacacionesActual > 0 && contrato.equals("Liquidaciones")){
-//	result = getMonths(fechaInicioVacacionesActual,_DateEnd);
-//	description="Fecha Desde: " +fechaInicioVacacionesActual.toString()+", Fecha Hasta: "+_DateEnd;
-//}
-//if (fechaInicioVacacionesActual.getTime()< FechaActual.getTime() && mesesTrabajadosVacacionesActual > 0 && !contrato.equals("Liquidaciones")){
-//	result = getMonths(fechaInicioVacacionesActual,FechaActual);
-//	description="Fecha Desde: " +fechaInicioVacacionesActual.toString()+", Fecha Hasta: "+FechaActual;
-//}
-//
-//////Sueldo vacaciones
-//
-//
-//result = 0.0;
-//double totalremuneracion=0.0;
-//double sueldoV=0.0;
-//double mesesPeriodo=0.0;
-//double diasmes=getAttribute("C_DIAS_DEL_MES");
-//double mesesAcum = 0.0;
-//double montoAsignacionesAcum = 0.0;
-//Timestamp fechaIniVac =null;
-//String sConsultai = ""
-//		+ "SELECT a.validfrom FROM HR_Attribute a " 
-//		+ " inner join HR_Concept c ON a.hr_concept_id = c.hr_concept_id "
-//		+ "WHERE a.c_bpartner_id = ? AND a.ad_org_id = ? "
-//		+ " AND c.value = ? AND a.validfrom >= ? AND COALESCE(a.validto,now()) <= ? ";
-//String fechaIniVacStr = DB.getSQLValueString(get_TrxName(),sConsultai,new Object[] {_C_BPartner_ID,getAD_Org_ID(),"A_DIAS_VACACIONES_TRABAJADOR", _From, _To});
-//if (fechaIniVacStr!=null){
-//	fechaIniVac = Timestamp.valueOf(fechaIniVacStr);
-//}else{
-//	MBPartner bp = MBPartner.get(getCtx(), _C_BPartner_ID);
-//	description ="AdempiereException: El Empleado:"+bp.getName()+" No tiene registros en A_DIAS_VACACIONES_TRABAJADOR";
-//	return;
-//}
-//mesesPeriodo=getMonths(_From , fechaIniVac);
-//
-//String ConsultaNominaPrincipal = ""
-//		+ " Select HR_Payroll.Value From HR_Payroll where HR_Payroll.HR_Payroll_ID IN  " 
-//		+ " (Select e.HR_Payroll_ID From HR_Employee e where e.C_BPartner_ID = ? ) "
-//		+ " AND Exists(Select 1 From HR_Contract hc Where hc.IsMain = ? AND hc.HR_Contract_ID = HR_Payroll.HR_Contract_ID)";
-//String NominaPrincipal = DB.getSQLValueString(get_TrxName(),ConsultaNominaPrincipal,new Object[] {_C_BPartner_ID,"Y"});
-//totalremuneracion =totalremuneracion + getConceptRangeOfPeriod("CC_TOTAL_ASIGNACION_POR_QUINCENA",NominaPrincipal,getTimestampToString(_From),getTimestampToString(fechaIniVac));
-//montoAsignacionesAcum = getAttribute("A_ACUM_MONTO_BASE_ASIGNACION_VAC");
-//mesesAcum = getAttribute("A_ACUM_MESES_BASE_VAC");
-//if(totalremuneracion>0 && (diasmes*mesesPeriodo)>0)
-//	sueldoV=(totalremuneracion+montoAsignacionesAcum)/(diasmes*(mesesAcum +mesesPeriodo));
-//if (totalremuneracion==0 && montoAsignacionesAcum>0 && mesesAcum>0)
-//	sueldoV= montoAsignacionesAcum/mesesAcum;
-//if(sueldoV>0)
-//   result=sueldoV;
-//description="Sueldo Diario para Vacaiones: " +result+ ", Nomina: "+NominaPrincipal;
-//				
-		////Calculo
-}
-	/////impuesto
+
+		
+		double result= 0.0;
+		double sueldoD= 0;
+		double sueldoM= 0;
+		double ValorTP= 0;
+		double HorasTP= 0;
+		double SueldoTP= 0;
+		String sQuery = "";
+		String PayrollValue = "";
+		String IsHourValueOnTeachingPosition = "N";
+		PayrollValue = getHR_Payroll().getValue();
+		BigDecimal horasxvalor =new BigDecimal(0);
+		sQuery = "SELECT p.IsHourValueOnTeachingPosition FROM hr_payroll p WHERE p.value = ? ";
+		IsHourValueOnTeachingPosition = DB.getSQLValueString(get_TrxName(),sQuery,new Object[]{PayrollValue});
+		ValorTP=getAttribute("A_VALOR_HORA_DOCENTE",_From,_To);
+		HorasTP=getAttribute("A_HORAS_LABORADAS_DOCENTE",_From,_To);
+		if (HorasTP >0 && ValorTP >0){
+		SueldoTP = ValorTP*HorasTP;
+		}
+		else
+		if (IsHourValueOnTeachingPosition.equals("Y")){
+		sQuery = "SELECT COALESCE((SELECT a.Amount*a.Qty FROM HR_Teaching_Position a, HR_Employee c "
+		+ " WHERE  a.HR_Teaching_Position_ID= c.HR_Teaching_Position_ID "
+		+ " AND c.C_Bpartner_ID = ? AND c.AD_Org_ID=?),0) ";
+		horasxvalor =  DB.getSQLValueBD(get_TrxName(),sQuery,new Object[]
+		{_C_BPartner_ID,getAD_Org_ID()});
+		if (!horasxvalor.equals(new BigDecimal(0)))
+		sueldoM=Double.parseDouble(horasxvalor.toString());
+		}else{
+		sueldoM = getAttribute("A_SUELDO_MENSUAL",_From,_To);
+		}
+		if (SueldoTP >0){
+		sueldoM = SueldoTP;
+		}
+		result = sueldoM;
+
+
+	
+	}/////End Test
+	
 	
 	
 	
