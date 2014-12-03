@@ -24,7 +24,7 @@ import org.compiere.model.MBPartner;
 import org.compiere.model.Query;
 import org.compiere.util.CCache;
 import org.compiere.util.Env;
-
+import org.python.antlr.ast.boolopType;
 
 /**
  * HR Employee Model
@@ -32,6 +32,7 @@ import org.compiere.util.Env;
  * @author Victor Perez
  * @author Cristina Ghita, www.arhipac.ro
  */
+
 public class MHREmployee extends X_HR_Employee
 {
 	private static final long serialVersionUID = -7083160315471023587L;
@@ -64,6 +65,7 @@ public class MHREmployee extends X_HR_Employee
 	 */
 	public static MBPartner[] getEmployees (MHRProcess p)
 	{
+		boolean IsPayrollApplicableToEmployee = false;
 		List<Object> params = new ArrayList<Object>();
 		StringBuilder whereClause = new StringBuilder();
 		whereClause.append(" C_BPartner.C_BPartner_ID IN (SELECT e.C_BPartner_ID FROM HR_Employee e WHERE e.IsActive=? AND e.AD_Org_ID = ?");
@@ -71,10 +73,18 @@ public class MHREmployee extends X_HR_Employee
 		params.add(true);
 		params.add(p.getAD_Org_ID());
 
+		// Valid if used definition of payroll per employee > ocurieles 18Nov2014
+		
+		MHRPayroll Payroll = MHRPayroll.get(Env.getCtx(),p.getHR_Payroll_ID());
+		
+		if (Payroll !=null || !Payroll.equals(null))
+			IsPayrollApplicableToEmployee = Payroll.get_ValueAsBoolean("IsemployeeApplicable");
+		
 		// This payroll not content periods, NOT IS a Regular Payroll > ogi-cd 28Nov2007
-		if(p.getHR_Payroll_ID() != 0 && p.getHR_Period_ID() != 0)
+		if(p.getHR_Payroll_ID() != 0 && p.getHR_Period_ID() != 0 && IsPayrollApplicableToEmployee)
+		
 		{
-			whereClause.append(" AND (e.HR_Payroll_ID IS NULL OR e.HR_Payroll_ID=?) " );
+		whereClause.append(" AND (e.HR_Payroll_ID IS NULL OR e.HR_Payroll_ID=?) " );
 			params.add(p.getHR_Payroll_ID());
 		}
 		

@@ -88,7 +88,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 	private static CLogger	s_log	= CLogger.getCLogger (MHRProcess.class);
 	public static final String CONCEPT_PP_COST_COLLECTOR_LABOR = "PP_COST_COLLECTOR_LABOR"; // HARDCODED
 	Object m_description = null;
-
+	boolean IsPayrollApplicableToEmployee = false;
 
 	private static StringBuilder s_scriptImport = new StringBuilder(" import org.eevolution.model.*;") 
 													.append(" import org.compiere.model.*;")
@@ -727,6 +727,13 @@ public class MHRProcess extends X_HR_Process implements DocAction
 	 */
 	private void createMovements() throws Exception
 	{
+		// Valid if used definition of payroll per employee > ocurieles 18Nov2014
+		
+		MHRPayroll Payroll = MHRPayroll.get(Env.getCtx(),getHR_Payroll_ID());
+						
+		if (Payroll !=null || !Payroll.equals(null))
+			IsPayrollApplicableToEmployee = Payroll.get_ValueAsBoolean("IsemployeeApplicable");
+				
 		m_scriptCtx.clear();
 		m_scriptCtx.put("process", this);
 		m_scriptCtx.put("_Process", getHR_Process_ID());
@@ -759,7 +766,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 			log.info("Employee " + count + "  ---------------------- " + bp.getName());
 			count++;
 			m_C_BPartner_ID = bp.get_ID();
-			if (getHR_Payroll_ID()>0)
+			if (getHR_Payroll_ID()>0 && IsPayrollApplicableToEmployee )
 				m_employee = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID, get_TrxName(),getHR_Payroll_ID());
 			else 
 				m_employee = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID, get_TrxName());
