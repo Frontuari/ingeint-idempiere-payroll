@@ -111,41 +111,89 @@ public class ConceptTest extends MHRProcess_ConceptTest implements DocAction
 
 	public void test(){
 
-		
-		double result= 0.0;
-		double sueldoD= 0;
-		double sueldoM= 0;
-		double ValorTP= 0;
-		double HorasTP= 0;
-		double SueldoTP= 0;
-		String sQuery = "";
-		String PayrollValue = "";
-		String IsHourValueOnTeachingPosition = "N";
-		PayrollValue = getHR_Payroll().getValue();
-		BigDecimal horasxvalor =new BigDecimal(0);
-		sQuery = "SELECT p.IsHourValueOnTeachingPosition FROM hr_payroll p WHERE p.value = ? ";
-		IsHourValueOnTeachingPosition = DB.getSQLValueString(get_TrxName(),sQuery,new Object[]{PayrollValue});
-		ValorTP=getAttribute("A_VALOR_HORA_DOCENTE",_From,_To);
-		HorasTP=getAttribute("A_HORAS_LABORADAS_DOCENTE",_From,_To);
-		if (HorasTP >0 && ValorTP >0){
-		SueldoTP = ValorTP*HorasTP;
-		}
-		else
-		if (IsHourValueOnTeachingPosition.equals("Y")){
-		sQuery = "SELECT COALESCE((SELECT a.Amount*a.Qty FROM HR_Teaching_Position a, HR_Employee c "
-		+ " WHERE  a.HR_Teaching_Position_ID= c.HR_Teaching_Position_ID "
-		+ " AND c.C_Bpartner_ID = ? AND c.AD_Org_ID=?),0) ";
-		horasxvalor =  DB.getSQLValueBD(get_TrxName(),sQuery,new Object[]
-		{_C_BPartner_ID,getAD_Org_ID()});
-		if (!horasxvalor.equals(new BigDecimal(0)))
-		sueldoM=Double.parseDouble(horasxvalor.toString());
-		}else{
-		sueldoM = getAttribute("A_SUELDO_MENSUAL",_From,_To);
-		}
-		if (SueldoTP >0){
-		sueldoM = SueldoTP;
-		}
-		result = sueldoM;
+result = 0.0;
+double baseimp=0,totalprov=0,utilidad=0,baseimpa=0,diferenciaIngresoGasto=0,excesoTotal=0,baseimpg=0;
+BigDecimal factorImpuesto=new BigDecimal(0),excesoDesde=new BigDecimal(0);
+String impuestoFraccion=  "0",sql1="",sql3="";
+StringBuffer sQuery=new StringBuffer();
+int periodo=getPayrollPeriod ();
+int meses=0;
+if (getFirstDayOfPeriodYear(periodo).after(_DateStart))
+	meses=getMonths(getFirstDayOfPeriodYear(periodo),getLastDayOfPeriod(periodo));
+else 
+	meses=getMonths(_DateStart,getLastDayOfPeriod(periodo));
+Timestamp FechaIni=getFirstDayOfPeriodYear(periodo);
+double gastoproyem=getAttribute("GAP");
+	String sQueryYear = "Select FiscalYear FROM C_Year WHERE C_Year_ID= COALESCE((select C_Year_ID from HR_Period WHERE HR_Period_ID = ?),1000000)";
+	String year =  DB.getSQLValueString(get_TrxName(),sQueryYear,new Object[]{periodo});
+MBPartner bp = new MBPartner(getCtx(), _C_BPartner_ID, get_TrxName());
+int HR_Basic_Factor_Type_ID = bp.get_Value("HR_Basic_Factor_Type_ID")!=null?bp.get_ValueAsInt("HR_Basic_Factor_Type_ID"):-1;
+if (HR_Basic_Factor_Type_ID<0||year.equals(""))
+	throw new AdempiereException("Año: "+year+", TipFactor: "+HR_Basic_Factor_Type_ID);
+PO gap = (PO)new Query(Env.getCtx(),"HR_GAP","HR_Basic_Factor_Type_ID = ? AND C_Year_ID IN (Select C_Year_ID From C_Year Where FiscalYear = ? )",null).setParameters(new Object[]{HR_Basic_Factor_Type_ID,year}).first();
+if (gap!=null){
+	PO gapSector = (PO)new Query(Env.getCtx(),"HR_GAP_Sector","HR_GAP_ID = ? AND C_BPartner_ID = ? ",null).setParameters(new Object[]{gap.get_ID(),_C_BPartner_ID}).first();
+	if (gapSector!=null){
+		double education = gapSector.get_ValueAsString("HR_Education").equals("")?0:Double.parseDouble(gapSector.get_ValueAsString("HR_Education"));
+		double food = gapSector.get_ValueAsString("HR_Food").equals("")?0:Double.parseDouble(gapSector.get_ValueAsString("HR_Food"));
+		double clothing = gapSector.get_ValueAsString("HR_Clothing").equals("")?0:Double.parseDouble(gapSector.get_ValueAsString("HR_Clothing"));
+		double health = gapSector.get_ValueAsString("HR_Health").equals("")?0:Double.parseDouble(gapSector.get_ValueAsString("HR_Health"));
+		double housing = gapSector.get_ValueAsString("HR_Housing").equals("")?0:Double.parseDouble(gapSector.get_ValueAsString("HR_Housing"));	
+gastoproyem = education + food + clothing +health +housing;
+	}
+}
+double ultimo=getConcept("CC_ULTIMA_SEMANA");
+double mesesOtroEmpleador=0;
+ mesesOtroEmpleador= getAttribute("A_ACUM_INICIAL_MESES_TRAB_OTROS");
+double acuminiasi=getAttribute("A_ACUM_INICIAL_ASIGNACION");
+double acumIESS = 0,baseAcumuladaProyectada=0;
+double factorAporte_Iess=getAttribute("C_FACTOR_IESS_PERSONAL");
+baseimpa=getConcept("CC_TOTAL_ASIGNACION_POR_QUINCENA");
+baseimpg=getConceptRangeOfPeriod("CC_TOTAL_ASIGNACION_POR_QUINCENA",null,getTimestampToString(FechaIni),getTimestampToString(_From));
+utilidad=getConceptRangeOfPeriod("CC_PAGO_UTILIDAD","NOMINA_UTILIDADES",getTimestampToString(FechaIni),getTimestampToString(_To));
+baseimp=baseimp+acuminiasi+baseimpa+baseimpg+utilidad;
+int mesesfaltantes=0;
+if (_DateEnd.equals(TimeUtil.getDay(2999, 12, 31))){
+	mesesfaltantes = getMonths(getLastDayOfPeriod(getHR_Period_ID()), getLastDayOfPeriodYear(getHR_Period_ID()));
+}else{
+	mesesfaltantes = getMonths(getLastDayOfPeriod(getHR_Period_ID()), _DateEnd);
+}
+baseAcumuladaProyectada = ((baseimp/(meses+1+mesesOtroEmpleador))*((meses+1+mesesOtroEmpleador)+mesesfaltantes));
+acumIESS = baseAcumuladaProyectada*(factorAporte_Iess/100);
+if(baseAcumuladaProyectada>0) 
+	diferenciaIngresoGasto=(baseAcumuladaProyectada-(gastoproyem+acumIESS));
+if (diferenciaIngresoGasto>0){
+sql1 = "Select COALESCE(att.";
+sql3 = " from HR_Attribute att where att.HR_Concept_ID = "
++ "(Select c.HR_Concept_ID from HR_Concept c where c.Value = ?) and  "
++ " ? > minValue and ?  <= MaxValue";
+sQuery.append(sql1).append("description ,'') ").append(sql3);
+impuestoFraccion =  DB.getSQLValueString(get_TrxName(),sQuery.toString(),new Object[] {"IMPUESTO",BigDecimal.valueOf(diferenciaIngresoGasto),BigDecimal.valueOf(diferenciaIngresoGasto)});
+if (impuestoFraccion==null){
+impuestoFraccion ="0";
+}
+sQuery=new StringBuffer();
+sQuery.append(sql1).append("MinValue ,0) ").append(sql3);
+excesoDesde =  DB.getSQLValueBD(get_TrxName(),sQuery.toString(),new Object[] {"IMPUESTO",BigDecimal.valueOf(diferenciaIngresoGasto),BigDecimal.valueOf(diferenciaIngresoGasto)});
+if (excesoDesde==null){
+excesoDesde = new BigDecimal(0);
+}
+sQuery=new StringBuffer();
+sQuery.append(sql1).append("Amount ,0) ").append(sql3);
+factorImpuesto =  DB.getSQLValueBD(get_TrxName(),sQuery.toString(),new Object[] {"IMPUESTO",BigDecimal.valueOf(diferenciaIngresoGasto),BigDecimal.valueOf(diferenciaIngresoGasto)});
+if (factorImpuesto==null){
+factorImpuesto = new BigDecimal(0);
+}
+excesoTotal = diferenciaIngresoGasto -excesoDesde.doubleValue();	
+excesoTotal = excesoTotal * factorImpuesto.doubleValue()/100;
+totalprov =  Double.parseDouble(impuestoFraccion) +excesoTotal;
+totalprov = totalprov/((meses+1+mesesOtroEmpleador)+mesesfaltantes);
+if(totalprov>0 && ultimo==1.0)
+result=totalprov;
+description = "Base"+baseimp+",Meses"+(meses+1)+"Proyectada:"+baseAcumuladaProyectada+"GAP:"+gastoproyem+",IESS:"+ acumIESS+",Fraccion: "+impuestoFraccion+ ",Exceso :"+excesoTotal+",Factor Imp:"+factorImpuesto.doubleValue()+" MesesFaltantes:"+mesesfaltantes;
+}else{
+result = 0;
+}	
 
 
 	
