@@ -695,7 +695,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 			}
 
 			//get employee
-			MHREmployee employee = MHREmployee.getActiveEmployee(getCtx(), C_BPartner_ID, get_TrxName());
+			MHREmployee employee = MHREmployee.getActiveEmployee(getCtx(), C_BPartner_ID,getAD_Org_ID(), get_TrxName());
 
 			//create movement
 			MHRMovement mv = new MHRMovement(this, concept);
@@ -767,9 +767,9 @@ public class MHRProcess extends X_HR_Process implements DocAction
 			count++;
 			m_C_BPartner_ID = bp.get_ID();
 			if (getHR_Payroll_ID()>0 && IsPayrollApplicableToEmployee )
-				m_employee = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID, get_TrxName(),getHR_Payroll_ID());
+				m_employee = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID,getAD_Org_ID(), get_TrxName(),getHR_Payroll_ID());
 			else 
-				m_employee = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID, get_TrxName());
+				m_employee = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID,getAD_Org_ID(), get_TrxName());
 			m_scriptCtx.remove("_DateStart");
 			m_scriptCtx.remove("_DateEnd");
 			m_scriptCtx.remove("_Days");
@@ -789,9 +789,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 				boolean printed = pc.isPrinted() || concept.isPrinted();
 				MHRMovement movement = m_movement.get(concept.get_ID()); // as it's now recursive, it can happen that the concept is already generated
 				if (movement == null) {
-					if (concept.getDescription().equalsIgnoreCase("A020")){
-						log.info("Prueba  Concept: "+concept.getName()+" Empleado: "+ bp.getName());
-					}
+
 					movement = createMovementFromConcept(concept, printed);
 					movement = m_movement.get(concept.get_ID());
 				}
@@ -862,6 +860,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 
 		log.info("Concept - " + concept.getName());
 		MHRMovement movement = new MHRMovement (getCtx(), 0, get_TrxName());
+		
 		movement.setC_BPartner_ID(m_C_BPartner_ID);
 		movement.setHR_Concept_ID(concept.getHR_Concept_ID());
 		movement.setHR_Concept_Category_ID(concept.getHR_Concept_Category_ID());
@@ -902,6 +901,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 			movement.setServiceDate(att.getServiceDate());
 		}
 		movement.setProcessed(true);
+		movement.setAD_Org_ID(getAD_Org_ID());
 		m_movement.put(concept.getHR_Concept_ID(), movement);
 		return movement;
 	}
@@ -1029,7 +1029,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 				return; // TODO throw exception
 			}
 			MHRMovement m = new MHRMovement(getCtx(), 0, get_TrxName());
-			MHREmployee employee = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID, get_TrxName());
+			MHREmployee employee = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID,getAD_Org_ID(), get_TrxName());
 			m.setColumnType(c.getColumnType());
 			m.setColumnValue(BigDecimal.valueOf(value));
 
@@ -1070,7 +1070,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 				return; // TODO throw exception
 			}
 			MHRMovement m = new MHRMovement(Env.getCtx(),0,get_TrxName());
-			MHREmployee employee = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID, get_TrxName());
+			MHREmployee employee = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID,getAD_Org_ID(), get_TrxName());
 			m.setColumnType(c.getColumnType());
 			if (c.getColumnType().equals(MHRConcept.COLUMNTYPE_Amount))
 				m.setAmount(BigDecimal.valueOf(value));
@@ -1981,7 +1981,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 	{
 	
 		MHRPeriod p = MHRPeriod.get(getCtx(), getHR_Period_ID());
-		MHREmployee e = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID, get_TrxName());
+		MHREmployee e = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID,getAD_Org_ID(), get_TrxName());
 		
 		// TODO: throw exception?
 		if (from == null)
@@ -2004,7 +2004,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 	 * */
 	public double getFamilyCharge (boolean bpfilter)
 	{
-		MHREmployee e = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID, get_TrxName());
+		MHREmployee e = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID,getAD_Org_ID(), get_TrxName());
 		
 		ArrayList<Object> params = new ArrayList<Object>();
 		StringBuffer whereClause = new StringBuffer();

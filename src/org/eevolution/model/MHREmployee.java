@@ -140,7 +140,22 @@ public class MHREmployee extends X_HR_Employee
 							.setOrderBy(COLUMNNAME_HR_Employee_ID+" DESC") // just in case...
 							.first();
 	}
-	
+	public static MHREmployee getActiveEmployee(Properties ctx, int C_BPartner_ID, int p_AD_Org_ID, String trxName)
+	{
+		return new Query(ctx, Table_Name, COLUMNNAME_C_BPartner_ID+"=? AND "+COLUMNNAME_AD_Org_ID +"=? ", trxName)
+							.setOnlyActiveRecords(true)
+							.setParameters(new Object[]{C_BPartner_ID, p_AD_Org_ID})
+							.setOrderBy(COLUMNNAME_HR_Employee_ID+" DESC") // just in case...
+							.first();
+	}
+	public static MHREmployee getActiveEmployee(Properties ctx, int C_BPartner_ID,int p_AD_Org_ID, String trxName,int p_Payroll_ID)
+	{
+		return new Query(ctx, Table_Name, COLUMNNAME_C_BPartner_ID+"=? AND HR_Payroll_ID = ? AND "+COLUMNNAME_AD_Org_ID+" =? ", trxName)
+							.setOnlyActiveRecords(true)
+							.setParameters(new Object[]{C_BPartner_ID,p_Payroll_ID,p_AD_Org_ID})
+							.setOrderBy(COLUMNNAME_HR_Employee_ID+" DESC") // just in case...
+							.first();
+	}
 	public static MHREmployee getActiveEmployee(Properties ctx, int C_BPartner_ID, String trxName,int p_Payroll_ID)
 	{
 		return new Query(ctx, Table_Name, COLUMNNAME_C_BPartner_ID+"=? AND HR_Payroll_ID = ?", trxName)
@@ -149,7 +164,6 @@ public class MHREmployee extends X_HR_Employee
 							.setOrderBy(COLUMNNAME_HR_Employee_ID+" DESC") // just in case...
 							.first();
 	}
-
 	/** Cache */
 	private static CCache<Integer, MHREmployee> s_cache = new CCache<Integer, MHREmployee>(Table_Name, 1000);
 	
