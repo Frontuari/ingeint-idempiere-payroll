@@ -1206,14 +1206,14 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		}
 		// LVE Localizacion Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
-		if (concept.isEmployee()){
+		
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
 			params.add(getAD_Org_ID());
-		}
+		
 
 		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
 		.setParameters(params)
-		.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+		.setOrderBy(MHRAttribute.COLUMNNAME_AD_Org_ID + " DESC")
 		.first();
 		if (attribute == null)
 			return 0.0;
@@ -1263,14 +1263,14 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		}
 		// LVE Localizacion Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
-		if (concept.isEmployee()){
+		
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
 			params.add(getAD_Org_ID());
-		}
+		
 		
 		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
 		.setParameters(params)
-		.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+		.setOrderBy(MHRAttribute.COLUMNNAME_AD_Org_ID + " DESC")
 		.first();
 		if (attribute == null)
 			return 0.0;
@@ -1314,14 +1314,14 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		}
 		// LVE Localizacion Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
-		if (concept.isEmployee()){
+		
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
 			params.add(getAD_Org_ID());
-		}
+		
 		
 		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
 		.setParameters(params)
-		.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+		.setOrderBy(MHRAttribute.COLUMNNAME_AD_Org_ID + " DESC")
 		.first();
 		if (attribute == null)
 			return 0.0;
@@ -1364,14 +1364,14 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		}
 		// LVE Localizacion Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
-		if (concept.isEmployee()){
+		
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
 			params.add(getAD_Org_ID());
-		}
+		
 		
 		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
 		.setParameters(params)
-		.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+		.setOrderBy(MHRAttribute.COLUMNNAME_AD_Org_ID + " DESC")
 		.first();
 		if (attribute == null)
 			return 0.0;
@@ -1474,14 +1474,14 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		}
 		// LVE Localizacion Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
-		if (concept.isEmployee()){
+		
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
 			params.add(getAD_Org_ID());
-		}
+		
 
 		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
 		.setParameters(params)
-		.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+		.setOrderBy(MHRAttribute.COLUMNNAME_AD_Org_ID + " DESC")
 		.first();
 		if (attribute == null)
 			return 0.0;
@@ -1528,14 +1528,14 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		}
          // LVE Localizacion Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
-		if (concept.isEmployee()){
+		
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
 			params.add(getAD_Org_ID());
-		}
+		
 		
 		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
 		.setParameters(params)
-		.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+		.setOrderBy(MHRAttribute.COLUMNNAME_AD_Org_ID + " DESC")
 		.first();
 		if (attribute == null)
 			return null;
@@ -1571,14 +1571,14 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		}
          // LVE Localizaci��n Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
-		if (concept.isEmployee()){
+		
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
 			params.add(getAD_Org_ID());
-		}
+		
 
 		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
 		.setParameters(params)
-		.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+		.setOrderBy(MHRAttribute.COLUMNNAME_AD_Org_ID + " DESC")
 		.first();
 		if (attribute == null)
 			return null;
@@ -1614,14 +1614,14 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		}
 		// LVE Localizaci��n Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
-		if (concept.isEmployee()){
+		
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
 			params.add(getAD_Org_ID());
-		}
+		
 
 		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
 		.setParameters(params)
-		.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+		.setOrderBy(MHRAttribute.COLUMNNAME_AD_Org_ID + " DESC")
 		.first();
 		if (attribute == null)
 			return null;
@@ -2100,14 +2100,14 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		}
 		// LVE Localizaci��n Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
-		if (concept.isEmployee()){
+		
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
 			params.add(getAD_Org_ID());
-		}
+		
 		
 		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
 		.setParameters(params)
-		.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+		.setOrderBy(MHRAttribute.COLUMNNAME_AD_Org_ID + " DESC")
 		.first();
 		
 		if(attribute!=null)
@@ -2148,14 +2148,14 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		}
 		// LVE Localizaci��n Venezuela
 		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
-		if (concept.isEmployee()){
+		
 			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
 			params.add(getAD_Org_ID());
-		}
+		
 		
 		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
 		.setParameters(params)
-		.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+		.setOrderBy(MHRAttribute.COLUMNNAME_AD_Org_ID + " DESC")
 		.first();
 		
 		if(attribute!=null)
