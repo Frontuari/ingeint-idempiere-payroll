@@ -717,6 +717,77 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 		return 0.0; //TODO throw exception ?? 
 	} // getAttribute
 	
+    /**
+	* Helper Method : Get Attribute [get Attribute to search key concept and date ] 
+	* @param pConcept - Value to Concept
+	* @param date1
+	* @param date2
+	* @return	SUM(Amount) of concept, applying to employee
+	*/ 
+	public double getAttributeSUM (String pConcept, Timestamp date1, Timestamp date2)
+	{
+		MHRConcept concept = MHRConcept.forValue(getCtx(), pConcept);
+		if (concept == null)
+			return 0;
+		ArrayList<Object> params = new ArrayList<Object>();
+		StringBuilder whereClause = new StringBuilder();
+		// check ValidFrom:
+		whereClause.append(MHRAttribute.COLUMNNAME_ValidFrom + "<=?");
+		params.add(date2);
+		//check client
+		whereClause.append(" AND AD_Client_ID = ?");
+		params.add(getAD_Client_ID());
+		//check concept
+		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? " 
+		+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
+		params.add(pConcept);
+		params.add(date1);
+		//
+		if (!concept.getType().equals(MHRConcept.TYPE_Information))
+		{
+			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
+			params.add(getC_BPartner_ID());
+		}
+		// LVE Localización Venezuela
+		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
+		if (concept.isEmployee()){
+			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
+			params.add(getAD_Org_ID());
+		}
+		
+		
+	
+		// if column type is Quantity return quantity
+		if (concept.getColumnType().equals(MHRConcept.COLUMNTYPE_Quantity)){
+			BigDecimal quantity = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
+			.setParameters(params)
+			.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+			.sum("Qty");
+			
+			if (quantity == null)
+				return 0.0;
+			else
+				return quantity.doubleValue();
+		}
+			
+	
+		// if column type is Amount return amount
+		if (concept.getColumnType().equals(MHRConcept.COLUMNTYPE_Amount)){
+			BigDecimal amount = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
+			.setParameters(params)
+			.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+			.sum("Amount");
+		
+			if (amount == null)
+				return 0.0;
+			else
+				return amount.doubleValue();
+		}
+		//something else
+		return 0.0; //TODO throw exception ?? 
+	} // getAttribute	
+	
+	
 	/**
 	 * 	Helper Method : Get Attribute [get Attribute to search key concept ]
 	 *  @param conceptValue
@@ -1172,6 +1243,9 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 		//check partner
 		whereClause.append(" AND " + MHRMovement.COLUMNNAME_C_BPartner_ID  + "=?");
 		params.add(getC_BPartner_ID());
+		//Adding Organization
+		whereClause.append(" AND ( " + MHRMovement.COLUMNNAME_AD_Org_ID + "=? OR " + MHRMovement.COLUMNNAME_AD_Org_ID + "= 0 )");
+		params.add(getAD_Org_ID());
 		//Adding dates 
 		whereClause.append(" AND validTo BETWEEN ? AND ?");
 		if (from == null)

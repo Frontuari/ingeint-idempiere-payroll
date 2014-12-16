@@ -474,8 +474,10 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 		if (fieldConcept.getValue()!=null){
 			conceptTest.setM_HR_Concept_ID(Integer.parseInt(fieldConcept.getValue().toString()));
 			concept = MHRConcept.get(Env.getCtx(), Integer.parseInt(fieldConcept.getValue().toString()));
-			
 		}
+		if (fieldOrg.getValue()!=null)
+			conceptTest.setAD_Org_ID(Integer.parseInt(fieldOrg.getValue().toString()));
+	
 		if (m_txbSqlField.getValue()!=null)
 			conceptTest.setScriptText(m_txbSqlField.getValue());
 		conceptTest.setHR_Department_ID(0);
