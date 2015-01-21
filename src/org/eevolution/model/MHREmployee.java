@@ -68,6 +68,7 @@ public class MHREmployee extends X_HR_Employee
 		boolean IsPayrollApplicableToEmployee = false;
 		List<Object> params = new ArrayList<Object>();
 		StringBuilder whereClause = new StringBuilder();
+				
 		whereClause.append(" C_BPartner.C_BPartner_ID IN (SELECT e.C_BPartner_ID FROM HR_Employee e WHERE e.IsActive=? AND e.AD_Org_ID = ?");
 		// Just active employee
 		params.add(true);
@@ -122,6 +123,14 @@ public class MHREmployee extends X_HR_Employee
 		//client
 		whereClause.append(" AND AD_Client_ID =? ");
 		params.add(p.getAD_Client_ID());
+		
+		if (p.getHR_Period().getStartDate().equals(p.getFirstDayOfPeriod(p.getHR_Period_ID()))){
+			//Primera nomina del mes
+			whereClause.append(" AND C_BPartner.C_BPartner_ID NOT IN (SELECT a.C_BPartner_ID FROM HR_Attribute a WHERE a.IsActive=? AND a.AD_Org_ID = ? AND a.HR_Concept_ID = "
+					+ " COALESCE((Select c.HR_Concept_ID From HR_Concept c where c.Value = 'A_ACUM_QUINCENA'),0)) ");
+			params.add(true);
+			params.add(p.getAD_Org_ID());
+		};
 		
 		List<MBPartner> list = new Query(p.getCtx(), MBPartner.Table_Name, whereClause.toString(), p.get_TrxName())
 								.setParameters(params)
