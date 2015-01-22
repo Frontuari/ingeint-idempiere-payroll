@@ -124,12 +124,17 @@ public class MHREmployee extends X_HR_Employee
 		whereClause.append(" AND AD_Client_ID =? ");
 		params.add(p.getAD_Client_ID());
 		
+		// Si se desea filtar empleados para que no se le calcule la primera quincena se registra en la
+		//novedad A_ACUM_QUINCENA el valor S 
 		if (p.getHR_Period().getStartDate().equals(p.getFirstDayOfPeriod(p.getHR_Period_ID()))){
 			//Primera nomina del mes
 			whereClause.append(" AND C_BPartner.C_BPartner_ID NOT IN (SELECT a.C_BPartner_ID FROM HR_Attribute a WHERE a.IsActive=? AND a.AD_Org_ID = ? AND a.HR_Concept_ID = "
-					+ " COALESCE((Select c.HR_Concept_ID From HR_Concept c where c.Value = 'A_ACUM_QUINCENA'),0)) ");
+					+ " COALESCE((Select c.HR_Concept_ID From HR_Concept c where c.Value = 'A_ACUM_QUINCENA'),0) "
+					+ " AND (? >= a.validfrom ) AND (? <= a.validto  OR a.validTO is null )) ");
 			params.add(true);
 			params.add(p.getAD_Org_ID());
+			params.add(p.getHR_Period().getEndDate());
+			params.add(p.getHR_Period().getStartDate());
 		};
 		
 		List<MBPartner> list = new Query(p.getCtx(), MBPartner.Table_Name, whereClause.toString(), p.get_TrxName())
