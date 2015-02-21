@@ -30,4 +30,11 @@
 		<nature>org.eclipse.pde.PluginNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>Reports/Views/PayrolGeneral2.sql</name>
+			<type>1</type>
+			<location>/Users/ocurieles/Desktop/PayrolGeneral2.sql</location>
+		</link>
+	</linkedResources>
 </projectDescription>
