@@ -24,6 +24,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
+
+
+
+
+import org.adempiere.report.jasper.ReportStarter;
 import org.compiere.model.MBPartner;
 import org.compiere.model.MClient;
 import org.compiere.model.MInterestArea;
@@ -32,12 +37,16 @@ import org.compiere.model.MPInstance;
 import org.compiere.model.MPInstancePara;
 import org.compiere.model.MProcess;
 import org.compiere.model.MUser;
+import org.compiere.model.Query;
 import org.compiere.process.ProcessInfo;
 import org.compiere.process.ProcessInfoParameter;
+import org.compiere.process.ServerProcessCtl;
 import org.compiere.process.SvrProcess;
+import org.compiere.util.AdempiereUserError;
 import org.compiere.util.DB;
 import org.compiere.util.EMail;
 import org.compiere.util.Env;
+import org.compiere.util.Msg;
 import org.compiere.util.Trx;
 
 /**
@@ -143,8 +152,10 @@ public class PayrollViaEMail extends SvrProcess
 		{
 				MUser tmpUser = new MUser(getCtx(),m_AD_User_ID,get_TrxName());
 				sendIndividualMail (m_from.getName(), tmpUser.getC_BPartner_ID(), null);
-		}else
+		}else if (m_C_BP_Group_ID > 0)
 			sendBPGroup();
+		else 
+			sendBPOfHRProcess();
 		log.fine("From " + m_from);
 			
 
@@ -225,6 +236,7 @@ public class PayrollViaEMail extends SvrProcess
 	private Boolean sendIndividualMail (String Name, int C_BPartner_ID,String unsubscribe)
 	{
 		//	Prevent two email
+		String emailAddr = "";
 		try
 		{
 			Integer ii = new Integer (C_BPartner_ID);
@@ -232,18 +244,27 @@ public class PayrollViaEMail extends SvrProcess
 			if (m_list.contains(ii))
 				return null;
 			m_list.add(ii);
-			//
-			//MUser to = new MUser (getCtx(), AD_User_ID, null);
+			
 			MBPartner to = new MBPartner(getCtx(), C_BPartner_ID, null);
-			//m_MailText.setUser(AD_User_ID);		//	parse context
-			//BPartner_ID=to.getC_BPartner_ID();
+			if (to.getURL()!=null)
+				emailAddr = to.getURL();
+			else{
+				MUser userDefault = new Query (getCtx(),MUser.Table_Name," C_BPartner_ID = ? AND IsHRDefault = ? AND IsActive = ? ",get_TrxName()).setParameters(C_BPartner_ID, "Y","Y").first();
+				if (userDefault != null)
+					emailAddr = userDefault.getEMail();
+				else{
+					addLog(0, null, null, ("@ERROR@") + " - "+to.getName()+": "+Msg.translate(Env.getCtx(), "FillMandatory")+ MUser.COLUMNNAME_EMail);
+					return Boolean.FALSE;
+				}
+			}
+			
 			String message = m_MailText.getMailText(true);
 			//	Unsubscribe
 			if (unsubscribe != null)
 				message += unsubscribe;
 			//
 			//EMail email = new EMail(m_client,m_from.getEMail(),to.getURL(),m_MailText.getMailHeader(), message);
-			EMail email = m_client.createEMail(m_from, to.getURL(), m_MailText.getMailHeader(), message);
+			EMail email = m_client.createEMail(m_from, emailAddr, m_MailText.getMailHeader(), message);
 			if (m_MailText.isHtml())
 				email.setMessageHTML(m_MailText.getMailHeader(), message);
 			else
@@ -255,8 +276,6 @@ public class PayrollViaEMail extends SvrProcess
 			if (!email.isValid() && !email.isValid(true))
 			{
 				log.warning("NOT VALID - " + email);
-				to.setIsActive(false);
-				to.save();
 				return Boolean.FALSE;
 			}
 			
@@ -265,10 +284,10 @@ public class PayrollViaEMail extends SvrProcess
 			//
 			
 			if (OK)
-				log.fine(to.getURL());
+				log.fine(emailAddr);
 			else
-				log.warning("FAILURE - " + to.getURL());
-			addLog(0, null, null, (OK ? "@OK@" : "@ERROR@") + " - " + to.getURL());
+				log.warning("FAILURE - " + emailAddr);
+			addLog(0, null, null, (OK ? "@OK@" : "@ERROR@") + " - " +to.getName()+": "+ emailAddr);
 			return OK;
 		}catch(Exception e)
 		{
@@ -290,14 +309,76 @@ public class PayrollViaEMail extends SvrProcess
 		pi.setAD_PInstance_ID (instance.getAD_PInstance_ID());
 
 		//	Add Parameter - Selection=Y
-		MPInstancePara ip = new MPInstancePara(instance, 10);
+		//MPInstancePara ip = new MPInstancePara(instance, 10);
+		ProcessInfoParameter[] para = {new ProcessInfoParameter("HR_Process_ID", m_HR_Process_ID, null, null, null),new ProcessInfoParameter("C_BPartner_ID",BPartner_ID , null, null, null)};
+		pi.setParameter(para);
 		pi.setRecord_ID(m_HR_Process_ID);
 		
 		pi.setIsBatch(true);
 		MProcess worker = new MProcess(getCtx(),AD_Process_ID,get_TrxName());
 		worker.processIt(pi, Trx.get(get_TrxName(), true));
+		if (worker.getJasperReport()!=null || worker.getJasperReport().equals(""))
+			ServerProcessCtl.process(pi,Trx.get(get_TrxName(), true));
 		attachment=pi.getPDFReport();
 		return attachment;
 	}
+	/**
+	 * 	Send to BP of  HR_Process
+	 */
+	private void sendBPOfHRProcess()
+	{
+		//log.info("C_BP_Group_ID=" + m_C_BP_Group_ID);
+		StringBuilder sql = new StringBuilder("SELECT Distinct(C_BPartner_ID) From HR_Movement m where m.HR_Process_ID = ? "); 
+					
+		PreparedStatement pstmt = null;
+		try
+		{
+			pstmt = DB.prepareStatement(sql.toString(), get_TrxName());
+			if (m_HR_Process_ID > 0)
+				pstmt.setInt(1, m_HR_Process_ID);
+			ResultSet rsMail = pstmt.executeQuery();
+			List <Integer> tabla = new  ArrayList<Integer>();
+			while (rsMail.next())
+			{
+				tabla.add(new Integer(rsMail.getInt(1)));
+			}
+			for(int i=0;i<tabla.size();i++)
+			{
+				
+				Boolean ok = sendIndividualMail ("", tabla.get(i).intValue(), null);
+				if (ok == null)
+				{
+					//nothing to do
+				}
+				else if (ok.booleanValue())
+				{
+					m_counter++;
+				}
+				else
+				{
+					m_errors++;
+				}
+			}
+			rsMail.close();
+			pstmt.close();
+			pstmt = null;
+		}
+		catch (SQLException ex)
+		{
+			log.log(Level.SEVERE, sql.toString(), ex);
+		}
+		//	Clean Up
+		try
+		{
+			if (pstmt != null)
+				pstmt.close();
+		}
+		catch (SQLException ex1)
+		{
+			log.log(Level.SEVERE, sql.toString(), ex1);
+		}
+		pstmt = null;
+	}	//	sendBPOfHRProcess
 
+	
 }	//	SendMailText

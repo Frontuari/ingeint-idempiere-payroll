@@ -18,5 +18,6 @@ Service-Component: OSGI-INF/org.idempiere.component.HRDocFactory.xml, OSGI-INF/o
  OSGI-INF/HRZKFormFactory.xml
 Bundle-Activator: org.adempiere.plugin.utils.AdempiereActivator
 Export-Package: org.eevolution.model
+Import-Package: org.adempiere.report.jasper
 
 
