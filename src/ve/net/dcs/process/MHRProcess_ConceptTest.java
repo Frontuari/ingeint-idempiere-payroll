@@ -54,6 +54,7 @@ import org.python.antlr.PythonParser.attr_return;
 
 import bsh.EvalError;
 import bsh.Interpreter;
+import bsh.NameSpace;
 /**
  * HR Process Model
  *
@@ -717,6 +718,68 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 		return 0.0; //TODO throw exception ?? 
 	} // getAttribute
 	
+	/**
+	* Helper Method : Get Attribute [get Attribute to search key concept and date ] 
+	* @param pConcept - Value to Concept
+	* @param date1
+	* @param date2
+	* @param Job
+	* @return	Amount of concept, applying to employee
+	*/ 
+	public double getAttribute (String pConcept, Timestamp date1, Timestamp date2,int pJob)
+	{
+		MHRConcept concept = MHRConcept.forValue(getCtx(), pConcept);
+		if (concept == null)
+			return 0;
+		ArrayList<Object> params = new ArrayList<Object>();
+		StringBuilder whereClause = new StringBuilder();
+		// check ValidFrom:
+		whereClause.append(MHRAttribute.COLUMNNAME_ValidFrom + "<=?");
+		params.add(date2);
+		//check client
+		whereClause.append(" AND AD_Client_ID = ?");
+		params.add(getAD_Client_ID());
+		//check concept
+		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? " 
+		+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
+		params.add(pConcept);
+		params.add(date1);
+		//
+		if (!concept.getType().equals(MHRConcept.TYPE_Information))
+		{
+			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
+			params.add(getC_BPartner_ID());
+		}
+		// LVE Localización Venezuela
+		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
+		if (concept.isEmployee()){
+			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
+			params.add(getAD_Org_ID());
+		}
+		if (pJob != 0){
+			whereClause.append(" AND "+ MHRAttribute.COLUMNNAME_HR_Job_ID + " = ? ");
+			params.add(pJob);
+		}
+		
+		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
+		.setParameters(params)
+		.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+		.first();
+		if (attribute == null)
+			return 0.0;
+	
+		// if column type is Quantity return quantity
+		if (concept.getColumnType().equals(MHRConcept.COLUMNTYPE_Quantity))
+			return attribute.getQty().doubleValue();
+	
+		// if column type is Amount return amount
+		if (concept.getColumnType().equals(MHRConcept.COLUMNTYPE_Amount))
+			return attribute.getAmount().doubleValue();
+	
+		//something else
+		return 0.0; //TODO throw exception ?? 
+	} // getAttribute
+	
     /**
 	* Helper Method : Get Attribute [get Attribute to search key concept and date ] 
 	* @param pConcept - Value to Concept
@@ -876,6 +939,8 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 		return attribute.getServiceDate();
 	} // getAttributeDate
 
+	
+
 	/**
 	 * 	Helper Method : Get Attribute [get Attribute to search key concept ]
 	 *  @param conceptValue
@@ -913,12 +978,62 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 		.setParameters(params)
 		.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
 		.first();
-		if (attribute == null)
+		if (attribute == null){
+			
 			return null;
-
+		}
+		System.out.println(params.toString());
 		return attribute.getTextMsg();
 	} // getAttributeString
+	
+	/**
+	 * 	Helper Method : Get Attribute [get Attribute to search key concept ]
+	 *  @param String conceptValue,Timestamp From,Timestamp To
+	 *  @return TextMsg
+	 */ 
+	public String getAttributeString (String conceptValue,Timestamp from,Timestamp to)
+	{
+		MHRConcept concept = MHRConcept.forValue(getCtx(), conceptValue);
+		if (concept == null)
+			return null;
 
+		ArrayList<Object> params = new ArrayList<Object>();
+		StringBuilder whereClause = new StringBuilder();
+		//check client
+		whereClause.append("AD_Client_ID = ?");
+		params.add(getAD_Client_ID());
+		//check concept
+		
+		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? " 
+		+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) AND HR_Attribute.ValidFrom <=?"+" )");
+		params.add(conceptValue);
+		params.add(from);
+		params.add(to);
+		//
+		
+		
+		if (!concept.getType().equals(MHRConcept.TYPE_Information))
+		{
+			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
+			params.add(getC_BPartner_ID());
+		}
+		// LVE Localizaci��n Venezuela
+		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
+		
+			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
+			params.add(getAD_Org_ID());
+		
+
+		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
+		.setParameters(params)
+		.setOrderBy(MHRAttribute.COLUMNNAME_AD_Org_ID + " DESC")
+		.first();
+		if (attribute == null){
+			System.out.println(whereClause.toString()+",Parmeter"+params.toString());
+			return null;
+		}
+		return attribute.getTextMsg();
+	} // getAttributeString
 	/**
 	 * 	Helper Method : Get the number of days between start and end, in Timestamp format
 	 *  @param date1 
@@ -1575,6 +1690,8 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 	
 		
 	} // getAttribute Min
+	
+	
 	/**
 	 * Helper Method : get days from specific period
 	 * @param period
@@ -1856,6 +1973,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 		m_scriptCtx.put("_Period", getHR_Period_ID());
 		m_scriptCtx.put("_Payroll", getHR_Payroll_ID());
 		m_scriptCtx.put("_Department", getHR_Department_ID());
+		
 		m_employee = new Query(getCtx(),MHREmployee.Table_Name," C_BPartner_ID =? AND HR_Payroll_ID = ? ",null).setParameters(getC_BPartner_ID(),getHR_Payroll_ID()).first();
 		if (m_employee!=null){
 
@@ -1863,7 +1981,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			m_scriptCtx.put("_DateEnd", m_employee.getEndDate() == null ? TimeUtil.getDay(2999, 12, 31) : m_employee.getEndDate());
 			
 		}
-		
+		m_scriptCtx.put("_JobEmployee", m_employee.getHR_Job_ID());
 		m_scriptCtx.put("_C_BPartner_ID", getC_BPartner_ID());
 		if (period ==null)
 			period = new MHRPeriod(getCtx(), getHR_Period_ID(), get_TrxName());

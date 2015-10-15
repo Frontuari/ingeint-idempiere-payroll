@@ -57,91 +57,77 @@ import org.python.antlr.PythonParser.attr_return;
 
 import bsh.EvalError;
 import bsh.Interpreter;
+
 /**
  * HR Process Model
- *
- *  @author oscar.gomez@e-evolution.com, e-Evolution http://www.e-evolution.com
- *			<li> Original contributor of Payroll Functionality
- *  @author victor.perez@e-evolution.com, e-Evolution http://www.e-evolution.com
- * 			<li> FR [ 2520591 ] Support multiple calendar for Org 
- *			@see http://sourceforge.net/tracker2/?func=detail&atid=879335&aid=2520591&group_id=176962
- * @contributor Cristina Ghita, www.arhipac.ro
- * 			<li> 
- * @contributor Freddy Heredia. - fheredia@dcs.net.ve, Double Click Sistemas http://www.dcsla.com
- *			<li> 
- *  @contributor Orlando Curieles - ocurieles@dcs.net.ve Double Click Sistemas CA www.dcsla.com
- *          <li> 
- */	
- 
-public class ConceptTest extends MHRProcess_ConceptTest implements DocAction
-{
-	
-	private int _Process_Period,_Payroll,_Department,_Days,	_C_BPartner_ID;
+ * 
+ * @author oscar.gomez@e-evolution.com, e-Evolution http://www.e-evolution.com
+ *         <li>Original contributor of Payroll Functionality
+ * @author victor.perez@e-evolution.com, e-Evolution http://www.e-evolution.com
+ *         <li>FR [ 2520591 ] Support multiple calendar for Org
+ * @see http 
+ *      ://sourceforge.net/tracker2/?func=detail&atid=879335&aid=2520591&group_id
+ *      =176962
+ * @contributor Cristina Ghita, www.arhipac.ro <li>
+ * @contributor Freddy Heredia. - fheredia@dcs.net.ve, Double Click Sistemas
+ *              http://www.dcsla.com <li>
+ * @contributor Orlando Curieles - ocurieles@dcs.net.ve Double Click Sistemas CA
+ *              www.dcsla.com <li>
+ */
+
+public class ConceptTest extends MHRProcess_ConceptTest implements DocAction {
+
+	private int _Process_Period, _Payroll, _Department, _Days, _C_BPartner_ID, _JobEmployee;
 	private double result;
 	private String description;
-	private Timestamp _From,	_To,_DateStart,	_DateEnd;
-	public ConceptTest(Properties ctx, int HR_Process_ID, String trxName) 
-	{
-		super(ctx, HR_Process_ID,trxName);
-		if (HR_Process_ID == 0)
-		{
+	private Timestamp _From, _To, _DateStart, _DateEnd;
+
+	public ConceptTest(Properties ctx, int HR_Process_ID, String trxName) {
+		super(ctx, HR_Process_ID, trxName);
+		if (HR_Process_ID == 0) {
 			setDocStatus(DOCSTATUS_Drafted);
 			setDocAction(DOCACTION_Prepare);
 			setC_DocType_ID(0);
-			set_ValueNoCheck ("DocumentNo", null);
+			set_ValueNoCheck("DocumentNo", null);
 			setProcessed(false);
 			setProcessing(false);
 			setPosted(false);
 			setHR_Department_ID(0);
 			setC_BPartner_ID(0);
 		}
-		
+
 	}
 
 	/**
-	 *  Load Constructor
-	 *  @param ctx context
-	 *  @param rs result set record
+	 * Load Constructor
+	 * 
+	 * @param ctx
+	 *            context
+	 * @param rs
+	 *            result set record
 	 */
-	public ConceptTest(Properties ctx, ResultSet rs, String trxName) 
-	{
-		super(ctx, rs,trxName);
-	}	//	MHRProcess_ConceptTest
+	public ConceptTest(Properties ctx, ResultSet rs, String trxName) {
+		super(ctx, rs, trxName);
+	} // MHRProcess_ConceptTest
 
-
-	public void test(){
+	public void test() {
 
 result = 0.0;
-double total=0.0;
-double totalprovision=0.0;
-double acumin=0.0;
-acumin=getAttribute("A_ACUM_INICIAL_PROVISION_TERCER");
-//String sNomina = getHR_Payroll().getValue();
-String ConsultaNominaPrincipal = ""
-		+ " Select HR_Payroll.Value From HR_Payroll where HR_Payroll.HR_Payroll_ID IN  " 
-		+ " (Select e.HR_Payroll_ID From HR_Employee e where e.C_BPartner_ID = ? ) "
-		+ " AND Exists(Select 1 From HR_Contract hc Where hc.IsDefault = ? AND hc.HR_Contract_ID = HR_Payroll.HR_Contract_ID)";
-String NominaPrincipal = DB.getSQLValueString(get_TrxName(),ConsultaNominaPrincipal,new Object[] {_C_BPartner_ID,"Y"});
-	if(NominaPrincipal!=null){
-      
-totalprovision=getConceptRangeOfPeriod("CC_PROVISION_TERCER_SUELDO",NominaPrincipal,getTimestampToString(_From),getTimestampToString(_To));
-if(acumin>0)
-   total=acumin;
-if(totalprovision>0)
-    total=total+totalprovision;
-if(total>0)
-    result=total;
-	description = "Acumulado Inicial de Proviciones: "+acumin+" Proviciones en el sistema:"+totalprovision;
-}
+String sql = "SELECT c.HR_Concept_ID FROM hr_concept c "
+		+ "JOIN hr_attribute a ON a.hr_concept_id = c.hr_concept_id "
+		+ "where c.value like '%SECTOR%' AND c.type = 'I' AND a.HR_Job_ID = ?";
+int [] conceptoSectorIDs = DB.getIDsEx(get_TrxName(), sql,new Object[] {_JobEmployee});
 
+if (conceptoSectorIDs.length>0){
+	org.eevolution.model.MHRConcept mconcepto = new org.eevolution.model.MHRConcept(getCtx(), conceptoSectorIDs[0], get_TrxName());
+	if (mconcepto!=null){
+		result = getAttribute(mconcepto.getValue(), _From,_To,_JobEmployee);
+		description = "Sector : " + mconcepto.getValue();
+	}
+}
+		
 		
 
+	}// ///End Test
 
-
-	}/////End Test
-	
-	
-	
-	
-	
-}	//ConceptTest
+} // ConceptTest

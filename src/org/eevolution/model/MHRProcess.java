@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.MBPartner;
@@ -740,7 +741,8 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		m_scriptCtx.put("_Period", getHR_Period_ID());
 		m_scriptCtx.put("_Payroll", getHR_Payroll_ID());
 		m_scriptCtx.put("_Department", getHR_Department_ID());
-
+		
+		
 		log.info("info data - " + " Process: " +getHR_Process_ID()+ ", Period: " +getHR_Period_ID()+ ", Payroll: " +getHR_Payroll_ID()+ ", Department: " +getHR_Department_ID());
 		MHRPeriod period = new MHRPeriod(getCtx(), getHR_Period_ID(), get_TrxName());
 		if (period != null)
@@ -778,7 +780,7 @@ public class MHRProcess extends X_HR_Process implements DocAction
 			m_scriptCtx.put("_DateEnd", m_employee.getEndDate() == null ? TimeUtil.getDay(2999, 12, 31) : m_employee.getEndDate());
 			m_scriptCtx.put("_Days", org.compiere.util.TimeUtil.getDaysBetween(period.getStartDate(),period.getEndDate())+1);
 			m_scriptCtx.put("_C_BPartner_ID", bp.getC_BPartner_ID());
- 
+			m_scriptCtx.put("_JobEmployee", m_employee.getHR_Job_ID());
 			m_movement.clear();
 			loadMovements(m_movement, m_C_BPartner_ID);
 			//
@@ -1120,6 +1122,9 @@ public class MHRProcess extends X_HR_Process implements DocAction
 			MHRConcept con = MHRConcept.get(getCtx(), pc.getHR_Concept_ID());
 			if(con.getHR_Concept_Category_ID() == category.get_ID())
 			{
+				if (con.getHR_Concept_Category_ID()==1000056){
+					System.out.println("ASG_NO_APORTABLES");
+				}
 				MHRMovement movement = m_movement.get(pc.getHR_Concept_ID());
 				if (movement == null) {
 					createMovementFromConcept(con, con.isPrinted());
@@ -1703,7 +1708,57 @@ public class MHRProcess extends X_HR_Process implements DocAction
 		.first();
 		if (attribute == null)
 			return null;
+		
 
+		return attribute.getTextMsg();
+	} // getAttributeString
+	
+	/**
+	 * 	Helper Method : Get Attribute [get Attribute to search key concept ]
+	 *  @param conceptValue
+	 *  @return TextMsg
+	 */ 
+	public String getAttributeString (String conceptValue,Timestamp from,Timestamp to)
+	{
+		MHRConcept concept = MHRConcept.forValue(getCtx(), conceptValue);
+		if (concept == null)
+			return null;
+
+		ArrayList<Object> params = new ArrayList<Object>();
+		StringBuilder whereClause = new StringBuilder();
+		//check client
+		whereClause.append("AD_Client_ID = ?");
+		params.add(getAD_Client_ID());
+		//check concept
+		
+		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? " 
+		+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) AND HR_Attribute.ValidFrom <=?"+" )");
+		params.add(conceptValue);
+		params.add(from);
+		params.add(to);
+		//
+		
+		
+		if (!concept.getType().equals(MHRConcept.TYPE_Information))
+		{
+			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
+			params.add(m_C_BPartner_ID);
+		}
+		// LVE Localizaci��n Venezuela
+		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
+		
+			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
+			params.add(getAD_Org_ID());
+		
+
+		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
+		.setParameters(params)
+		.setOrderBy(MHRAttribute.COLUMNNAME_AD_Org_ID + " DESC")
+		.first();
+		if (attribute == null){
+			System.out.println(whereClause.toString()+",Parmeter"+params.toString());
+			return null;
+		}
 		return attribute.getTextMsg();
 	} // getAttributeString
 
