@@ -77,10 +77,11 @@ import bsh.Interpreter;
 
 public class ConceptTest extends MHRProcess_ConceptTest implements DocAction {
 
-	private int _Process_Period, _Payroll, _Department, _Days, _C_BPartner_ID, _JobEmployee;
+	private int _Process_Period, _Payroll, _Department, _Days, _C_BPartner_ID,_Process,
+			_JobEmployee;
 	private double result;
-	private String description;
-	private Timestamp _From, _To, _DateStart, _DateEnd;
+	private String description,_RegionEmployee;
+	private Timestamp _From, _To, _DateStart, _DateEnd,serviceDate;
 
 	public ConceptTest(Properties ctx, int HR_Process_ID, String trxName) {
 		super(ctx, HR_Process_ID, trxName);
@@ -112,22 +113,31 @@ public class ConceptTest extends MHRProcess_ConceptTest implements DocAction {
 
 	public void test() {
 
+getConcept("CC_TOTAL_REMUNERACION_APORTABLE");
+
+//
+String descriptionTemp = "";
+String conceptoTemp ="";
+//
 result = 0.0;
-String sql = "SELECT c.HR_Concept_ID FROM hr_concept c "
-		+ "JOIN hr_attribute a ON a.hr_concept_id = c.hr_concept_id "
-		+ "where c.value like '%SECTOR%' AND c.type = 'I' AND a.HR_Job_ID = ?";
-int [] conceptoSectorIDs = DB.getIDsEx(get_TrxName(), sql,new Object[] {_JobEmployee});
+double totalremuneracion=0.0;
+double aporte_iess=0.0;
+aporte_iess=getAttribute("C_FACTOR_IESS_PERSONAL");
+totalremuneracion=getConcept("CC_TOTAL_REMUNERACION_APORTABLE");
+result=totalremuneracion*(aporte_iess/100);
+description = "Remuneracion: "+ totalremuneracion + ", Factor: "+aporte_iess;
 
-if (conceptoSectorIDs.length>0){
-	org.eevolution.model.MHRConcept mconcepto = new org.eevolution.model.MHRConcept(getCtx(), conceptoSectorIDs[0], get_TrxName());
-	if (mconcepto!=null){
-		result = getAttribute(mconcepto.getValue(), _From,_To,_JobEmployee);
-		description = "Sector : " + mconcepto.getValue();
-	}
-}
-		
-		
+conceptoTemp="C_FACTOR_IESS_PERSONAL";
+descriptionTemp = description;
+double totalDeduccionActual = result;
+double totalDeduccionProximoPeriodo= getCreditForNextPeriod(_Process,_C_BPartner_ID,totalDeduccionActual,conceptoTemp,"D_DEDUCCION_FALTANTE_PERIODO_ANTERIOR");
+result =  (totalDeduccionActual-totalDeduccionProximoPeriodo);
+description = descriptionTemp+". "+getMessageCreditForNextPeriod(totalDeduccionProximoPeriodo);
 
+
+
+
+
+		
 	}// ///End Test
-
 } // ConceptTest

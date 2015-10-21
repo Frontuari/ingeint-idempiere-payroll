@@ -896,6 +896,51 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 		return attribute.getServiceDate();
 	} // getAttributeDate
 
+
+	/**
+	 * 	Helper Method : Get Attribute [get Attribute to search key concept ]
+	 *  @param conceptValue
+	 *  @return ServiceDate
+	 */ 
+	public Timestamp getAttributeDate (String conceptValue, String pRegion)
+	{
+		MHRConcept concept = MHRConcept.forValue(getCtx(), conceptValue);
+		if (concept == null)
+			return null;
+
+		ArrayList<Object> params = new ArrayList<Object>();
+		StringBuilder whereClause = new StringBuilder();
+		//check client
+		whereClause.append("AD_Client_ID = ?");
+		params.add(getAD_Client_ID());
+		//check concept
+		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND c.Value = ? "
+				+ "AND HR_Region = ?)");
+		params.add(conceptValue);
+		params.add(pRegion);
+		
+		//
+		if (!concept.getType().equals(MHRConcept.TYPE_Information))
+		{
+			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
+			params.add(getC_BPartner_ID());
+		}
+         // LVE Localización Venezuela
+		// when is employee, it is necessary to check if the organization of the employee is equal to that of the attribute
+		if (concept.isEmployee()){
+			whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID + "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
+			params.add(getAD_Org_ID());
+		}
+		
+		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
+		.setParameters(params)
+		.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+		.first();
+		if (attribute == null)
+			return null;
+
+		return attribute.getServiceDate();
+	} // getAttributeDate
 	/**
 	 * 	Helper Method : Get Attribute [get Attribute to search key concept ]
 	 *  @param conceptValue
@@ -1982,6 +2027,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			
 		}
 		m_scriptCtx.put("_JobEmployee", m_employee.getHR_Job_ID());
+		m_scriptCtx.put("_RegionEmployee",m_employee.get_Value("HR_Region"));
 		m_scriptCtx.put("_C_BPartner_ID", getC_BPartner_ID());
 		if (period ==null)
 			period = new MHRPeriod(getCtx(), getHR_Period_ID(), get_TrxName());

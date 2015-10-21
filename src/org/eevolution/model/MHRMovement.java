@@ -116,6 +116,7 @@ public class MHRMovement extends X_HR_Movement
 		this.setHR_Concept_Category_ID(concept.getHR_Concept_Category_ID());
 		this.setHR_Concept_ID(concept.getHR_Concept_ID());
 		this.setColumnType(concept.getColumnType());
+		this.setAccountSign(concept.getAccountSign());
 	}
 	
 	public void addAmount(BigDecimal amount)
