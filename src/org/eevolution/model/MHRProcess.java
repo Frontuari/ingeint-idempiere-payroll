@@ -833,7 +833,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			// Save movements:
 			for (MHRMovement m : m_movement.values()) {
 				MHRConcept c = (MHRConcept) m.getHR_Concept();
-				if (c.isRegistered() || m.isEmpty()) {
+				if ((c.isRegistered() || m.isEmpty()) && !c.get_ValueAsBoolean("HR_MovementInsertForce")) {
 					log.fine("Skip saving " + m);
 				} else {
 					boolean saveThisRecord = m.isPrinted() || c.isPaid()
@@ -889,9 +889,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 
 		log.info("Concept - " + concept.getName());
 		MHRMovement movement = new MHRMovement(getCtx(), 0, get_TrxName());
-		if (concept.get_ID()==1000586){
-			System.out.println("total remuneracion aportable");
-		}
+
 		movement.setC_BPartner_ID(m_C_BPartner_ID);
 		movement.setHR_Concept_ID(concept.getHR_Concept_ID());
 		movement.setHR_Concept_Category_ID(concept.getHR_Concept_Category_ID());
@@ -2683,11 +2681,20 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		this.m_C_BPartner_ID = m_C_BPartner_ID;
 	}
 
-	public double getCreditForNextPeriod(int p_Process,int p_C_BPartner_ID,double currentCredit,String p_conceptValueFrom,String p_coneptValueTo){
+	/**
+	 * Helper Method : It is calculated as the excess deductions which must be sent to the following period because otherwise the payment would be negative
+	 * 
+	 * @param int p_Process
+	 * @param int p_C_BPartner_ID
+	 * @param int double currentCredit
+	 * @param String p_conceptValueFrom,String p_coneptValueTo,String p_conceptCreditAcum,String p_conceptRevenue 
+	 * @return double Credit For Next Period
+	 */
+	public double getCreditForNextPeriod(int p_Process,int p_C_BPartner_ID,double currentCredit,String p_conceptValueFrom,String p_coneptValueTo,String p_conceptCreditAcum,String p_conceptRevenue){
 		double debitTotal = 0;
 		double creditTotal = 0;
 		currentCredit = Math.rint(currentCredit*100)/100;
-		MHRConcept c = MHRConcept.forValue(getCtx(), "C_ACUMULADO_CREDITOS_TEMP");
+		MHRConcept c = MHRConcept.forValue(getCtx(), p_conceptCreditAcum);
 		MHRMovement m = m_movement.get(c.get_ID());
 		if (m==null){
 			createMovementFromConcept(c, c.isPrinted());
@@ -2700,7 +2707,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			creditTotal+=currentCredit;	
 		}
 		
-		MHRConcept d = MHRConcept.forValue(getCtx(), "CC_TOTAL_REMUNERACION_APORTABLE");
+		MHRConcept d = MHRConcept.forValue(getCtx(), p_conceptRevenue);
 		MHRMovement md = m_movement.get(d.get_ID());
 		debitTotal = md.getAmount().doubleValue();
 		
@@ -2737,14 +2744,14 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 					
 				}
 			}
-			updateConcept("C_ACUMULADO_CREDITOS_TEMP", (debitTotal));
+			updateConcept(p_conceptCreditAcum, (debitTotal));
 			return creditTotal-debitTotal;
 		}
 		else{
-			updateConcept("C_ACUMULADO_CREDITOS_TEMP", (creditTotal));
+			updateConcept(p_conceptCreditAcum, (creditTotal));
 			return 0;
 		}
-	}
+	}//getCreditForNextPeriod
 
 	public String getMessageCreditForNextPeriod(double creditForNextPeriod) {
 		if (creditForNextPeriod > 0) {
@@ -2757,7 +2764,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 	}
 	
 	/**
-	 * Helper Method : sets the value of a concept
+	 * Helper Method : update the value of a concept
 	 * 
 	 * @param conceptValue
 	 * @param value

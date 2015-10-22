@@ -113,29 +113,33 @@ public class ConceptTest extends MHRProcess_ConceptTest implements DocAction {
 
 	public void test() {
 
-getConcept("CC_TOTAL_REMUNERACION_APORTABLE");
 
-//
-String descriptionTemp = "";
-String conceptoTemp ="";
-//
 result = 0.0;
 double totalremuneracion=0.0;
-double aporte_iess=0.0;
-aporte_iess=getAttribute("C_FACTOR_IESS_PERSONAL");
-totalremuneracion=getConcept("CC_TOTAL_REMUNERACION_APORTABLE");
-result=totalremuneracion*(aporte_iess/100);
-description = "Remuneracion: "+ totalremuneracion + ", Factor: "+aporte_iess;
-
-conceptoTemp="C_FACTOR_IESS_PERSONAL";
-descriptionTemp = description;
-double totalDeduccionActual = result;
-double totalDeduccionProximoPeriodo= getCreditForNextPeriod(_Process,_C_BPartner_ID,totalDeduccionActual,conceptoTemp,"D_DEDUCCION_FALTANTE_PERIODO_ANTERIOR");
-result =  (totalDeduccionActual-totalDeduccionProximoPeriodo);
-description = descriptionTemp+". "+getMessageCreditForNextPeriod(totalDeduccionProximoPeriodo);
-
-
-
+double totalasigbas=0.0;
+double totalnovhor=0.0;
+double totalnovdia=0.0;
+double dedDiasIngreso=0.0;
+double adelantoQuincena =0;
+double quincena=0;
+double dedInasistencia = 0;
+totalasigbas=getConceptGroup("ASG_BAS");
+adelantoQuincena = getConcept("CC_ANTICIPO_QUINCENA");
+quincena = getConcept("CC_QUINCENA");
+if (getConcept("CC_ULTIMA_SEMANA")==1){
+	totalasigbas -=adelantoQuincena;
+}else{
+	totalasigbas +=quincena;
+}
+totalnovhor=getConceptGroup("ASG_NOV_HORAS");
+totalnovdia=getConceptGroup("ASG_NOV_DIAS");
+//dedDiasIngreso=getConcept("CC_MONTO_DEDUCIR_DIAS_INGRESO");
+//dedInasistencia=getConcept("CC_DEDUCCION_INASISTENCIA");
+totalremuneracion=totalasigbas+totalnovhor+totalnovdia-dedDiasIngreso-dedInasistencia;
+result=totalremuneracion;
+description = "Asignaciones Basicas: "+totalasigbas+", Anticipo Quincena: "
+		+ ""+adelantoQuincena+", Asig Horas: "+totalnovhor+", Asig Dias: "+totalnovdia+", Total :"+totalremuneracion
+		+", Deduccion Dias Ingreso: "+dedDiasIngreso+", Deduccion Inasistencia"+dedInasistencia;
 
 
 		
