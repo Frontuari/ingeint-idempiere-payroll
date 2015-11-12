@@ -115,31 +115,22 @@ public class ConceptTest extends MHRProcess_ConceptTest implements DocAction {
 
 
 result = 0.0;
-double totalremuneracion=0.0;
-double totalasigbas=0.0;
-double totalnovhor=0.0;
-double totalnovdia=0.0;
-double dedDiasIngreso=0.0;
-double adelantoQuincena =0;
-double quincena=0;
-double dedInasistencia = 0;
-totalasigbas=getConceptGroup("ASG_BAS");
-adelantoQuincena = getConcept("CC_ANTICIPO_QUINCENA");
-quincena = getConcept("CC_QUINCENA");
-if (getConcept("CC_ULTIMA_SEMANA")==1){
-	totalasigbas -=adelantoQuincena;
-}else{
-	totalasigbas +=quincena;
+
+String valorBonoAntiguedadStr=  "0",sql1="",sql3="";
+StringBuffer sQuery=new StringBuffer();
+double valorBonoAntiguedad = 0;
+double aniosAntiguedad = getConcept("CC_AÑOS_ANTIGUEDAD");
+sql1 = "Select COALESCE(att.";
+sql3 = " from HR_Attribute att where att.HR_Concept_ID = "
++ "(Select c.HR_Concept_ID from HR_Concept c where c.Value = ?) and  "
++ " ? > minValue and ?  <= MaxValue AND IsActive = ? ";
+sQuery.append(sql1).append("Amount ,0) ").append(sql3);
+valorBonoAntiguedadStr =  DB.getSQLValueString(get_TrxName(),sQuery.toString(),new Object[] {"IMPUESTO",BigDecimal.valueOf(aniosAntiguedad),BigDecimal.valueOf(aniosAntiguedad),"Y"});
+if (valorBonoAntiguedadStr!=null){
+	valorBonoAntiguedad = Double.valueOf(valorBonoAntiguedadStr);
 }
-totalnovhor=getConceptGroup("ASG_NOV_HORAS");
-totalnovdia=getConceptGroup("ASG_NOV_DIAS");
-//dedDiasIngreso=getConcept("CC_MONTO_DEDUCIR_DIAS_INGRESO");
-//dedInasistencia=getConcept("CC_DEDUCCION_INASISTENCIA");
-totalremuneracion=totalasigbas+totalnovhor+totalnovdia-dedDiasIngreso-dedInasistencia;
-result=totalremuneracion;
-description = "Asignaciones Basicas: "+totalasigbas+", Anticipo Quincena: "
-		+ ""+adelantoQuincena+", Asig Horas: "+totalnovhor+", Asig Dias: "+totalnovdia+", Total :"+totalremuneracion
-		+", Deduccion Dias Ingreso: "+dedDiasIngreso+", Deduccion Inasistencia"+dedInasistencia;
+result = aniosAntiguedad * valorBonoAntiguedad;
+description = "Años antiguedad: "+aniosAntiguedad +", Valor bono: "+valorBonoAntiguedad;
 
 
 		
