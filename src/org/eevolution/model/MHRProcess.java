@@ -2711,7 +2711,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		
 		MHRConcept d = MHRConcept.forValue(getCtx(), p_conceptRevenue);
 		MHRMovement md = m_movement.get(d.get_ID());
-		debitTotal = md.getAmount().doubleValue();
+		if (md!=null)
+			debitTotal = md.getAmount().doubleValue();
 		
 		if (creditTotal>debitTotal){
 			if (p_conceptValueFrom!=null && p_coneptValueTo!=null){
