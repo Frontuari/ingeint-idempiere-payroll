@@ -14,7 +14,7 @@ Require-Bundle: org.adempiere.ui;bundle-version="1.0.0",
  org.zkoss.zk.library;bundle-version="6.0.0",
  org.adempiere.ui.zk;bundle-version="1.0.0"
 Bundle-ActivationPolicy: lazy
-Service-Component: OSGI-INF/org.idempiere.component.HRDocFactory.xml, OSGI-INF/org.idempiere.component.HRModelFactory.xml, 
+Service-Component: OSGI-INF/org.idempiere.component.HRDocFactory.xml,
  OSGI-INF/HRZKFormFactory.xml,OSGI-INF/com.ingeint.component.ModelFactory.xml,OSGI-INF/com.ingeint.component.EventManager.xml,OSGI-INF/com.ingeint.component.CalloutFactory.xml,OSGI-INF/com.ingeint.component.ProcessFactory.xml,
  OSGI-INF/com.ingeint.component.FormFactory.xml
 Bundle-Activator: org.adempiere.plugin.utils.AdempiereActivator

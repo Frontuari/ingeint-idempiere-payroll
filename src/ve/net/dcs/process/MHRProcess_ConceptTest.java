@@ -109,6 +109,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 													.append(" import org.adempiere.model.*;")
 													.append(" import org.compiere.util.*;")
 													.append(" import java.math.*;")
+													.append(" import org.globalqss.model.*;")
 													.append(" import java.sql.*;");
 													
 
@@ -177,9 +178,8 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 				.replace(".process.get", ".get");
 			}else{
 				scriptText = scriptText.trim().replaceAll("\\bget", "process.get")
-				.replace(".process.get", ".get");
-				
-			}
+						.replace(".process.get", ".get");
+			}	
 			
 			String resultType = "double";
 			if  (MHRAttribute.COLUMNTYPE_Date.equals(columnType))
@@ -2050,5 +2050,6 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 		}
 		
 	}
+	
 	
 }	//	MHRProcess_ConceptTest

@@ -114,25 +114,6 @@ public class ConceptTest extends MHRProcess_ConceptTest implements DocAction {
 	public void test() {
 
 
-result = 0.0;
-
-String valorBonoAntiguedadStr=  "0",sql1="",sql3="";
-StringBuffer sQuery=new StringBuffer();
-double valorBonoAntiguedad = 0;
-double aniosAntiguedad = getConcept("CC_AÑOS_ANTIGUEDAD");
-sql1 = "Select COALESCE(att.";
-sql3 = " from HR_Attribute att where att.HR_Concept_ID = "
-+ "(Select c.HR_Concept_ID from HR_Concept c where c.Value = ?) and  "
-+ " ? > minValue and ?  <= MaxValue AND IsActive = ? ";
-sQuery.append(sql1).append("Amount ,0) ").append(sql3);
-valorBonoAntiguedadStr =  DB.getSQLValueString(get_TrxName(),sQuery.toString(),new Object[] {"IMPUESTO",BigDecimal.valueOf(aniosAntiguedad),BigDecimal.valueOf(aniosAntiguedad),"Y"});
-if (valorBonoAntiguedadStr!=null){
-	valorBonoAntiguedad = Double.valueOf(valorBonoAntiguedadStr);
-}
-result = aniosAntiguedad * valorBonoAntiguedad;
-description = "Años antiguedad: "+aniosAntiguedad +", Valor bono: "+valorBonoAntiguedad;
-
-
-		
+				
 	}// ///End Test
 } // ConceptTest

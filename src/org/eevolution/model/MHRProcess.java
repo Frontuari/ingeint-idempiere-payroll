@@ -94,11 +94,13 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 	boolean IsPayrollApplicableToEmployee = false;
 
 	private static StringBuilder s_scriptImport = new StringBuilder(
-			" import org.eevolution.model.*;")
+			"")
 			.append(" import org.compiere.model.*;")
 			.append(" import org.adempiere.model.*;")
 			.append(" import org.compiere.util.*;")
-			.append(" import java.math.*;").append(" import java.sql.*;");
+			.append(" import java.math.*;")
+			.append(" import java.sql.*;")
+			.append(" import org.eevolution.model.*;");
 
 	public static void addScriptImportPackage(String packageName) {
 		s_scriptImport.append(" import ").append(packageName).append(";");
@@ -2786,4 +2788,53 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			s_log.warning(e.getMessage());
 		}
 	} // setConcept
+	
+	/**
+	 * Helper Method : getNexPeriod by PeriodNo
+	 * 
+	 * @param p_currentPeriod_ID
+	 * @return periodTo_ID
+	 */
+	public int getNexPeriod(int p_currentPeriod_ID) {
+		MHRPeriod periodFrom = MHRPeriod.get(getCtx(), p_currentPeriod_ID);
+		MHRPeriod periodTo = null;
+		
+		int periodFromNo = periodFrom.getPeriodNo();
+		String where = MHRPayroll.COLUMNNAME_HR_Payroll_ID+" = ? AND HR_Year_ID = ? AND C_Year_ID = ? AND PeriodNo > ?";
+		Object[] para = new Object[]{periodFrom.getHR_Payroll_ID(),periodFrom.getHR_Year_ID(),periodFrom.getC_Year_ID(),periodFromNo};
+		BigDecimal periodToNo = new Query(getCtx(),MHRPeriod.Table_Name,where,get_TrxName()).
+				setParameters(para).
+				aggregate("PeriodNo", "MIN");
+		if (periodToNo!=null){
+			
+			where =  MHRPayroll.COLUMNNAME_HR_Payroll_ID+" = ? AND HR_Year_ID = ? AND C_Year_ID = ? AND PeriodNo = ?";
+			para = new Object[]{periodFrom.getHR_Payroll_ID(),periodFrom.getHR_Year_ID(),periodFrom.getC_Year_ID(),periodToNo};
+			periodTo = new Query(getCtx(),MHRPeriod.Table_Name,where,get_TrxName()).setParameters(para).first();
+			
+		}
+		return periodTo.get_ID();
+	}
+	
+	
+	/**
+	 * Helper Method : getaddAttributeAmt (New register on HR_Attribute)
+	 * 
+	 * @param p_currentPeriod
+	 * @return periodTo 
+	 */
+	public void getaddAttributeAmt(String p_concept,int p_period_id,double p_amt,String p_description,int p_C_BPartner_ID){
+		
+		MHRPeriod p_period = MHRPeriod.get(getCtx(), p_period_id);
+		MHRConcept conceptTo = MHRConcept.forValue(getCtx(), p_concept);
+		
+		MHRAttribute attribute = new MHRAttribute(getCtx(), 0, get_TrxName());
+		attribute.setHR_Concept_ID(conceptTo.get_ID());
+		attribute.setDescription(p_description);
+		attribute.setAmount(BigDecimal.valueOf(p_amt));
+		attribute.setValidFrom(p_period.getStartDate());
+		attribute.setValidTo(p_period.getEndDate());
+		attribute.setC_BPartner_ID(p_C_BPartner_ID);
+		attribute.saveEx();
+	
+	}//getaddAttributeAmt
 } // MHRProcess
