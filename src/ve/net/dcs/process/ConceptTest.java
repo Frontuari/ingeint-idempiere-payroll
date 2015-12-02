@@ -113,6 +113,15 @@ public class ConceptTest extends MHRProcess_ConceptTest implements DocAction {
 
 	public void test() {
 
-result =0;
+		
+		
+//Add to each credit		
+
+//conceptoTemp="D_CUOTA_PRESTAMO_HIPOTECARIO";
+//descriptionTemp = description;
+//double totalDeduccionActual = result;
+//double totalDeduccionProximoPeriodo= getCreditForNextPeriod(_Process,_C_BPartner_ID,totalDeduccionActual,conceptoTemp,"D_DEDUCCION_FALTANTE_PERIODO_ANTERIOR","C_ACUMULADO_CREDITOS_TEMP","C_ACUMULADO_DEBITOS_TEMP");
+//result =  (totalDeduccionActual-totalDeduccionProximoPeriodo);
+//description = descriptionTemp+". "+getMessageCreditForNextPeriod(totalDeduccionProximoPeriodo);
 	}// ///End Test
 } // ConceptTest
