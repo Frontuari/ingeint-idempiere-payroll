@@ -113,7 +113,6 @@ public class ConceptTest extends MHRProcess_ConceptTest implements DocAction {
 
 	public void test() {
 
-
-				
+result =0;
 	}// ///End Test
 } // ConceptTest

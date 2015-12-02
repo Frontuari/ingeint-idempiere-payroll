@@ -830,6 +830,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 					throw new AdempiereException("Concept "
 							+ concept.getValue() + " not created");
 				}
+				movement.set_ValueOfColumn("SeqNo", pc.getSeqNo());
 			} // concept
 
 			// Save movements:

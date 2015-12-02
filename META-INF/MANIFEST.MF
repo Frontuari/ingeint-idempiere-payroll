@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: LiberoHR_VE
 Bundle-SymbolicName: ve.net.dcs.LiberoHR_VE;singleton:=true
-Bundle-Version: 2.2.9.Bqualifier
+Bundle-Version: 2.3.1
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7,
  JavaSE-1.6
 Require-Bundle: org.adempiere.ui;bundle-version="1.0.0",
@@ -17,7 +17,7 @@ Bundle-ActivationPolicy: lazy
 Service-Component: OSGI-INF/org.idempiere.component.HRDocFactory.xml,
  OSGI-INF/HRZKFormFactory.xml,OSGI-INF/com.ingeint.component.ModelFactory.xml,OSGI-INF/com.ingeint.component.EventManager.xml,OSGI-INF/com.ingeint.component.CalloutFactory.xml,OSGI-INF/com.ingeint.component.ProcessFactory.xml,
  OSGI-INF/com.ingeint.component.FormFactory.xml
-Bundle-Activator: org.adempiere.plugin.utils.AdempiereActivator
+Bundle-Activator: org.adempiere.plugin.utils.Incremental2PackActivator
 Export-Package: org.eevolution.model
 Import-Package: org.adempiere.report.jasper,
  org.osgi.service.event;version="1.3.0"
