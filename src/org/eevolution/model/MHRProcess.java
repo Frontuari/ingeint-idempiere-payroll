@@ -2836,6 +2836,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		attribute.setAmount(BigDecimal.valueOf(p_amt));
 		attribute.setValidFrom(p_period.getStartDate());
 		attribute.setValidTo(p_period.getEndDate());
+		attribute.setColumnType(conceptTo.getColumnType());
 		attribute.setC_BPartner_ID(p_C_BPartner_ID);
 		attribute.saveEx();
 	
