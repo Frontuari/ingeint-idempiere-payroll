@@ -78,9 +78,9 @@ public class MHREmployee extends X_HR_Employee
 		
 		MHRPayroll Payroll = MHRPayroll.get(Env.getCtx(),p.getHR_Payroll_ID());
 		
-		if (Payroll !=null || !Payroll.equals(null))
+		if (Payroll !=null || !Payroll.equals(null)){
 			IsPayrollApplicableToEmployee = Payroll.get_ValueAsBoolean("IsemployeeApplicable");
-		
+		}
 		// This payroll not content periods, NOT IS a Regular Payroll > ogi-cd 28Nov2007
 		if(p.getHR_Payroll_ID() != 0 && p.getHR_Period_ID() != 0 && IsPayrollApplicableToEmployee)
 		
@@ -100,8 +100,9 @@ public class MHREmployee extends X_HR_Employee
 			MHRPeriod period = new MHRPeriod(p.getCtx(), p.getHR_Period_ID(), p.get_TrxName());
 			whereClause.append(" AND e.StartDate <=? ");
 			params.add(period.getEndDate());
-			whereClause.append(" AND (e.EndDate IS NULL OR e.EndDate >=?) ");
+			whereClause.append(" AND (e.EndDate IS NULL OR (e.EndDate >=? AND (e.HR_Exclude='N' Or e.HR_Exclude IS NULL) OR (e.EndDate >?))) ");
 			params.add(period.getStartDate());
+			params.add(period.getEndDate());
 		}
 		
 		// Selected Department
