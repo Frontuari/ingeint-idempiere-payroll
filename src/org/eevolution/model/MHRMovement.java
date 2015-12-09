@@ -136,7 +136,8 @@ public class MHRMovement extends X_HR_Movement
 	{
 		return getQty().signum() == 0
 				&& getAmount().signum() == 0
-				&& Util.isEmpty(getTextMsg());		
+				&& Util.isEmpty(getTextMsg())
+				&& getServiceDate() == null;
 	}
 	
 	/**

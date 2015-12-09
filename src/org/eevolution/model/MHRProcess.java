@@ -93,13 +93,11 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 	Object m_description = null;
 	boolean IsPayrollApplicableToEmployee = false;
 
-	private static StringBuilder s_scriptImport = new StringBuilder(
-			"")
+	private static StringBuilder s_scriptImport = new StringBuilder("")
 			.append(" import org.compiere.model.*;")
 			.append(" import org.adempiere.model.*;")
 			.append(" import org.compiere.util.*;")
-			.append(" import java.math.*;")
-			.append(" import java.sql.*;")
+			.append(" import java.math.*;").append(" import java.sql.*;")
 			.append(" import org.eevolution.model.*;");
 
 	public static void addScriptImportPackage(String packageName) {
@@ -620,11 +618,14 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 						.replaceAll("\\bget", "process.get")
 						.replace(".process.get", ".get");
 			}
-			String resultType = "double";
+			String resultType = "double result = 0;";
 			if (MHRAttribute.COLUMNTYPE_Text.equals(columnType))
-				resultType = "String";
+				resultType = "String result = null;";
+			if (MHRAttribute.COLUMNTYPE_Date.equals(columnType)) {
+				resultType = "Timestamp result = null;";
+			}
 			final String script = s_scriptImport.toString() + " " + resultType
-					+ " result = 0;" + " String description = null;"
+					+ " String description = null;"
 					+ " Timestamp serviceDate = null;" + text;
 			Scriptlet engine = new Scriptlet(Scriptlet.VARIABLE, script,
 					m_scriptCtx);
@@ -836,7 +837,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			// Save movements:
 			for (MHRMovement m : m_movement.values()) {
 				MHRConcept c = (MHRConcept) m.getHR_Concept();
-				if ((c.isRegistered() || m.isEmpty()) && !c.get_ValueAsBoolean("HR_MovementInsertForce")) {
+				if ((c.isRegistered() || m.isEmpty())
+						&& !c.get_ValueAsBoolean("HR_MovementInsertForce")) {
 					log.fine("Skip saving " + m);
 				} else {
 					boolean saveThisRecord = m.isPrinted() || c.isPaid()
@@ -2685,78 +2687,111 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 	}
 
 	/**
-	 * Helper Method : It is calculated as the excess deductions which must be sent to the following period because otherwise the payment would be negative
+	 * Helper Method : It is calculated as the excess deductions which must be
+	 * sent to the following period because otherwise the payment would be
+	 * negative
 	 * 
 	 * @param int p_Process
 	 * @param int p_C_BPartner_ID
 	 * @param int double currentCredit
-	 * @param String p_conceptValueFrom,String p_coneptValueTo,String p_conceptCreditAcum,String p_conceptRevenue 
+	 * @param String
+	 *            p_conceptValueFrom,String p_coneptValueTo,String
+	 *            p_conceptCreditAcum,String p_conceptRevenue
 	 * @return double Credit For Next Period
 	 */
-	public double getCreditForNextPeriod(int p_Process,int p_C_BPartner_ID,double currentCredit,String p_conceptValueFrom,String p_coneptValueTo,String p_conceptCreditAcum,String p_conceptRevenue){
+	public double getCreditForNextPeriod(int p_Process, int p_C_BPartner_ID,
+			double currentCredit, String p_conceptValueFrom,
+			String p_coneptValueTo, String p_conceptCreditAcum,
+			String p_conceptRevenue) {
 		double debitTotal = 0;
 		double creditTotal = 0;
-		currentCredit = Math.rint(currentCredit*100)/100;
+		currentCredit = Math.rint(currentCredit * 100) / 100;
 		MHRConcept c = MHRConcept.forValue(getCtx(), p_conceptCreditAcum);
 		MHRMovement m = m_movement.get(c.get_ID());
-		if (m==null){
+		if (m == null) {
 			createMovementFromConcept(c, c.isPrinted());
 			m = m_movement.get(c.get_ID());
 		}
 		creditTotal = m.getAmount().doubleValue();
-		if (creditTotal==-1){
+		if (creditTotal == -1) {
 			creditTotal = currentCredit;
-		}else{
-			creditTotal+=currentCredit;	
+		} else {
+			creditTotal += currentCredit;
 		}
-		
+
 		MHRConcept d = MHRConcept.forValue(getCtx(), p_conceptRevenue);
 		MHRMovement md = m_movement.get(d.get_ID());
-		if (md!=null)
+		if (md != null)
 			debitTotal = md.getAmount().doubleValue();
-		
-		if (creditTotal>debitTotal){
-			if (p_conceptValueFrom!=null && p_coneptValueTo!=null){
-				if (!p_conceptValueFrom.isEmpty() && !p_coneptValueTo.isEmpty()){
-					//Register attribute for nex period
-					MHRConcept conceptFrom = new Query(getCtx(),MHRConcept.Table_Name,"Value = ?",get_TrxName()).setParameters(p_conceptValueFrom).first();
-					MHRConcept conceptTo = new Query(getCtx(),MHRConcept.Table_Name,"Value = ?",get_TrxName()).setParameters(p_coneptValueTo).first();
-					MHRPeriod periodFrom =(MHRPeriod)this.getHR_Period();
+
+		if (creditTotal > debitTotal) {
+			if (p_conceptValueFrom != null && p_coneptValueTo != null) {
+				if (!p_conceptValueFrom.isEmpty() && !p_coneptValueTo.isEmpty()) {
+					// Register attribute for nex period
+					MHRConcept conceptFrom = new Query(getCtx(),
+							MHRConcept.Table_Name, "Value = ?", get_TrxName())
+							.setParameters(p_conceptValueFrom).first();
+					MHRConcept conceptTo = new Query(getCtx(),
+							MHRConcept.Table_Name, "Value = ?", get_TrxName())
+							.setParameters(p_coneptValueTo).first();
+					MHRPeriod periodFrom = (MHRPeriod) this.getHR_Period();
 					int periodFromNo = periodFrom.getPeriodNo();
-					String where = MHRPayroll.COLUMNNAME_HR_Payroll_ID+" = ? AND HR_Year_ID = ? AND C_Year_ID = ? AND PeriodNo > ?";
-					Object[] para = new Object[]{periodFrom.getHR_Payroll_ID(),periodFrom.getHR_Year_ID(),periodFrom.getC_Year_ID(),periodFromNo};
-					BigDecimal periodToNo = new Query(getCtx(),MHRPeriod.Table_Name,where,get_TrxName()).
-							setParameters(para).
-							aggregate("PeriodNo", "MIN");
-					if (periodToNo!=null){
-						where =  MHRPayroll.COLUMNNAME_HR_Payroll_ID+" = ? AND HR_Year_ID = ? AND C_Year_ID = ? AND PeriodNo = ?";
-						para = new Object[]{periodFrom.getHR_Payroll_ID(),periodFrom.getHR_Year_ID(),periodFrom.getC_Year_ID(),periodToNo};
-						MHRPeriod periodTo = new Query(getCtx(),MHRPeriod.Table_Name,where,get_TrxName()).setParameters(para).first();
-						if (periodTo!=null){
-							MHRAttribute attribute = new MHRAttribute(getCtx(), 0, get_TrxName());
-							attribute.setHR_Concept_ID(conceptTo.get_ID());
-							attribute.setDescription(Msg.translate(getCtx(), "Missing Credit From Last Period")+" "+conceptFrom.getName());
-							attribute.setAmount(BigDecimal.valueOf(creditTotal-debitTotal));
-							attribute.setValidFrom(periodTo.getStartDate());
-							attribute.setValidTo(periodTo.getEndDate());
-							attribute.setC_BPartner_ID(p_C_BPartner_ID);
-							attribute.setColumnType(conceptTo.getColumnType());
-							attribute.saveEx();	
+					String where = MHRPayroll.COLUMNNAME_HR_Payroll_ID
+							+ " = ? AND HR_Year_ID = ? AND C_Year_ID = ? AND PeriodNo > ?";
+					Object[] para = new Object[] {
+							periodFrom.getHR_Payroll_ID(),
+							periodFrom.getHR_Year_ID(),
+							periodFrom.getC_Year_ID(), periodFromNo };
+					BigDecimal periodToNo = new Query(getCtx(),
+							MHRPeriod.Table_Name, where, get_TrxName())
+							.setParameters(para).aggregate("PeriodNo", "MIN");
+					if (periodToNo != null) {
+						where = MHRPayroll.COLUMNNAME_HR_Payroll_ID
+								+ " = ? AND HR_Year_ID = ? AND C_Year_ID = ? AND PeriodNo = ?";
+						para = new Object[] { periodFrom.getHR_Payroll_ID(),
+								periodFrom.getHR_Year_ID(),
+								periodFrom.getC_Year_ID(), periodToNo };
+						MHRPeriod periodTo = new Query(getCtx(),
+								MHRPeriod.Table_Name, where, get_TrxName())
+								.setParameters(para).first();
+						if (periodTo != null) {
+
+//							MHRAttribute attribute = new MHRAttribute(getCtx(),
+//									0, get_TrxName());
+//							attribute.setHR_Concept_ID(conceptTo.get_ID());
+//							attribute.setDescription(Msg.translate(getCtx(),
+//									"Missing Credit From Last Period")
+//									+ " "
+//									+ conceptFrom.getName());
+//							attribute.setAmount(BigDecimal.valueOf(creditTotal
+//									- debitTotal));
+//							attribute.setValidFrom(periodTo.getStartDate());
+//							attribute.setValidTo(periodTo.getEndDate());
+//							attribute.setC_BPartner_ID(p_C_BPartner_ID);
+//							attribute.setColumnType(conceptTo.getColumnType());
+//							attribute.saveEx();
+							getaddAttributeAmt(
+									conceptFrom.getValue(),
+									conceptTo.getValue(),
+									periodTo.get_ID(),
+									(creditTotal - debitTotal),
+									(Msg.translate(getCtx(),
+											"Missing Credit From Last Period")
+											+ " " + conceptFrom.getName()),
+									p_C_BPartner_ID);
 						}
-						
+
 					}
-				
-					
+
 				}
 			}
 			updateConcept(p_conceptCreditAcum, (debitTotal));
-			return creditTotal-debitTotal;
-		}
-		else{
+			return creditTotal - debitTotal;
+		} else {
 			updateConcept(p_conceptCreditAcum, (creditTotal));
 			return 0;
 		}
-	}//getCreditForNextPeriod
+	}// getCreditForNextPeriod
 
 	public String getMessageCreditForNextPeriod(double creditForNextPeriod) {
 		if (creditForNextPeriod > 0) {
@@ -2767,7 +2802,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		}
 
 	}
-	
+
 	/**
 	 * Helper Method : update the value of a concept
 	 * 
@@ -2776,22 +2811,23 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 	 */
 	public void updateConcept(String conceptValue, double value) {
 		try {
-			
-			MHRConcept concept = MHRConcept.forValue(getCtx(), conceptValue.trim());
+
+			MHRConcept concept = MHRConcept.forValue(getCtx(),
+					conceptValue.trim());
 
 			MHRMovement m = m_movement.get(concept.get_ID());
 			if (m == null) {
 				createMovementFromConcept(concept, concept.isPrinted());
 				m = m_movement.get(concept.get_ID());
 			}
-			
+
 			m.setAmount(BigDecimal.valueOf(value));
 			m.saveEx();
 		} catch (Exception e) {
 			s_log.warning(e.getMessage());
 		}
 	} // setConcept
-	
+
 	/**
 	 * Helper Method : getNexPeriod by PeriodNo
 	 * 
@@ -2801,35 +2837,42 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 	public int getNexPeriod(int p_currentPeriod_ID) {
 		MHRPeriod periodFrom = MHRPeriod.get(getCtx(), p_currentPeriod_ID);
 		MHRPeriod periodTo = null;
-		
+
 		int periodFromNo = periodFrom.getPeriodNo();
-		String where = MHRPayroll.COLUMNNAME_HR_Payroll_ID+" = ? AND HR_Year_ID = ? AND C_Year_ID = ? AND PeriodNo > ?";
-		Object[] para = new Object[]{periodFrom.getHR_Payroll_ID(),periodFrom.getHR_Year_ID(),periodFrom.getC_Year_ID(),periodFromNo};
-		BigDecimal periodToNo = new Query(getCtx(),MHRPeriod.Table_Name,where,get_TrxName()).
-				setParameters(para).
-				aggregate("PeriodNo", "MIN");
-		if (periodToNo!=null){
-			
-			where =  MHRPayroll.COLUMNNAME_HR_Payroll_ID+" = ? AND HR_Year_ID = ? AND C_Year_ID = ? AND PeriodNo = ?";
-			para = new Object[]{periodFrom.getHR_Payroll_ID(),periodFrom.getHR_Year_ID(),periodFrom.getC_Year_ID(),periodToNo};
-			periodTo = new Query(getCtx(),MHRPeriod.Table_Name,where,get_TrxName()).setParameters(para).first();
-			
+		String where = MHRPayroll.COLUMNNAME_HR_Payroll_ID
+				+ " = ? AND HR_Year_ID = ? AND C_Year_ID = ? AND PeriodNo > ?";
+		Object[] para = new Object[] { periodFrom.getHR_Payroll_ID(),
+				periodFrom.getHR_Year_ID(), periodFrom.getC_Year_ID(),
+				periodFromNo };
+		BigDecimal periodToNo = new Query(getCtx(), MHRPeriod.Table_Name,
+				where, get_TrxName()).setParameters(para).aggregate("PeriodNo",
+				"MIN");
+		if (periodToNo != null) {
+
+			where = MHRPayroll.COLUMNNAME_HR_Payroll_ID
+					+ " = ? AND HR_Year_ID = ? AND C_Year_ID = ? AND PeriodNo = ?";
+			para = new Object[] { periodFrom.getHR_Payroll_ID(),
+					periodFrom.getHR_Year_ID(), periodFrom.getC_Year_ID(),
+					periodToNo };
+			periodTo = new Query(getCtx(), MHRPeriod.Table_Name, where,
+					get_TrxName()).setParameters(para).first();
+
 		}
 		return periodTo.get_ID();
 	}
-	
-	
+
 	/**
 	 * Helper Method : getaddAttributeAmt (New register on HR_Attribute)
 	 * 
 	 * @param p_currentPeriod
-	 * @return periodTo 
+	 * @return periodTo
 	 */
-	public void getaddAttributeAmt(String p_concept,int p_period_id,double p_amt,String p_description,int p_C_BPartner_ID){
-		
+	public void getaddAttributeAmt(String p_concept, int p_period_id,
+			double p_amt, String p_description, int p_C_BPartner_ID) {
+
 		MHRPeriod p_period = MHRPeriod.get(getCtx(), p_period_id);
 		MHRConcept conceptTo = MHRConcept.forValue(getCtx(), p_concept);
-		
+
 		MHRAttribute attribute = new MHRAttribute(getCtx(), 0, get_TrxName());
 		attribute.setHR_Concept_ID(conceptTo.get_ID());
 		attribute.setDescription(p_description);
@@ -2839,6 +2882,45 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		attribute.setColumnType(conceptTo.getColumnType());
 		attribute.setC_BPartner_ID(p_C_BPartner_ID);
 		attribute.saveEx();
-	
-	}//getaddAttributeAmt
+
+	}// getaddAttributeAmt
+
+	/**
+	 * 
+	 * @param p_conceptFrom
+	 * @param p_conceptTo
+	 * @param p_period_id
+	 * @param p_amt
+	 * @param p_description
+	 * @param p_C_BPartner_ID
+	 */
+	public void getaddAttributeAmt(String p_conceptFrom, String p_conceptTo,
+			int p_period_id, double p_amt, String p_description,
+			int p_C_BPartner_ID) {
+
+		MHRPeriod p_period = MHRPeriod.get(getCtx(), p_period_id);
+		MHRConcept conceptFrom = MHRConcept.forValue(getCtx(), p_conceptFrom);
+		MHRConcept conceptTo = MHRConcept.forValue(getCtx(), p_conceptTo);
+		String where = " HR_Process_ID = ? AND HR_Concept_ID = ? AND C_BPartner_ID = ? AND HR_ConceptFrom_ID = ?";
+		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name,
+				where, get_TrxName()).setParameters(getHR_Process_ID(),
+				conceptTo.get_ID(), p_C_BPartner_ID, conceptFrom.get_ID())
+				.firstOnly();
+
+		if (attribute == null)
+			attribute = new MHRAttribute(getCtx(), 0, get_TrxName());
+
+		attribute.setHR_Concept_ID(conceptTo.get_ID());
+		attribute.setDescription(p_description);
+		attribute.setAmount(BigDecimal.valueOf(p_amt));
+		attribute.setValidFrom(p_period.getStartDate());
+		attribute.setValidTo(p_period.getEndDate());
+		attribute.setColumnType(conceptTo.getColumnType());
+		attribute.setC_BPartner_ID(p_C_BPartner_ID);
+		attribute.set_ValueOfColumn("HR_Process_ID", getHR_Process_ID());
+		attribute.set_ValueOfColumn("HR_ConceptFrom_ID", conceptFrom.get_ID());
+		attribute.saveEx();
+
+	}// getaddAttributeAmt
+
 } // MHRProcess
