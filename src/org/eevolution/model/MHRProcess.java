@@ -1031,7 +1031,9 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		String type = m.getColumnType();
 		if (MHRMovement.COLUMNTYPE_Text.equals(type)) {
 			return m.getServiceDate();
-		} else {
+		}else if (MHRMovement.COLUMNTYPE_Date.equals(type)){
+			return m.getServiceDate();
+		}else {
 			// TODO: throw exception ?
 			return null;
 		}

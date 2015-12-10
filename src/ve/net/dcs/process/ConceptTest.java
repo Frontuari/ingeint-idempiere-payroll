@@ -79,7 +79,7 @@ public class ConceptTest extends MHRProcess_ConceptTest implements DocAction {
 
 	private int _Process_Period, _Payroll, _Department, _Days, _C_BPartner_ID,_Process,
 			_JobEmployee;
-	private double result;
+	private Object result;
 	private String description,_RegionEmployee;
 	private Timestamp _From, _To, _DateStart, _DateEnd,serviceDate;
 
@@ -113,8 +113,20 @@ public class ConceptTest extends MHRProcess_ConceptTest implements DocAction {
 
 	public void test() {
 
-		
-		
+result = 0.0;
+
+
+//*************************************************************
+//*CC_SUELDO_ULTIMANOMINA_HASTA_LIQ*
+//*************************************************************
+double sueldoDiario = getConcept("CC_SUELDO_DIARIO");
+double diasPendientes= getDays(getConceptDate("C_FECHA_INICIO_PERIODO"),_DateEnd);
+result =sueldoDiario*diasPendientes;
+//************************************************************************************************
+
+
+
+	
 //Add to each credit		
 
 //conceptoTemp="D_CUOTA_PRESTAMO_HIPOTECARIO";
