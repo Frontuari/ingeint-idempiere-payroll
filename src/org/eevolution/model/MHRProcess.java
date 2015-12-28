@@ -2737,22 +2737,18 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 							MHRConcept.Table_Name, "Value = ?", get_TrxName())
 							.setParameters(p_coneptValueTo).first();
 					MHRPeriod periodFrom = (MHRPeriod) this.getHR_Period();
-					int periodFromNo = periodFrom.getPeriodNo();
+					Timestamp periodFromDateAcct  =periodFrom.getDateAcct();
 					String where = MHRPayroll.COLUMNNAME_HR_Payroll_ID
-							+ " = ? AND HR_Year_ID = ? AND C_Year_ID = ? AND PeriodNo > ?";
+							+ " = ? AND DateAcct > ?";
 					Object[] para = new Object[] {
-							periodFrom.getHR_Payroll_ID(),
-							periodFrom.getHR_Year_ID(),
-							periodFrom.getC_Year_ID(), periodFromNo };
-					BigDecimal periodToNo = new Query(getCtx(),
+							periodFrom.getHR_Payroll_ID(), periodFromDateAcct };
+					Timestamp DateAcctTo = new Query(getCtx(),
 							MHRPeriod.Table_Name, where, get_TrxName())
-							.setParameters(para).aggregate("PeriodNo", "MIN");
-					if (periodToNo != null) {
+							.setParameters(para).aggregate("DateAcct", "MIN",Timestamp.class);
+					if (DateAcctTo != null) {
 						where = MHRPayroll.COLUMNNAME_HR_Payroll_ID
-								+ " = ? AND HR_Year_ID = ? AND C_Year_ID = ? AND PeriodNo = ?";
-						para = new Object[] { periodFrom.getHR_Payroll_ID(),
-								periodFrom.getHR_Year_ID(),
-								periodFrom.getC_Year_ID(), periodToNo };
+								+ " = ? AND DateAcct = ?";
+						para = new Object[] { periodFrom.getHR_Payroll_ID(), DateAcctTo };
 						MHRPeriod periodTo = new Query(getCtx(),
 								MHRPeriod.Table_Name, where, get_TrxName())
 								.setParameters(para).first();
@@ -2840,22 +2836,19 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		MHRPeriod periodFrom = MHRPeriod.get(getCtx(), p_currentPeriod_ID);
 		MHRPeriod periodTo = null;
 
-		int periodFromNo = periodFrom.getPeriodNo();
+		
+		Timestamp dateAcctFrom = periodFrom.getDateAcct();
 		String where = MHRPayroll.COLUMNNAME_HR_Payroll_ID
-				+ " = ? AND HR_Year_ID = ? AND C_Year_ID = ? AND PeriodNo > ?";
-		Object[] para = new Object[] { periodFrom.getHR_Payroll_ID(),
-				periodFrom.getHR_Year_ID(), periodFrom.getC_Year_ID(),
-				periodFromNo };
-		BigDecimal periodToNo = new Query(getCtx(), MHRPeriod.Table_Name,
-				where, get_TrxName()).setParameters(para).aggregate("PeriodNo",
-				"MIN");
-		if (periodToNo != null) {
+				+ " = ? AND DateAcct > ?";
+		Object[] para = new Object[] { periodFrom.getHR_Payroll_ID(),dateAcctFrom };
+		Timestamp DateAcctTo = new Query(getCtx(), MHRPeriod.Table_Name,
+				where, get_TrxName()).setParameters(para).aggregate("DateAcct",
+				"MIN",Timestamp.class);
+		if (DateAcctTo != null) {
 
 			where = MHRPayroll.COLUMNNAME_HR_Payroll_ID
-					+ " = ? AND HR_Year_ID = ? AND C_Year_ID = ? AND PeriodNo = ?";
-			para = new Object[] { periodFrom.getHR_Payroll_ID(),
-					periodFrom.getHR_Year_ID(), periodFrom.getC_Year_ID(),
-					periodToNo };
+					+ " = ? AND DateAcct = ?";
+			para = new Object[] { periodFrom.getHR_Payroll_ID(),DateAcctTo };
 			periodTo = new Query(getCtx(), MHRPeriod.Table_Name, where,
 					get_TrxName()).setParameters(para).first();
 
