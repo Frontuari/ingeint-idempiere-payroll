@@ -764,9 +764,14 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 						new Object[] { getHR_Process_ID(), true },
 						get_TrxName());
 		log.info("HR_Movement deleted #" + no);
-
+		MBPartner[] linesEmployee =null;
+		if (Payroll.get_ValueAsBoolean("HR_IncludeInActiveEmployee")){
+			linesEmployee = MHREmployee.getEmployeesAll(this);
+		}else{
+			linesEmployee = MHREmployee.getEmployees(this);
+		}
 		linesConcept = MHRPayrollConcept.getPayrollConcepts(this);
-		MBPartner[] linesEmployee = MHREmployee.getEmployees(this);
+		
 		//
 		int count = 1;
 		for (MBPartner bp : linesEmployee) // ===============================================================

@@ -194,4 +194,79 @@ public class MHREmployee extends X_HR_Employee
 	{
 		super(ctx, rs, trxName);
 	}	//	MHREmployee
+	
+	/**
+	 * 	Get Employees of Process Regardless of its active state
+	 *  @param p HR Process
+	 * 	@return Array of Business Partners
+	 */
+	public static MBPartner[] getEmployeesAll (MHRProcess p)
+	{
+		boolean IsPayrollApplicableToEmployee = false;
+		List<Object> params = new ArrayList<Object>();
+		StringBuilder whereClause = new StringBuilder();
+				
+		whereClause.append(" C_BPartner.C_BPartner_ID IN (SELECT e.C_BPartner_ID FROM HR_Employee e WHERE e.AD_Org_ID = ?");
+		params.add(p.getAD_Org_ID());
+
+		// Valid if used definition of payroll per employee > ocurieles 18Nov2014
+		
+		MHRPayroll Payroll = MHRPayroll.get(Env.getCtx(),p.getHR_Payroll_ID());
+		
+		if (Payroll !=null || !Payroll.equals(null)){
+			IsPayrollApplicableToEmployee = Payroll.get_ValueAsBoolean("IsemployeeApplicable");
+		}
+		// This payroll not content periods, NOT IS a Regular Payroll > ogi-cd 28Nov2007
+		if(p.getHR_Payroll_ID() != 0 && p.getHR_Period_ID() != 0 && IsPayrollApplicableToEmployee)
+		
+		{
+		whereClause.append(" AND (e.HR_Payroll_ID IS NULL OR e.HR_Payroll_ID=?) " );
+			params.add(p.getHR_Payroll_ID());
+		}
+		
+		// HR Period
+		if(p.getHR_Period_ID() == 0)
+		{
+			whereClause.append(" AND e.StartDate <=? ");
+			params.add(p.getDateAcct());	
+		}
+		else
+		{
+			MHRPeriod period = new MHRPeriod(p.getCtx(), p.getHR_Period_ID(), p.get_TrxName());
+			whereClause.append(" AND e.StartDate <=? ");
+			params.add(period.getEndDate());
+			whereClause.append(" AND (e.EndDate IS NULL OR (e.EndDate >=? AND (e.HR_Exclude='N' Or e.HR_Exclude IS NULL) OR (e.EndDate >?))) ");
+			params.add(period.getStartDate());
+			params.add(period.getEndDate());
+		}
+		
+		// Selected Department
+		if (p.getHR_Department_ID() != 0) 
+		{
+			whereClause.append(" AND e.HR_Department_ID =? ");
+			params.add(p.getHR_Department_ID());
+		}
+		
+		whereClause.append(" ) "); // end select from HR_Employee
+		
+		// Selected Employee
+		if (p.getC_BPartner_ID() != 0)
+		{
+			whereClause.append(" AND C_BPartner_ID =? ");
+			params.add(p.getC_BPartner_ID());
+		}
+		
+		//client
+		whereClause.append(" AND AD_Client_ID =? ");
+		params.add(p.getAD_Client_ID());
+		
+		
+		List<MBPartner> list = new Query(p.getCtx(), MBPartner.Table_Name, whereClause.toString(), p.get_TrxName())
+								.setParameters(params)
+								.setOnlyActiveRecords(true)
+								.setOrderBy(COLUMNNAME_Name)
+								.list();
+
+		return list.toArray(new MBPartner[list.size()]);
+	}	//	getEmployees
 }	//	MHREmployee
