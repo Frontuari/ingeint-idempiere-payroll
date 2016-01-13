@@ -733,7 +733,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		// 18Nov2014
 
 		MHRPayroll Payroll = MHRPayroll.get(Env.getCtx(), getHR_Payroll_ID());
-
+		boolean includeInActiveEmployee = Payroll.get_ValueAsBoolean("HR_IncludeInActiveEmployee");
+		boolean allOrg = Payroll.get_ValueAsBoolean("HR_AllOrg");
 		if (Payroll != null || !Payroll.equals(null))
 			IsPayrollApplicableToEmployee = Payroll
 					.get_ValueAsBoolean("IsemployeeApplicable");
@@ -765,8 +766,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 						get_TrxName());
 		log.info("HR_Movement deleted #" + no);
 		MBPartner[] linesEmployee =null;
-		if (Payroll.get_ValueAsBoolean("HR_IncludeInActiveEmployee")){
-			linesEmployee = MHREmployee.getEmployeesAll(this);
+		if (includeInActiveEmployee){
+			linesEmployee = MHREmployee.getEmployeesAll(this,allOrg);
 		}else{
 			linesEmployee = MHREmployee.getEmployees(this);
 		}
@@ -781,13 +782,30 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 					+ bp.getName());
 			count++;
 			m_C_BPartner_ID = bp.get_ID();
-			if (getHR_Payroll_ID() > 0 && IsPayrollApplicableToEmployee)
-				m_employee = MHREmployee.getActiveEmployee(getCtx(),
-						m_C_BPartner_ID, getAD_Org_ID(), get_TrxName(),
-						getHR_Payroll_ID());
-			else
-				m_employee = MHREmployee.getActiveEmployee(getCtx(),
-						m_C_BPartner_ID, getAD_Org_ID(), get_TrxName());
+			if (getHR_Payroll_ID() > 0 && IsPayrollApplicableToEmployee && !allOrg){
+				if (includeInActiveEmployee){
+					m_employee = MHREmployee.getEmployee(getCtx(),
+							m_C_BPartner_ID, getAD_Org_ID(), get_TrxName(),
+							getHR_Payroll_ID());
+				}else{
+					m_employee = MHREmployee.getActiveEmployee(getCtx(),
+							m_C_BPartner_ID, getAD_Org_ID(), get_TrxName(),
+							getHR_Payroll_ID());
+				}
+				
+			}
+				
+			else{
+				if (includeInActiveEmployee){
+					m_employee = MHREmployee.getEmployee(getCtx(),
+							m_C_BPartner_ID, get_TrxName());
+				}else{
+					m_employee = MHREmployee.getActiveEmployee(getCtx(),
+							m_C_BPartner_ID, get_TrxName());	
+				}
+				
+			}
+				
 			m_scriptCtx.remove("_DateStart");
 			m_scriptCtx.remove("_DateEnd");
 			m_scriptCtx.remove("_Days");
