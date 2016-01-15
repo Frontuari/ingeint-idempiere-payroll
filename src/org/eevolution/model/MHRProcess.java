@@ -821,8 +821,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 							period.getStartDate(), period.getEndDate()) + 1);
 			m_scriptCtx.put("_C_BPartner_ID", bp.getC_BPartner_ID());
 			m_scriptCtx.put("_JobEmployee", m_employee.getHR_Job_ID());
-			m_scriptCtx.put("_RegionEmployee",
-					m_employee.get_Value("HR_Region"));
+			
 			m_movement.clear();
 			loadMovements(m_movement, m_C_BPartner_ID);
 			//
@@ -2998,5 +2997,104 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		// something else
 		return 0.0; // TODO throw exception ??
 	} // getAttribute
+	
+	/**
+	 * TODO QSS Reviewme Helper Method: gets Concept value of payrroll(s)
+	 * between 2 dates if payrollValue is null then sum all payrolls between 2
+	 * dates if dates range are null then set them based on first and last day
+	 * of period
+	 * 
+	 * @param pConcept
+	 * @param from
+	 * @param to
+	 * */
+	public double getConceptRangeOfPeriodExcludeFirstAndLast(String conceptValue,
+			String payrollValue, String dateFrom, String dateTo) {
+		int payroll_id = -1;
+		if (payrollValue == null) {
+			// payroll_id = getHR_Payroll_ID();
+			payroll_id = 0; // all payrrolls
+		} else {
+			payroll_id = MHRPayroll.forValue(getCtx(), payrollValue).get_ID();
+		}
+
+		MHRConcept concept = MHRConcept.forValue(getCtx(), conceptValue);
+
+		if (concept == null)
+			return 0.0;
+
+		Timestamp from = null;
+		Timestamp to = null;
+
+		if (dateFrom != null)
+			from = Timestamp.valueOf(dateFrom);
+		if (dateTo != null)
+			to = Timestamp.valueOf(dateTo);
+
+		// Detect field name
+		final String fieldName;
+		if (MHRConcept.COLUMNTYPE_Quantity.equals(concept.getColumnType())) {
+			fieldName = MHRMovement.COLUMNNAME_Qty;
+		} else if (MHRConcept.COLUMNTYPE_Amount.equals(concept.getColumnType())) {
+			fieldName = MHRMovement.COLUMNNAME_Amount;
+		} else {
+			return 0; // TODO: throw exception?
+		}
+		//
+		MHRPeriod p = MHRPeriod.get(getCtx(), getHR_Period_ID());
+		ArrayList<Object> params = new ArrayList<Object>();
+		StringBuffer whereClause = new StringBuffer();
+		// check client
+		whereClause.append("AD_Client_ID = ?");
+		params.add(getAD_Client_ID());
+		// check concept
+		whereClause.append(" AND " + MHRMovement.COLUMNNAME_HR_Concept_ID
+				+ "=?");
+		params.add(concept.get_ID());
+		// check partner
+		whereClause.append(" AND " + MHRMovement.COLUMNNAME_C_BPartner_ID
+				+ "=?");
+		params.add(getM_C_BPartner_ID());
+		// Adding Organization
+		whereClause.append(" AND ( " + MHRMovement.COLUMNNAME_AD_Org_ID
+				+ "=? OR " + MHRMovement.COLUMNNAME_AD_Org_ID + "= 0 )");
+		params.add(getAD_Org_ID());
+		// Adding dates
+		whereClause.append(" AND validFrom >= ? ");
+		params.add(from);
+		whereClause.append(" AND validTo <= ? ");
+		params.add(to);
+		
+//		if (from == null)
+//			from = getFirstDayOfPeriod(p.getHR_Period_ID());
+//		if (to == null)
+//			to = getLastDayOfPeriod(p.getHR_Period_ID());
+//		params.add(from);
+//		params.add(to);
+		//
+		// check process and payroll
+		if (payroll_id > 0) {
+			whereClause
+					.append(" AND EXISTS (SELECT 1 FROM HR_Process p"
+							+ " INNER JOIN HR_Period pr ON (pr.HR_Period_id=p.HR_Period_ID)"
+							+ " WHERE HR_Movement.HR_Process_ID = p.HR_Process_ID"
+							+ " AND p.HR_Payroll_ID=?");
+
+			params.add(payroll_id);
+			whereClause.append(")");
+			//
+		}
+		StringBuffer sql = new StringBuffer("SELECT COALESCE(SUM(")
+				.append(fieldName).append("),0) FROM ")
+				.append(MHRMovement.Table_Name).append(" WHERE ")
+				.append(whereClause);
+		BigDecimal value = DB.getSQLValueBDEx(get_TrxName(), sql.toString(),
+				params);
+		if (value != null)
+			return value.doubleValue();
+		else
+			return 0;
+
+	} // getConceptRangeOfPeriod
 
 } // MHRProcess

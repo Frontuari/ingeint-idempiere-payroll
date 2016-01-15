@@ -245,7 +245,7 @@ public class MHREmployee extends X_HR_Employee
 		}
 		if (p.getC_BPartner_ID() != 0)
 		{
-			whereClause.append(" AND C_BPartner_ID =? ");
+			whereClause.append(" AND m.C_BPartner_ID =? ");
 			params.add(p.getC_BPartner_ID());
 		}
 		whereClause.append(" AND p.Docstatus in ('CO'))");
