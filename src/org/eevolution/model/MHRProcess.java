@@ -850,8 +850,9 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 					movement = m_movement.get(concept.get_ID());
 				}
 				if (movement == null) {
-					throw new AdempiereException("Concept "
-							+ concept.getValue() + " not created");
+					continue;
+					//throw new AdempiereException("Concept "
+//							+ concept.getValue() + " not created");
 				}
 				movement.set_ValueOfColumn("SeqNo", pc.getSeqNo());
 			} // concept
@@ -1049,7 +1050,9 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			createMovementFromConcept(concept, concept.isPrinted());
 			m = m_movement.get(concept.get_ID());
 		}
-
+		if (m==null){
+			return null;
+		}
 		String type = m.getColumnType();
 		if (MHRMovement.COLUMNTYPE_Text.equals(type)) {
 			return m.getServiceDate();
