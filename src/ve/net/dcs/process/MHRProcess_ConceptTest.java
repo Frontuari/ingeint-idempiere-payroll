@@ -50,7 +50,6 @@ import org.compiere.util.Env;
 import org.compiere.util.TimeUtil;
 import org.eevolution.model.*;
 import org.eevolution.process.*;
-import org.python.antlr.PythonParser.attr_return;
 
 import bsh.EvalError;
 import bsh.Interpreter;
