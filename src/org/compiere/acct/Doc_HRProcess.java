@@ -130,6 +130,7 @@ public class Doc_HRProcess extends Doc
 			{
 				if (isBalancing)
 				{
+					//TODO Revisar el metodo accountBDP
 					MAccount accountBPD = MAccount.get (getCtx(), getAccountBalancingBPG(as.getC_AcctSchema_ID(),HR_Concept_ID,MHRConcept.ACCOUNTSIGN_Debit,C_BP_Group_ID));
 					FactLine debit=fact.createLine(docLine, accountBPD,as.getC_Currency_ID(),sumAmount, null);
 					debit.setAD_OrgTrx_ID(AD_OrgTrx_ID);
@@ -249,7 +250,9 @@ public class Doc_HRProcess extends Doc
 		StringBuilder sqlAccount = new StringBuilder("SELECT COALESCE(").append(field).append(",0) FROM HR_Concept_Acct")
 											.append(" WHERE HR_Concept_ID=? AND C_AcctSchema_ID=? AND C_BP_Group_ID=? ");
 		int Account_ID = DB.getSQLValueEx(getTrxName(), sqlAccount.toString(), HR_Concept_ID, AcctSchema_ID,p_C_BP_Group_ID);
-		if (Account_ID==0){
+		//Support https://support.ingeint.com/issues/870
+		// No encontraba la cuenta contable-devolvía null se agregó || Account_ID==-1
+		if (Account_ID==0 || Account_ID==-1){
 			sqlAccount = new StringBuilder("SELECT COALESCE(").append(field).append(",0) FROM HR_Concept_Acct")
 					.append(" WHERE HR_Concept_ID=? AND C_AcctSchema_ID=? ");
 			Account_ID = DB.getSQLValueEx(getTrxName(), sqlAccount.toString(), HR_Concept_ID, AcctSchema_ID);
