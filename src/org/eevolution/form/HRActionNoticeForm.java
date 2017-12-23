@@ -250,7 +250,7 @@ public class HRActionNoticeForm implements IFormController, EventListener<Event>
 		mainLayout.appendChild(center);
 		miniTable.setVflex(true);
 		miniTable.setWidth("100%");
-		miniTable.setHeight("100%");
+	  //miniTable.setHeight("100%");
 
 		fieldValidFrom.setReadWrite(false);
 		fieldValidTo.setReadWrite(false);
@@ -279,7 +279,8 @@ public class HRActionNoticeForm implements IFormController, EventListener<Event>
 	}
 	//Filter for AD_Client_ID ocurieles 19/11/2014
 	private void loadPayrollProcces() {
-		String sql = "SELECT HRP.HR_Process_ID, HRP.DocumentNo ||'-'|| HRP.Name, HRP.DocumentNo, HRP.Name FROM HR_Process HRP WHERE HRP.IsActive = 'Y' AND HRP.DocStatus IN ('DR', 'PR', 'IP') AND HRP.AD_Client_ID= " + Env.getAD_Client_ID(Env.getCtx()) ;
+		String sql = "SELECT HRP.HR_Process_ID, HRP.DocumentNo ||'-'|| HRP.Name, HRP.DocumentNo,"
+				+ " HRP.Name FROM HR_Process HRP WHERE HRP.IsActive = 'Y' AND HRP.DocStatus IN ('DR', 'PR', 'IP') AND HRP.AD_Client_ID= " + Env.getAD_Client_ID(Env.getCtx()) ;
 
 		if (AD_Org_ID > 0) {
 			sql += " AND HRP.AD_Org_ID = " + AD_Org_ID;

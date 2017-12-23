@@ -256,12 +256,12 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 		
 
 		row.appendCellChild(labelOrg.rightAlign());
-		fieldOrg.getComponent().setHflex("true");
+		//fieldOrg.getComponent().setHflex("true");
 		row.appendCellChild(fieldOrg.getComponent(), 2);
 		row = rows.newRow();
 		
 		row.appendCellChild(labelHRPeriod.rightAlign());
-		fieldHRPeriod.getComponent().setHflex("true");
+		//fieldHRPeriod.getComponent().setHflex("true");
 		fieldHRPeriod.dynamicDisplay();
 		row.appendCellChild(fieldHRPeriod.getComponent(), 2);
 		
@@ -311,7 +311,7 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 		row = rows.newRow();
 		row.appendCellChild(bZoom, 2);
 		bZoom.setHflex("true");
-		bZoom.setWidth("100%");
+		//bZoom.setWidth("100%");
 		row.appendCellChild(descriptionLabel.rightAlign());
 		descriptionLabel.setHflex("true");
 		row.appendCellChild(descriptionField.getComponent(), 3);
