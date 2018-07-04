@@ -27,6 +27,7 @@ package com.ingeint.component;
 import org.adempiere.base.event.IEventTopics;
 
 import com.ingeint.base.CustomEventManager;
+import com.ingeint.event.EmployeeLoans;
 import com.ingeint.event.HRGAP_EventHandler;
 
 /**
@@ -39,6 +40,6 @@ public class EventManager extends CustomEventManager {
 		// Register the custom events handler to build
 		registerTableEvent(IEventTopics.PO_AFTER_CHANGE, "HR_GAP_Sector", HRGAP_EventHandler.class);
 		registerTableEvent(IEventTopics.PO_AFTER_NEW, "HR_GAP_Sector", HRGAP_EventHandler.class);
+		registerTableEvent(IEventTopics.PO_AFTER_CHANGE, "HR_Loan", EmployeeLoans.class);
 	}
-
 }

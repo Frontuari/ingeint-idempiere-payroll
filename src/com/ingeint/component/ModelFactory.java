@@ -38,6 +38,7 @@ import org.eevolution.model.MHRProcess;
 import org.eevolution.model.MHRYear;
 
 import com.ingeint.base.CustomModelFactory;
+import com.ingeint.model.MHRLoan;
 import com.ingeint.model.MHR_Basic_Factor_Type;
 import com.ingeint.model.MHR_GAP;
 
@@ -63,7 +64,6 @@ public class ModelFactory extends CustomModelFactory {
 		registerTableModel(MHRPayrollConcept.Table_Name, MHRPayrollConcept.class);
 		registerTableModel(MHRProcess.Table_Name, MHRProcess.class);
 		registerTableModel(MHRYear.Table_Name, MHRYear.class);
-		
+		registerTableModel(MHRLoan.Table_Name, MHRLoan.class);		
 	}
-
 }

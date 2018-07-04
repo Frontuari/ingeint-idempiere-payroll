@@ -23,7 +23,8 @@ Require-Bundle: org.adempiere.base;bundle-version="5.1.0",
  zweb;bundle-version="0.0.0"
 Service-Component: OSGI-INF/org.idempiere.component.HRDocFactory.xml,
  OSGI-INF/com.ingeint.component.ZKFormFactory.xml,OSGI-INF/com.ingeint.component.ModelFactory.xml,OSGI-INF/com.ingeint.component.EventManager.xml
-Export-Package: org.eevolution.model,
+Export-Package: com.ingeint.model,
+ org.eevolution.model,
  ve.net.dcs.process
 Import-Package: org.adempiere.report.jasper,
  org.osgi.service.event
