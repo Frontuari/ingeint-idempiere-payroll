@@ -36,7 +36,6 @@ public class MHRLoan extends X_HR_Loan implements DocAction, DocOptions {
 
 	public MHRLoan(Properties ctx, ResultSet rs, String trxName) {
 		super(ctx, rs, trxName);
-		// TODO Auto-generated constructor stub
 	}
 	
 	/**	Process Message 			*/
@@ -151,7 +150,7 @@ public class MHRLoan extends X_HR_Loan implements DocAction, DocOptions {
 				+ "FROM HR_LoanLines WHERE HR_Loan_ID = ? ", get_ID());
 		
 		setDateFinish(maxDate);
-		
+		setOpenAmt(getAmt());		
 		return DocAction.STATUS_InProgress;
 		
 	}
