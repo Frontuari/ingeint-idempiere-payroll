@@ -106,6 +106,19 @@ public interface I_HR_LoanLines
 	  */
 	public String getDescription();
 
+    /** Column name DueDate */
+    public static final String COLUMNNAME_DueDate = "DueDate";
+
+	/** Set Due Date.
+	  * Date when the payment is due
+	  */
+	public void setDueDate (Timestamp DueDate);
+
+	/** Get Due Date.
+	  * Date when the payment is due
+	  */
+	public Timestamp getDueDate();
+
     /** Column name FeeNumbers */
     public static final String COLUMNNAME_FeeNumbers = "FeeNumbers";
 

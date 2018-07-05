@@ -58,5 +58,5 @@
          <process
                class="org.idempiere.process.GeneratePayrollPayments">
          </process>
-      </extension>
+      </extension>            
 </plugin>

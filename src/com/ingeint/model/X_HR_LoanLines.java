@@ -19,6 +19,7 @@ package com.ingeint.model;
 
 import java.math.BigDecimal;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.Properties;
 import org.compiere.model.*;
 import org.compiere.util.Env;
@@ -32,7 +33,7 @@ public class X_HR_LoanLines extends PO implements I_HR_LoanLines, I_Persistent
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20180704L;
+	private static final long serialVersionUID = 20180705L;
 
     /** Standard Constructor */
     public X_HR_LoanLines (Properties ctx, int HR_LoanLines_ID, String trxName)
@@ -107,6 +108,23 @@ public class X_HR_LoanLines extends PO implements I_HR_LoanLines, I_Persistent
 	public String getDescription () 
 	{
 		return (String)get_Value(COLUMNNAME_Description);
+	}
+
+	/** Set Due Date.
+		@param DueDate 
+		Date when the payment is due
+	  */
+	public void setDueDate (Timestamp DueDate)
+	{
+		set_Value (COLUMNNAME_DueDate, DueDate);
+	}
+
+	/** Get Due Date.
+		@return Date when the payment is due
+	  */
+	public Timestamp getDueDate () 
+	{
+		return (Timestamp)get_Value(COLUMNNAME_DueDate);
 	}
 
 	/** Set Fee Numbers.
