@@ -12,6 +12,7 @@ import java.util.logging.Level;
 import org.compiere.model.MDocType;
 import org.compiere.model.MOrder;
 import org.compiere.model.MPeriod;
+import org.compiere.model.MSysConfig;
 import org.compiere.model.ModelValidationEngine;
 import org.compiere.model.ModelValidator;
 import org.compiere.process.DocAction;
@@ -49,16 +50,20 @@ public class MHRLoan extends X_HR_Loan implements DocAction, DocOptions {
 		
 		loan.setAD_Org_ID(order.getAD_Org_ID());
 		loan.setC_BPartner_ID(order.getC_BPartner_ID());
+		loan.setDocStatus(DOCSTATUS_Drafted);
+		loan.setC_DocTypeTarget_ID(MSysConfig.getIntValue("C_DocTypeForLoanOrder", 0, loan.getAD_Client_ID()));
 		loan.setFeeNumbers(4);
 		loan.setDateStart(order.getDateOrdered());
 		loan.setAD_User_ID(order.getCreatedBy());
 		loan.setC_Order_ID(order.getC_Order_ID());
+		loan.setDateAcct(order.getDateAcct());
 		loan.setIsLoanActive(true);
 		loan.setAmt(order.getGrandTotal());
 		
 		BigDecimal OpenAmt = DB.getSQLValueBD(order.get_TrxName(), "SELECT SUM(OpenAmt) "
 				+ "FROM HR_Loan "
-				+ "WHERE C_BPartner_ID = ? AND IsLoanActive = 'Y' ", order.getC_BPartner_ID());
+				+ "WHERE C_BPartner_ID = ? AND IsLoanActive = 'Y' "
+				+ "AND DocStatus IN ('CO','CL') AND OpenAmt >0 ", order.getC_BPartner_ID());
 
 		if(OpenAmt==null)
 			OpenAmt = Env.ZERO;
@@ -68,17 +73,20 @@ public class MHRLoan extends X_HR_Loan implements DocAction, DocOptions {
 		
 		//Generate Lines
 		BigDecimal feeAmt = order.getGrandTotal().divide(BigDecimal.valueOf(loan.getFeeNumbers(), 0));
+		Date StartDate=new Date(loan.getDateStart().getTime());
 		
 		for (int i=1; i <= loan.getFeeNumbers(); i= i+1) {
 			MHRLoanLines lines = new MHRLoanLines(loan);
 			lines.setFeeNumbers(i);
 			lines.setAmt(feeAmt);
+			lines.setDueDate(new java.sql.Timestamp(calculateDate(StartDate,30).getTime()));
+			StartDate = new Date(lines.getDueDate().getTime());	
 			lines.saveEx();			
 		}//Generate Lines
 		
 		return loan;
 	}	
-
+		
 	public static void createLoanLines(MHRLoan loan) {
 		//Generate Lines
 		BigDecimal feeAmt = loan.getAmt().divide(BigDecimal.valueOf(loan.getFeeNumbers()), 2, BigDecimal.ROUND_HALF_UP);
@@ -115,7 +123,7 @@ public class MHRLoan extends X_HR_Loan implements DocAction, DocOptions {
 		if (docStatus.equals(DocumentEngine.STATUS_Drafted) || docStatus.equals(DocumentEngine.STATUS_Invalid)) {
 			options[index++] = DocumentEngine.ACTION_Complete;
 			options[index++] = DocumentEngine.ACTION_Prepare;
-			options[index++] = DocumentEngine.ACTION_Void;
+			options[index++] = DocumentEngine.ACTION_Reject;
 
 			// If the document is already completed, we also want to be able to reactivate or void it instead of only closing it
 		} else if (docStatus.equals(DocumentEngine.STATUS_Completed)) {
@@ -172,14 +180,28 @@ public class MHRLoan extends X_HR_Loan implements DocAction, DocOptions {
 	@Override
 	public boolean rejectIt() {
 		
+		if (getC_Order_ID()>0) {
+			
+			
+			
+		}
+		
 		return false;
 	}
 
 	@Override
 	public String completeIt() {
+		m_processMsg = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_BEFORE_COMPLETE);
+		if (m_processMsg != null)
+			return DocAction.STATUS_Invalid;
+		m_processMsg = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_AFTER_COMPLETE);
+		if (m_processMsg != null)
+			return DocAction.STATUS_Invalid;
 		setProcessed(true);
+		setDocAction(DOCACTION_Close);
 		return DocAction.STATUS_Completed;
 	}
+	
 
 	@Override
 	public boolean voidIt() {
