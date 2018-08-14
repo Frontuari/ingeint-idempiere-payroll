@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Level;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.MBPartner;
@@ -660,6 +659,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 	 * @param cc
 	 * @return
 	 */
+	@SuppressWarnings("unused")
 	private MHRMovement createMovementForCC(int C_BPartner_ID,
 			I_PP_Cost_Collector cc) {
 		// get the concept that should store the labor
