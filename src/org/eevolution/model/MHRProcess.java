@@ -34,6 +34,7 @@ import org.compiere.model.MFactAcct;
 import org.compiere.model.MPeriod;
 import org.compiere.model.MPeriodControl;
 import org.compiere.model.MRule;
+import org.compiere.model.MSysConfig;
 import org.compiere.model.ModelValidationEngine;
 import org.compiere.model.ModelValidator;
 import org.compiere.model.Query;
@@ -63,6 +64,9 @@ import org.compiere.util.TimeUtil;
  *              http://www.dcsla.com <li>
  * @contributor Rafael Salazar C. - rsalazar@dcsla.com, Double Click Sistemas
  *              http://www.dcsla.com <li>
+ * 
+ * @contributor Orlando Curieles - orlando.curieles@ingeint.com - INGEINT SA
+ * 				https://www.ingeint.com
  */
 public class MHRProcess extends X_HR_Process implements DocAction {
 	/**
@@ -91,6 +95,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 	public static final String CONCEPT_PP_COST_COLLECTOR_LABOR = "PP_COST_COLLECTOR_LABOR"; // HARDCODED
 	Object m_description = null;
 	boolean IsPayrollApplicableToEmployee = false;
+	String DebugMode = MSysConfig.getValue("DEBUG_PAYROLL");
 
 	private static StringBuilder s_scriptImport = new StringBuilder("")
 			.append(" import org.compiere.model.*;")
@@ -782,6 +787,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 					+ bp.getName());
 			count++;
 			m_C_BPartner_ID = bp.get_ID();
+			if (DebugMode!=null && DebugMode.equals("Y"))
+				log.warning("********Employee: **********"+bp.getName());
 			if (getHR_Payroll_ID() > 0 && IsPayrollApplicableToEmployee && !allOrg){
 				if (includeInActiveEmployee){
 					m_employee = MHREmployee.getEmployee(getCtx(),
@@ -846,7 +853,10 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 																			// generated
 				if (movement == null) {
 
+					if (DebugMode!=null && DebugMode.equals("Y"))
+						log.warning("Debug concept: "+concept);
 					movement = createMovementFromConcept(concept, printed);
+					
 					movement = m_movement.get(concept.get_ID());
 				}
 				if (movement == null) {
