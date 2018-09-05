@@ -148,8 +148,7 @@ public class MHRLoan extends X_HR_Loan implements DocAction, DocOptions {
 		{
 			m_processMsg = "@PeriodClosed@";
 			return DocAction.STATUS_Invalid;
-		}
-		
+		}		
 		setC_DocType_ID(getC_DocTypeTarget_ID());
 		setIsLoanActive(true);
 		setIsApproved(true);
@@ -161,8 +160,7 @@ public class MHRLoan extends X_HR_Loan implements DocAction, DocOptions {
 		setOpenAmt(getAmt());		
 		return DocAction.STATUS_InProgress;
 		
-	}
-	
+	}	
 	
 	@Override
 	public boolean processIt(String action) throws Exception {
@@ -171,6 +169,19 @@ public class MHRLoan extends X_HR_Loan implements DocAction, DocOptions {
 		return engine.processIt(action, getDocAction());
 	}
 
+	@Override
+	public String completeIt() {
+		m_processMsg = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_BEFORE_COMPLETE);
+		if (m_processMsg != null)
+			return DocAction.STATUS_Invalid;
+		m_processMsg = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_AFTER_COMPLETE);
+		if (m_processMsg != null)
+			return DocAction.STATUS_Invalid;
+		setProcessed(true);
+		setDocAction(DOCACTION_Close);
+		return DocAction.STATUS_Completed;
+	}
+	
 	@Override
 	public boolean approveIt() {
 		// TODO Auto-generated method stub
@@ -188,20 +199,6 @@ public class MHRLoan extends X_HR_Loan implements DocAction, DocOptions {
 		
 		return false;
 	}
-
-	@Override
-	public String completeIt() {
-		m_processMsg = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_BEFORE_COMPLETE);
-		if (m_processMsg != null)
-			return DocAction.STATUS_Invalid;
-		m_processMsg = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_AFTER_COMPLETE);
-		if (m_processMsg != null)
-			return DocAction.STATUS_Invalid;
-		setProcessed(true);
-		setDocAction(DOCACTION_Close);
-		return DocAction.STATUS_Completed;
-	}
-	
 
 	@Override
 	public boolean voidIt() {
