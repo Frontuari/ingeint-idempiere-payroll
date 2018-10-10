@@ -33,7 +33,7 @@ public class X_HR_PaymentSelection extends PO implements I_HR_PaymentSelection, 
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20180827L;
+	private static final long serialVersionUID = 20181004L;
 
     /** Standard Constructor */
     public X_HR_PaymentSelection (Properties ctx, int HR_PaymentSelection_ID, String trxName)
@@ -96,6 +96,87 @@ public class X_HR_PaymentSelection extends PO implements I_HR_PaymentSelection, 
 	public int getC_BPartner_ID () 
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_C_BPartner_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
+
+	public org.compiere.model.I_C_BankAccount getC_BankAccount() throws RuntimeException
+    {
+		return (org.compiere.model.I_C_BankAccount)MTable.get(getCtx(), org.compiere.model.I_C_BankAccount.Table_Name)
+			.getPO(getC_BankAccount_ID(), get_TrxName());	}
+
+	/** Set Bank Account.
+		@param C_BankAccount_ID 
+		Account at the Bank
+	  */
+	public void setC_BankAccount_ID (int C_BankAccount_ID)
+	{
+		if (C_BankAccount_ID < 1) 
+			set_Value (COLUMNNAME_C_BankAccount_ID, null);
+		else 
+			set_Value (COLUMNNAME_C_BankAccount_ID, Integer.valueOf(C_BankAccount_ID));
+	}
+
+	/** Get Bank Account.
+		@return Account at the Bank
+	  */
+	public int getC_BankAccount_ID () 
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_C_BankAccount_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
+
+	public org.compiere.model.I_C_Charge getC_Charge() throws RuntimeException
+    {
+		return (org.compiere.model.I_C_Charge)MTable.get(getCtx(), org.compiere.model.I_C_Charge.Table_Name)
+			.getPO(getC_Charge_ID(), get_TrxName());	}
+
+	/** Set Charge.
+		@param C_Charge_ID 
+		Additional document charges
+	  */
+	public void setC_Charge_ID (int C_Charge_ID)
+	{
+		if (C_Charge_ID < 1) 
+			set_Value (COLUMNNAME_C_Charge_ID, null);
+		else 
+			set_Value (COLUMNNAME_C_Charge_ID, Integer.valueOf(C_Charge_ID));
+	}
+
+	/** Get Charge.
+		@return Additional document charges
+	  */
+	public int getC_Charge_ID () 
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_C_Charge_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
+
+	public org.compiere.model.I_C_DocType getC_DocTypePayment() throws RuntimeException
+    {
+		return (org.compiere.model.I_C_DocType)MTable.get(getCtx(), org.compiere.model.I_C_DocType.Table_Name)
+			.getPO(getC_DocTypePayment_ID(), get_TrxName());	}
+
+	/** Set C_DocTypePayment_ID.
+		@param C_DocTypePayment_ID C_DocTypePayment_ID	  */
+	public void setC_DocTypePayment_ID (int C_DocTypePayment_ID)
+	{
+		if (C_DocTypePayment_ID < 1) 
+			set_Value (COLUMNNAME_C_DocTypePayment_ID, null);
+		else 
+			set_Value (COLUMNNAME_C_DocTypePayment_ID, Integer.valueOf(C_DocTypePayment_ID));
+	}
+
+	/** Get C_DocTypePayment_ID.
+		@return C_DocTypePayment_ID	  */
+	public int getC_DocTypePayment_ID () 
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_C_DocTypePayment_ID);
 		if (ii == null)
 			 return 0;
 		return ii.intValue();
@@ -479,6 +560,27 @@ public class X_HR_PaymentSelection extends PO implements I_HR_PaymentSelection, 
 	public boolean isProcessed () 
 	{
 		Object oo = get_Value(COLUMNNAME_Processed);
+		if (oo != null) 
+		{
+			 if (oo instanceof Boolean) 
+				 return ((Boolean)oo).booleanValue(); 
+			return "Y".equals(oo);
+		}
+		return false;
+	}
+
+	/** Set Process Now.
+		@param Processing Process Now	  */
+	public void setProcessing (boolean Processing)
+	{
+		set_Value (COLUMNNAME_Processing, Boolean.valueOf(Processing));
+	}
+
+	/** Get Process Now.
+		@return Process Now	  */
+	public boolean isProcessing () 
+	{
+		Object oo = get_Value(COLUMNNAME_Processing);
 		if (oo != null) 
 		{
 			 if (oo instanceof Boolean) 

@@ -32,7 +32,7 @@ public class X_HR_PaymentSelectionLine extends PO implements I_HR_PaymentSelecti
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20180827L;
+	private static final long serialVersionUID = 20181004L;
 
     /** Standard Constructor */
     public X_HR_PaymentSelectionLine (Properties ctx, int HR_PaymentSelectionLine_ID, String trxName)
@@ -289,6 +289,26 @@ public class X_HR_PaymentSelectionLine extends PO implements I_HR_PaymentSelecti
 	public String getHelp () 
 	{
 		return (String)get_Value(COLUMNNAME_Help);
+	}
+
+	/** Set Line No.
+		@param Line 
+		Unique line for this document
+	  */
+	public void setLine (int Line)
+	{
+		set_Value (COLUMNNAME_Line, Integer.valueOf(Line));
+	}
+
+	/** Get Line No.
+		@return Unique line for this document
+	  */
+	public int getLine () 
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_Line);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
 	}
 
 	/** Set Open Amount.

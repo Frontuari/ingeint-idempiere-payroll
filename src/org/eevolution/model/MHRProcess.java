@@ -1923,7 +1923,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		MHRConcept concept = MHRConcept.forValue(getCtx(), conceptValue);
 		if (concept == null)
 			return null;
-
+		
 		ArrayList<Object> params = new ArrayList<Object>();
 		StringBuilder whereClause = new StringBuilder();
 		// check client

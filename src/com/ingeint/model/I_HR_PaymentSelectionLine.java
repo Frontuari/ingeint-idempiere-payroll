@@ -213,6 +213,19 @@ public interface I_HR_PaymentSelectionLine
 	  */
 	public boolean isActive();
 
+    /** Column name Line */
+    public static final String COLUMNNAME_Line = "Line";
+
+	/** Set Line No.
+	  * Unique line for this document
+	  */
+	public void setLine (int Line);
+
+	/** Get Line No.
+	  * Unique line for this document
+	  */
+	public int getLine();
+
     /** Column name OpenAmt */
     public static final String COLUMNNAME_OpenAmt = "OpenAmt";
 

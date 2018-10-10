@@ -3,16 +3,22 @@ package com.ingeint.model;
 import java.io.File;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 
 import org.compiere.model.MDocType;
+import org.compiere.model.MPayment;
 import org.compiere.model.MPeriod;
 import org.compiere.model.ModelValidationEngine;
 import org.compiere.model.ModelValidator;
+import org.compiere.model.Query;
 import org.compiere.process.DocAction;
 import org.compiere.process.DocOptions;
 import org.compiere.process.DocumentEngine;
+import org.compiere.util.Util;
+
+import com.ingeint.utils.PayrollUtils;
 
 public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAction, DocOptions {
 
@@ -33,6 +39,54 @@ public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAct
 		super(ctx, rs, trxName);
 		// TODO Auto-generated constructor stub
 	}
+		
+	/**	Process Message 			*/
+	private String		m_processMsg = null;
+	/**	Just Prepared Flag			*/
+	private boolean		m_justPrepared = false;	
+	
+	/** Load Lines */
+	protected MHRPaymentSelectionLine[] t_lines = null;
+	
+	MHRPaymentSelectionLine[] getLines (String whereClause, String orderClause)
+	{
+		StringBuilder whereClauseFinal = new StringBuilder(MHRPaymentSelectionLine.COLUMNNAME_HR_PaymentSelection_ID+"=? ");
+		if (!Util.isEmpty(whereClause, true))
+			whereClauseFinal.append(whereClause);
+		if (orderClause.length() == 0)
+			orderClause = MHRPaymentSelectionLine.COLUMNNAME_Line;
+		//
+		List<MHRPaymentSelectionLine> list = new Query(getCtx(), MHRPaymentSelectionLine.Table_Name, whereClauseFinal.toString(), get_TrxName())
+										.setParameters(get_ID())
+										.setOrderBy(orderClause)
+										.list();
+		for (MHRPaymentSelectionLine ol : list) {
+			ol.setHeaderInfo(this);
+		}
+		//
+		return list.toArray(new MHRPaymentSelectionLine[list.size()]);		
+	}	//	getLines
+	
+	public MHRPaymentSelectionLine[] getLines (boolean requery, String orderBy)
+	{
+		if (t_lines != null && !requery) {
+			set_TrxName(t_lines, get_TrxName());
+			return t_lines;
+		}
+		//
+		String orderClause = "";
+		if (orderBy != null && orderBy.length() > 0)
+			orderClause += orderBy;
+		else
+			orderClause += "Line";
+		t_lines = getLines(null, orderClause);
+		return t_lines;
+	}	//	getLines
+	
+	public MHRPaymentSelectionLine[] getLines() {
+		return getLines(false, null);
+	}	//	getLines
+	
 	
 	@Override
 	public int customizeValidActions(String docStatus, Object processing, String orderType, String isSOTrx, int AD_Table_ID,
@@ -72,40 +126,23 @@ public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAct
 			return DocAction.STATUS_Invalid;
 		}
 		
-		/*Integer lineZero = DB.getSQLValueEx(get_TrxName(), "SELECT C_BParter_ID "
-				+ "FROM HR_PaymentSelectionLine "
-				+ "WHERE HR_PaymentSelection_ID = ? AND PayAmt = 0 ",get_ID());
-		
-		MHREmployee employee = null;
-		if (lineZero>0) {
-			employee = MHREmployee.getEmployee(getCtx(), lineZero, get_TrxName());
-			throw new AdempiereException("El Monto a pagar para el empleado "+employee.getName()+" No puede ser zero");
-		}*/
-		
-		setC_DocType_ID(getC_DocTypeTarget_ID());
-		setIsApproved(true);
-		m_justPrepared = true;
-		if (!DOCACTION_Complete.equals(getDocAction()))
-			setDocAction(DOCACTION_Complete);
+		MHRPaymentSelectionLine[] lines = getLines(true, null);
+		if (lines.length == 0)
+		{
+			m_processMsg = "@NoLines@";
+			return DocAction.STATUS_Invalid;
+		}		
+		setC_DocType_ID(getC_DocTypeTarget_ID());		
 		return DocAction.STATUS_InProgress;
-	}	//	prepareIt
-	
-	
+	}	//	prepareIt	
 	
 	@Override
-	public boolean processIt(String processAction) throws Exception {
+	public boolean processIt(String action) throws Exception {
+		log.warning("Processing Action=" + action + " - DocStatus=" + getDocStatus() + " - DocAction=" + getDocAction());
+		DocumentEngine engine = new DocumentEngine(this, getDocStatus());
+		return engine.processIt(action, getDocAction());
+	}
 		
-			m_processMsg = null;
-			DocumentEngine engine = new DocumentEngine (this, getDocStatus());
-			return engine.processIt (processAction, getDocAction());
-		}	//	process
-
-		/**	Process Message 			*/
-		private String		m_processMsg = null;
-		/**	Just Prepared Flag			*/
-		private boolean		m_justPrepared = false;	
-		
-			
 	@Override
 	public String completeIt() {
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_BEFORE_COMPLETE);
@@ -114,17 +151,20 @@ public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAct
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_AFTER_COMPLETE);
 		if (m_processMsg != null)
 			return DocAction.STATUS_Invalid;
+		
+		//Generate Payments
+		
+		MHRPaymentSelectionLine[] plines = getLines();
+		
+		for (MHRPaymentSelectionLine pline:plines) {
+			PayrollUtils.createPayment(pline);			
+		}		
 		setProcessed(true);
-		setDocAction(DOCACTION_Close);
+		setDocAction(DOCACTION_Close);		
 		return DocAction.STATUS_Completed;
 	}	//	completeIt
 
-	@Override
-	public void setDocStatus(String newStatus) {
-		// TODO Auto-generated method stub
-		
-	}
-
+	
 	@Override
 	public boolean unlockIt() {
 		// TODO Auto-generated method stub
@@ -228,5 +268,6 @@ public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAct
 	public BigDecimal getApprovalAmt() {
 		// TODO Auto-generated method stub
 		return null;
-	}	
+	}
+	
 }
