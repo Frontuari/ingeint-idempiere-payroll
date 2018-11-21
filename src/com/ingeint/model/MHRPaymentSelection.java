@@ -1,5 +1,6 @@
 package com.ingeint.model;
 
+
 import java.io.File;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -8,7 +9,6 @@ import java.util.Properties;
 import java.util.logging.Level;
 
 import org.compiere.model.MDocType;
-import org.compiere.model.MPayment;
 import org.compiere.model.MPeriod;
 import org.compiere.model.ModelValidationEngine;
 import org.compiere.model.ModelValidator;
@@ -155,7 +155,7 @@ public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAct
 		//Generate Payments
 		
 		MHRPaymentSelectionLine[] plines = getLines();
-		
+				
 		for (MHRPaymentSelectionLine pline:plines) {
 			PayrollUtils.createPayment(pline);			
 		}		
@@ -229,12 +229,6 @@ public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAct
 	}
 
 	@Override
-	public String getDocumentNo() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public String getDocumentInfo() {
 		// TODO Auto-generated method stub
 		return null;
@@ -268,6 +262,5 @@ public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAct
 	public BigDecimal getApprovalAmt() {
 		// TODO Auto-generated method stub
 		return null;
-	}
-	
+	}	
 }

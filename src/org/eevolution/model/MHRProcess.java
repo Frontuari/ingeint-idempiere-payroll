@@ -19,6 +19,7 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -743,7 +744,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		if (Payroll != null || !Payroll.equals(null))
 			IsPayrollApplicableToEmployee = Payroll
 					.get_ValueAsBoolean("IsemployeeApplicable");
-
+		
 		m_scriptCtx.clear();
 		m_scriptCtx.put("process", this);
 		m_scriptCtx.put("_Process", getHR_Process_ID());
@@ -798,8 +799,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 					m_employee = MHREmployee.getActiveEmployee(getCtx(),
 							m_C_BPartner_ID, getAD_Org_ID(), get_TrxName(),
 							getHR_Payroll_ID());
-				}
-				
+				}				
 			}
 				
 			else{
@@ -838,6 +838,16 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 				m_HR_Concept_ID = pc.getHR_Concept_ID();
 				MHRConcept concept = MHRConcept.get(getCtx(), m_HR_Concept_ID);
 				boolean printed = pc.isPrinted() || concept.isPrinted();
+				Boolean byDate = concept.get_ValueAsBoolean("IsApplyByDate");
+				
+				if (byDate) {
+					m_scriptCtx.remove("_From");
+					m_scriptCtx.remove("_To");
+					Timestamp[] dates = getDates2(period.getStartDate(), period.getEndDate());
+					m_scriptCtx.put("_From", dates[0]);
+					m_scriptCtx.put("_To", dates[1]);
+				}
+				
 				MHRMovement movement = m_movement.get(concept.get_ID()); // as
 																			// it's
 																			// now
@@ -856,7 +866,6 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 					if (DebugMode!=null && DebugMode.equals("Y"))
 						log.warning("Debug concept: "+concept);
 					movement = createMovementFromConcept(concept, printed);
-					
 					movement = m_movement.get(concept.get_ID());
 				}
 				if (movement == null) {
@@ -891,13 +900,28 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			boolean printed) {
 		log.info("Calculating concept " + concept.getValue());
 		m_columnType = concept.getColumnType();
-
+		
+		Timestamp[] dates = null;
+		
+				
+		Boolean IsApplyByDate = concept.get_ValueAsBoolean("IsApplyByDate");
+		if (IsApplyByDate) {			
+			dates = getDates2(m_dateFrom, m_dateTo);
+		}
+		
+		
 		List<Object> params = new ArrayList<Object>();
 		StringBuilder whereClause = new StringBuilder();
 		whereClause
 				.append("? >= ValidFrom AND ( ? <= ValidTo OR ValidTo IS NULL)");
-		params.add(m_dateFrom);
-		params.add(m_dateTo);
+		
+		if (IsApplyByDate) {
+			params.add(dates[0]);
+			params.add(dates[1]);
+		}else {
+			params.add(m_dateFrom);
+			params.add(m_dateTo);
+		}
 		whereClause.append(" AND HR_Concept_ID = ? ");
 		params.add(concept.getHR_Concept_ID());
 		whereClause
@@ -936,8 +960,13 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		movement.setHR_Job_ID(m_employee.getHR_Job_ID());
 		movement.setColumnType(m_columnType);
 		movement.setAD_Rule_ID(att.getAD_Rule_ID());
-		movement.setValidFrom(m_dateFrom);
-		movement.setValidTo(m_dateTo);
+		if (IsApplyByDate) {
+			movement.setValidFrom(dates[0]);
+			movement.setValidTo(dates[1]);
+		}else {
+			movement.setValidFrom(m_dateFrom);
+			movement.setValidTo(m_dateTo);
+		}		
 		movement.setIsPrinted(printed);
 		movement.setIsRegistered(concept.isRegistered());
 		movement.setC_Activity_ID(m_employee.getC_Activity_ID());
@@ -1247,12 +1276,17 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		MHRConcept concept = MHRConcept.forValue(getCtx(), pConcept);
 		if (concept == null)
 			return 0;
-
+				
 		ArrayList<Object> params = new ArrayList<Object>();
 		StringBuilder whereClause = new StringBuilder();
 		// check ValidFrom:
 		whereClause.append(MHRAttribute.COLUMNNAME_ValidFrom + "<=?");
-		params.add(m_dateFrom);
+		
+		if (concept.get_ValueAsBoolean("IsApplyByDate")) {		
+			Timestamp [] dates = getDates2(m_dateFrom, m_dateTo);
+			params.add(dates[0]);
+		}else		
+			params.add(m_dateFrom);
 		// check client
 		whereClause.append(" AND AD_Client_ID = ?");
 		params.add(getAD_Client_ID());
@@ -1308,10 +1342,18 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		if (concept == null)
 			return 0;
 		ArrayList<Object> params = new ArrayList<Object>();
+		Timestamp [] dates = null;
+		Boolean byDate = concept.get_ValueAsBoolean("IsApplyByDate");
+		if (byDate)	
+			 dates = getDates2(m_dateFrom, m_dateTo);
+					
 		StringBuilder whereClause = new StringBuilder();
 		// check ValidFrom:
 		whereClause.append(MHRAttribute.COLUMNNAME_ValidFrom + "<=?");
-		params.add(date2);
+		if (byDate)
+			params.add(dates[1]);
+		else
+			params.add(date2);
 		// check client
 		whereClause.append(" AND AD_Client_ID = ?");
 		params.add(getAD_Client_ID());
@@ -1320,7 +1362,10 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? "
 						+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
 		params.add(pConcept);
-		params.add(date1);
+		if (byDate)
+			params.add(dates[0]);
+		else
+			params.add(date1);
 		//
 		if (!concept.getType().equals(MHRConcept.TYPE_Information)) {
 			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID
@@ -1421,6 +1466,12 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		if (concept == null)
 			return 0;
 		ArrayList<Object> params = new ArrayList<Object>();
+		
+		Timestamp [] dates = null;
+		Boolean byDate = concept.get_ValueAsBoolean("IsApplyByDate");
+		if (byDate)	
+			 dates = getDates2(m_dateFrom, m_dateTo);
+		
 		StringBuilder whereClause = new StringBuilder();
 		// check client
 		whereClause.append(" AD_Client_ID = ?");
@@ -1480,11 +1531,20 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		MHRConcept concept = MHRConcept.forValue(getCtx(), pConcept);
 		if (concept == null)
 			return 0;
+		
+		Timestamp [] dates = null;
+		Boolean byDate = concept.get_ValueAsBoolean("IsApplyByDate");
+		if (byDate)	
+			 dates = getDates2(m_dateFrom, m_dateTo);
+		
 		ArrayList<Object> params = new ArrayList<Object>();
 		StringBuilder whereClause = new StringBuilder();
 		// check ValidFrom:
 		whereClause.append(MHRAttribute.COLUMNNAME_ValidFrom + "<=?");
-		params.add(date2);
+		if (byDate)
+			params.add(dates[1]);
+		else 
+			params.add(date2);
 		// check client
 		whereClause.append(" AND AD_Client_ID = ?");
 		params.add(getAD_Client_ID());
@@ -1493,7 +1553,10 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? "
 						+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
 		params.add(pConcept);
-		params.add(date1);
+		if (byDate)
+			params.add(dates[0]);
+		else
+			params.add(date1);
 		//
 		if (!concept.getType().equals(MHRConcept.TYPE_Information)) {
 			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID
@@ -1614,11 +1677,24 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		MHRConcept concept = MHRConcept.forValue(getCtx(), pConcept);
 		if (concept == null)
 			return 0;
+	
+		Timestamp[] dates = null;
+		
+		Boolean IsApplyByDate = concept.get_ValueAsBoolean("IsApplyByDate");
+		if (IsApplyByDate) {			
+			
+			dates = getDates2(date1, date2);
+		}		
+		
 		ArrayList<Object> params = new ArrayList<Object>();
 		StringBuilder whereClause = new StringBuilder();
 		// check ValidFrom:
 		whereClause.append(MHRAttribute.COLUMNNAME_ValidFrom + "<=?");
-		params.add(date2);
+		
+		if (IsApplyByDate)
+			params.add(dates[1]);
+		else		
+			params.add(date2);
 		// check client
 		whereClause.append(" AND AD_Client_ID = ?");
 		params.add(getAD_Client_ID());
@@ -1627,7 +1703,10 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? "
 						+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
 		params.add(pConcept);
-		params.add(date1);
+		if (IsApplyByDate)
+			params.add(dates[0]);
+		else
+			params.add(date1);
 		//
 		if (!concept.getType().equals(MHRConcept.TYPE_Information)) {
 			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID
@@ -3109,5 +3188,22 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			return 0;
 
 	} // getConceptRangeOfPeriod
-
+	
+	public Timestamp[] getDates2 (Timestamp DateFrom, Timestamp DateTo) {
+		
+		Integer cutDay = MSysConfig.getIntValue("CutDayPayrollEvents", 20, getAD_Client_ID());
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(m_dateFrom);
+		calendar.add(Calendar.MONTH,-1);
+		calendar.add(Calendar.DAY_OF_MONTH,cutDay);
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+		Timestamp m_DateFrom2 = Timestamp.valueOf(sdf.format(calendar.getTime()).toString());
+		calendar = Calendar.getInstance();
+		calendar.setTime(m_dateFrom);
+		calendar.add(Calendar.DAY_OF_YEAR, cutDay-1);
+		Timestamp m_DateTo2 = Timestamp.valueOf(sdf.format(calendar.getTime()).toString());	
+		
+		return new Timestamp[] {m_DateFrom2, m_DateTo2};		
+	} //getDates2
+	
 } // MHRProcess
