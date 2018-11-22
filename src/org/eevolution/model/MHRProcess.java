@@ -840,8 +840,6 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 				m_HR_Concept_ID = pc.getHR_Concept_ID();
 				MHRConcept concept = MHRConcept.get(getCtx(), m_HR_Concept_ID);
 				
-				if (concept.getValue().equalsIgnoreCase("CC_HORAS_EXTRAS_COMPLE"))
-					log.warning("aqui");
 				boolean printed = pc.isPrinted() || concept.isPrinted();
 				Boolean byDate = concept.get_ValueAsBoolean("IsApplyByDate");
 				
