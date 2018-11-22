@@ -72,7 +72,7 @@ public class MHRMovement extends X_HR_Movement
 		MHRConcept hrconcept = new MHRConcept(getCtx(), impHRm.getHR_Concept_ID(), get_TrxName());
 		MHREmployee employee  = MHREmployee.getActiveEmployee(getCtx(), impHRm.getC_BPartner_ID(), get_TrxName());
 		MHRProcess process = new MHRProcess(getCtx(), impHRm.getHR_Process_ID(), get_TrxName());
-
+		
 		setAD_Org_ID(process.getAD_Org_ID());
 		setUpdatedBy(impHRm.getUpdatedBy());
 		//

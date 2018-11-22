@@ -655,6 +655,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			throw new AdempiereException("Execution error - @AD_Rule_ID@="
 					+ rulee.getValue() + " \n " + errorMsg);
 		}
+		if (rulee.get_Value("ctxVariable")!=null)
+			m_scriptCtx.put((String) rulee.get_Value("ctxVariable"), result);
 		return result;
 	}
 
@@ -837,6 +839,9 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			{
 				m_HR_Concept_ID = pc.getHR_Concept_ID();
 				MHRConcept concept = MHRConcept.get(getCtx(), m_HR_Concept_ID);
+				
+				if (concept.getValue().equalsIgnoreCase("CC_HORAS_EXTRAS_COMPLE"))
+					log.warning("aqui");
 				boolean printed = pc.isPrinted() || concept.isPrinted();
 				Boolean byDate = concept.get_ValueAsBoolean("IsApplyByDate");
 				
@@ -865,6 +870,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 						log.warning("Debug concept: "+concept);
 					movement = createMovementFromConcept(concept, printed);
 					movement = m_movement.get(concept.get_ID());
+					m_scriptCtx.put("_From", period.getStartDate());
+					m_scriptCtx.put("_To", period.getEndDate());
 				}
 				if (movement == null) {
 					continue;
@@ -899,27 +906,13 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		log.info("Calculating concept " + concept.getValue());
 		m_columnType = concept.getColumnType();
 		
-		Timestamp[] dates = null;
-		
-				
-		Boolean IsApplyByDate = concept.get_ValueAsBoolean("IsApplyByDate");
-		if (IsApplyByDate) {			
-			dates = getDates2(m_dateFrom, m_dateTo);
-		}
-		
-		
 		List<Object> params = new ArrayList<Object>();
 		StringBuilder whereClause = new StringBuilder();
 		whereClause
 				.append("? >= ValidFrom AND ( ? <= ValidTo OR ValidTo IS NULL)");
 		
-		if (IsApplyByDate) {
-			params.add(dates[0]);
-			params.add(dates[1]);
-		}else {
-			params.add(m_dateFrom);
-			params.add(m_dateTo);
-		}
+		params.add(m_scriptCtx.get("_From"));
+		params.add(m_scriptCtx.get("_To"));
 		whereClause.append(" AND HR_Concept_ID = ? ");
 		params.add(concept.getHR_Concept_ID());
 		whereClause
@@ -958,13 +951,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		movement.setHR_Job_ID(m_employee.getHR_Job_ID());
 		movement.setColumnType(m_columnType);
 		movement.setAD_Rule_ID(att.getAD_Rule_ID());
-		if (IsApplyByDate) {
-			movement.setValidFrom(dates[0]);
-			movement.setValidTo(dates[1]);
-		}else {
-			movement.setValidFrom(m_dateFrom);
-			movement.setValidTo(m_dateTo);
-		}		
+		movement.setValidFrom((Timestamp) m_scriptCtx.get("_From"));
+		movement.setValidTo((Timestamp) m_scriptCtx.get("_To"));
 		movement.setIsPrinted(printed);
 		movement.setIsRegistered(concept.isRegistered());
 		movement.setC_Activity_ID(m_employee.getC_Activity_ID());
