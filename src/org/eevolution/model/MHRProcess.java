@@ -1266,11 +1266,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		// check ValidFrom:
 		whereClause.append(MHRAttribute.COLUMNNAME_ValidFrom + "<=?");
 		
-		if (concept.get_ValueAsBoolean("IsApplyByDate")) {		
-			Timestamp [] dates = getDates2(m_dateFrom, m_dateTo);
-			params.add(dates[0]);
-		}else		
-			params.add(m_dateFrom);
+		params.add(m_dateFrom);
 		// check client
 		whereClause.append(" AND AD_Client_ID = ?");
 		params.add(getAD_Client_ID());
@@ -1502,7 +1498,6 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		if (concept == null)
 			return 0;
 		
-		Timestamp [] dates = null;
 		ArrayList<Object> params = new ArrayList<Object>();
 		StringBuilder whereClause = new StringBuilder();
 		// check ValidFrom:
@@ -1988,7 +1983,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		}
 		return attribute.getTextMsg();
 	} // getAttributeString
-
+	
+	
 	/**
 	 * Helper Method : Get the number of days between start and end, in
 	 * Timestamp format
@@ -2250,7 +2246,6 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		} else {
 			payroll_id = MHRPayroll.forValue(getCtx(), payrollValue).get_ID();
 		}
-
 		MHRConcept concept = MHRConcept.forValue(getCtx(), conceptValue);
 
 		if (concept == null)
@@ -2348,7 +2343,12 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		BigDecimal value = DB
 				.getSQLValueBD(
 						null,
-						"SELECT COALESCE(SUM(cr.grandtotal),0) FROM C_Commission c JOIN c_CommissionRun cr on c.C_Commission_ID = cr.C_Commission_ID WHERE c.AD_Client_ID = ? AND c.AD_ORG_ID = ? AND c.C_BPartner_ID = ? AND startdate BETWEEN ? AND ? GROUP BY c.AD_Client_ID, c.AD_ORG_ID, c.C_BPartner_ID",
+						"SELECT COALESCE(SUM(cr.grandtotal),0) "
+						+ "FROM C_Commission c "
+						+ "JOIN c_CommissionRun cr on c.C_Commission_ID = cr.C_Commission_ID "
+						+ "WHERE c.AD_Client_ID = ? AND c.AD_ORG_ID = ? AND c.C_BPartner_ID = ? "
+						+ "AND startdate BETWEEN ? AND ? GROUP BY c.AD_Client_ID, c.AD_ORG_ID, "
+						+ "c.C_BPartner_ID",
 						e.getAD_Client_ID(), e.getAD_Org_ID(), m_C_BPartner_ID,
 						from, to);
 
