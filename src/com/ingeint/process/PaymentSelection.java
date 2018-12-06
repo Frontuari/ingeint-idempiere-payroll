@@ -51,17 +51,21 @@ public class PaymentSelection extends CustomProcess {
 		
 		MHRMovement[] movement = null;
 			if (ps.getC_BPartner_ID()>0) {
-				DB.executeUpdate("DELETE FROM HR_PaymentSelectionLine WHERE HR_PaymentSelection_ID = ? AND C_BPartner_ID = ? ", new Object[] {ps.getHR_PaymentSelection_ID(),ps.getC_BPartner_ID()}, true, get_TrxName());
+				DB.executeUpdate("DELETE FROM HR_PaymentSelectionLine WHERE HR_PaymentSelection_ID = ? AND C_BPartner_ID = ? ", 
+						new Object[] {ps.getHR_PaymentSelection_ID(),ps.getC_BPartner_ID()}, true, get_TrxName());
 			    movement = getmovement(ps.getHR_Process_ID(), HR_Concept_ID, ps.getC_BPartner_ID(), 0, 0);
 				 
 			}else if (ps.getHR_Job_ID()>0) {
-				DB.executeUpdate("DELETE FROM HR_PaymentSelectionLine WHERE HR_PaymentSelection_ID = ? AND HR_Job_ID = ? ", new Object[] {ps.getHR_PaymentSelection_ID(),ps.getHR_Job_ID()}, true, get_TrxName());
+				DB.executeUpdate("DELETE FROM HR_PaymentSelectionLine WHERE HR_PaymentSelection_ID = ? AND HR_Job_ID = ? ", 
+						new Object[] {ps.getHR_PaymentSelection_ID(),ps.getHR_Job_ID()}, true, get_TrxName());
 			    movement = getmovement(ps.getHR_Process_ID(), HR_Concept_ID, 0, ps.getHR_Job_ID(), 0);	 
 			}else if (ps.getHR_Department_ID()>0) {
-				DB.executeUpdate("DELETE FROM HR_PaymentSelectionLine WHERE HR_PaymentSelection_ID = ? AND HR_Department_ID = ? ", new Object[] {ps.getHR_PaymentSelection_ID(),ps.getHR_Department_ID()}, true, get_TrxName());
+				DB.executeUpdate("DELETE FROM HR_PaymentSelectionLine WHERE HR_PaymentSelection_ID = ? AND HR_Department_ID = ? ", 
+						new Object[] {ps.getHR_PaymentSelection_ID(),ps.getHR_Department_ID()}, true, get_TrxName());
 			    movement = getmovement(ps.getHR_Process_ID(), HR_Concept_ID, 0,0, ps.getHR_Department_ID());
 			}else {
-				DB.executeUpdate("DELETE FROM HR_PaymentSelectionLine WHERE HR_PaymentSelection_ID = ? ", new Object[] {ps.getHR_PaymentSelection_ID()}, true, get_TrxName());
+				DB.executeUpdate("DELETE FROM HR_PaymentSelectionLine WHERE HR_PaymentSelection_ID = ? ", 
+						new Object[] {ps.getHR_PaymentSelection_ID()}, true, get_TrxName());
 			    movement = getmovement(ps.getHR_Process_ID(), HR_Concept_ID, 0,0,0);				
 			}				
 				 for (MHRMovement move : movement) {
@@ -77,7 +81,8 @@ public class PaymentSelection extends CustomProcess {
 		return null;
 	}
 	
-	public MHRMovement[] getmovement (Integer HR_Process_ID, Integer HR_Concept_ID, Integer C_BPartner_ID, Integer HR_Job_ID, Integer HR_Department_ID) {
+	public MHRMovement[] getmovement (Integer HR_Process_ID, Integer HR_Concept_ID,
+			Integer C_BPartner_ID, Integer HR_Job_ID, Integer HR_Department_ID) {
 		
 		StringBuilder whereClauseFinal = new StringBuilder();		
 		whereClauseFinal.append(MHRMovement.COLUMNNAME_HR_Process_ID+"=? ");
@@ -96,15 +101,14 @@ public class PaymentSelection extends CustomProcess {
 		
 		if (HR_Department_ID>0) {
 			whereClauseFinal.append("AND HR_Department_ID = ? ");
-			params = new Object[]{HR_Process_ID, HR_Concept_ID, HR_Department_ID};
-			
+			params = new Object[]{HR_Process_ID, HR_Concept_ID, HR_Department_ID};			
 		}
 		
-		List<MHRMovement> list = new Query(getCtx(), MHRMovement.Table_Name, whereClauseFinal.toString(), get_TrxName())
+		List<MHRMovement> list = new Query(getCtx(), MHRMovement.Table_Name, 
+				whereClauseFinal.toString(), get_TrxName())
 				.setParameters(params)
 				.list();
 		
 		return list.toArray(new MHRMovement[list.size()]);		
 	}
 }
-	

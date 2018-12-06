@@ -441,6 +441,11 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		no = MFactAcct.deleteEx(MHRProcess.Table_ID, getHR_Process_ID(),
 				get_TrxName());
 		log.fine("Fact_Acct deleted #" + no);
+		
+		log.warning(DB.getSQLValueString(get_TrxName(), "DELETE "
+				+ "FROM HR_Attribute "
+				+ "WHERE HR_Process_ID = ? ", 
+				getHR_Process_ID())+" Deleted Attributes");		
 
 		// After reActivate
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this,

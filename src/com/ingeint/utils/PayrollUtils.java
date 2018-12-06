@@ -19,7 +19,8 @@ public class PayrollUtils {
 		MBankAccount ba = null;
 		
 		Integer C_BP_BankAccount_ID = DB.getSQLValue(psline.get_TrxName(), "SELECT C_BP_BankAccount_ID "
-				+ "FROM C_BP_BankAccount WHERE C_BPartner_ID = ? And IsDefault = 'Y' ", psline.getC_BPartner_ID());
+				+ "FROM C_BP_BankAccount "
+				+ "WHERE C_BPartner_ID = ? AND C_Bank_ID = ? ", new Object[] {psline.getC_BPartner_ID(),psline.get_Value("C_BankAccountTo_ID")});
 		
 		MPayment payment = new MPayment(null, 0, psline.get_TrxName());
 		
@@ -50,6 +51,5 @@ public class PayrollUtils {
 	
 	public static Timestamp now() {
 		return new Timestamp(Calendar.getInstance().getTimeInMillis());
-	}
-
+	}	
 }
