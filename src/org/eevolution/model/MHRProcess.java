@@ -90,7 +90,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 	HashMap<String, Object> m_scriptCtx = new HashMap<String, Object>();
 	/* stack of concepts executing rules - to check loop in recursion */
 	private List<MHRConcept> activeConceptRule = new ArrayList<MHRConcept>();
-
+	private MBPartner partner;
+	
 	/** Static Logger */
 	private static CLogger s_log = CLogger.getCLogger(MHRProcess.class);
 	public static final String CONCEPT_PP_COST_COLLECTOR_LABOR = "PP_COST_COLLECTOR_LABOR"; // HARDCODED
@@ -230,7 +231,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		MHRPeriod period = MHRPeriod.get(getCtx(), getHR_Period_ID());
 		MPeriod.testPeriodOpen(getCtx(),
 				getHR_Period_ID() > 0 ? period.getDateAcct() : getDateAcct(),
-				getC_DocTypeTarget_ID(), getAD_Org_ID());
+						getC_DocTypeTarget_ID(), getAD_Org_ID());
 
 		// New or in Progress/Invalid
 		if (DOCSTATUS_Drafted.equals(getDocStatus())
@@ -433,7 +434,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		// Delete
 		StringBuilder sql = new StringBuilder(
 				"DELETE FROM HR_Movement WHERE HR_Process_ID =").append(
-				this.getHR_Process_ID()).append(" AND IsRegistered = 'N'");
+						this.getHR_Process_ID()).append(" AND IsRegistered = 'N'");
 		int no = DB.executeUpdate(sql.toString(), get_TrxName());
 		log.fine("HR_Process deleted #" + no);
 
@@ -441,7 +442,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		no = MFactAcct.deleteEx(MHRProcess.Table_ID, getHR_Process_ID(),
 				get_TrxName());
 		log.fine("Fact_Acct deleted #" + no);
-		
+
 		log.warning(DB.getSQLValueString(get_TrxName(), "DELETE "
 				+ "FROM HR_Attribute "
 				+ "WHERE HR_Process_ID = ? ", 
@@ -547,23 +548,23 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		params.add(getHR_Process_ID());
 		// With Qty or Amounts
 		whereClause.append(" AND (Qty <> 0 OR Amount <> 0)"); // TODO: it's
-																// really needed
-																// ?
+		// really needed
+		// ?
 		// Only Active Concepts
 		whereClause
-				.append(" AND EXISTS(SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Movement.HR_Concept_ID"
-						+ " AND c.IsActive=?"
-						+ " AND c.AccountSign NOT LIKE ?)"); // TODO : why ?
-																// //red1
-																// replace '<>'
-																// with 'NOT
-																// LIKE'
+		.append(" AND EXISTS(SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Movement.HR_Concept_ID"
+				+ " AND c.IsActive=?"
+				+ " AND c.AccountSign NOT LIKE ?)"); // TODO : why ?
+		// //red1
+		// replace '<>'
+		// with 'NOT
+		// LIKE'
 		params.add(true);
 		params.add(MHRConcept.ACCOUNTSIGN_Natural); // TODO : why ?
 		// Concepts with accounting
 		whereClause
-				.append(" AND EXISTS(SELECT 1 FROM HR_Concept_Acct ca WHERE ca.HR_Concept_ID=HR_Movement.HR_Concept_ID"
-						+ " AND ca.IsActive=?)");
+		.append(" AND EXISTS(SELECT 1 FROM HR_Concept_Acct ca WHERE ca.HR_Concept_ID=HR_Movement.HR_Concept_ID"
+				+ " AND ca.IsActive=?)");
 		params.add(true);
 		// BPartner field is filled
 		whereClause.append(" AND C_BPartner_ID IS NOT NULL");
@@ -571,7 +572,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		// ORDER BY
 		StringBuilder orderByClause = new StringBuilder();
 		orderByClause
-				.append("(SELECT bp.C_BP_Group_ID FROM C_BPartner bp WHERE bp.C_BPartner_ID=HR_Movement.C_BPartner_ID)");
+		.append("(SELECT bp.C_BP_Group_ID FROM C_BPartner bp WHERE bp.C_BPartner_ID=HR_Movement.C_BPartner_ID)");
 		//
 		List<MHRMovement> list = new Query(getCtx(), MHRMovement.Table_Name,
 				whereClause.toString(), get_TrxName()).setParameters(params)
@@ -594,7 +595,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 				.append(MHRMovement.COLUMNNAME_C_BPartner_ID).append("=?");
 		List<MHRMovement> list = new Query(getCtx(), MHRMovement.Table_Name,
 				whereClause.toString(), get_TrxName()).setParameters(
-				new Object[] { getHR_Process_ID(), C_PBartner_ID }).list();
+						new Object[] { getHR_Process_ID(), C_PBartner_ID }).list();
 		for (MHRMovement mvm : list) {
 			if (movements.containsKey(mvm.getHR_Concept_ID())) {
 				MHRMovement lastM = movements.get(mvm.getHR_Concept_ID());
@@ -683,13 +684,13 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		List<Object> params = new ArrayList<Object>();
 		StringBuilder whereClause = new StringBuilder();
 		whereClause
-				.append("? >= ValidFrom AND ( ? <= ValidTo OR ValidTo IS NULL)");
+		.append("? >= ValidFrom AND ( ? <= ValidTo OR ValidTo IS NULL)");
 		params.add(m_dateFrom);
 		params.add(m_dateTo);
 		whereClause.append(" AND HR_Concept_ID = ? ");
 		params.add(concept.get_ID());
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Concept conc WHERE conc.HR_Concept_ID = HR_Attribute.HR_Concept_ID )");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept conc WHERE conc.HR_Concept_ID = HR_Attribute.HR_Concept_ID )");
 		MHRAttribute att = new Query(getCtx(), MHRAttribute.Table_Name,
 				whereClause.toString(), get_TrxName()).setParameters(params)
 				.setOnlyActiveRecords(true)
@@ -750,8 +751,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		boolean allOrg = Payroll.get_ValueAsBoolean("HR_AllOrg");
 		if (Payroll != null || !Payroll.equals(null))
 			IsPayrollApplicableToEmployee = Payroll
-					.get_ValueAsBoolean("IsemployeeApplicable");
-		
+			.get_ValueAsBoolean("IsemployeeApplicable");
+
 		m_scriptCtx.clear();
 		m_scriptCtx.put("process", this);
 		m_scriptCtx.put("_Process", getHR_Process_ID());
@@ -760,8 +761,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		m_scriptCtx.put("_Department", getHR_Department_ID());
 
 		log.info("info data - " + " Process: " + getHR_Process_ID()
-				+ ", Period: " + getHR_Period_ID() + ", Payroll: "
-				+ getHR_Payroll_ID() + ", Department: " + getHR_Department_ID());
+		+ ", Period: " + getHR_Period_ID() + ", Payroll: "
+		+ getHR_Payroll_ID() + ", Department: " + getHR_Department_ID());
 		MHRPeriod period = new MHRPeriod(getCtx(), getHR_Period_ID(),
 				get_TrxName());
 		if (period != null) {
@@ -785,11 +786,11 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			linesEmployee = MHREmployee.getEmployees(this);
 		}
 		linesConcept = MHRPayrollConcept.getPayrollConcepts(this);
-		
+
 		//
 		int count = 1;
 		for (MBPartner bp : linesEmployee) // ===============================================================
-											// Employee
+			// Employee
 		{
 			log.info("Employee " + count + "  ---------------------- "
 					+ bp.getName());
@@ -808,7 +809,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 							getHR_Payroll_ID());
 				}				
 			}
-				
+
 			else{
 				if (includeInActiveEmployee){
 					m_employee = MHREmployee.getEmployee(getCtx(),
@@ -817,9 +818,9 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 					m_employee = MHREmployee.getActiveEmployee(getCtx(),
 							m_C_BPartner_ID, get_TrxName());	
 				}
-				
+
 			}
-				
+
 			m_scriptCtx.remove("_DateStart");
 			m_scriptCtx.remove("_DateEnd");
 			m_scriptCtx.remove("_Days");
@@ -835,38 +836,38 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 							period.getStartDate(), period.getEndDate()) + 1);
 			m_scriptCtx.put("_C_BPartner_ID", bp.getC_BPartner_ID());
 			m_scriptCtx.put("_JobEmployee", m_employee.getHR_Job_ID());
-			
+
 			m_movement.clear();
 			loadMovements(m_movement, m_C_BPartner_ID);
 			//
 			for (MHRPayrollConcept pc : linesConcept) // ====================================================
-														// Concept
+				// Concept
 			{
 				m_HR_Concept_ID = pc.getHR_Concept_ID();
 				MHRConcept concept = MHRConcept.get(getCtx(), m_HR_Concept_ID);
 				
 				boolean printed = pc.isPrinted() || concept.isPrinted();
 				Boolean byDate = concept.get_ValueAsBoolean("IsApplyByDate");
-				
+
 				if (byDate) {
 					Timestamp[] dates = getDates2(period.getStartDate(), period.getEndDate());
 					m_scriptCtx.put("_From", dates[0]);
 					m_scriptCtx.put("_To", dates[1]);
 				}
-				
+
 				MHRMovement movement = m_movement.get(concept.get_ID()); // as
-																			// it's
-																			// now
-																			// recursive,
-																			// it
-																			// can
-																			// happen
-																			// that
-																			// the
-																			// concept
-																			// is
-																			// already
-																			// generated
+				// it's
+				// now
+				// recursive,
+				// it
+				// can
+				// happen
+				// that
+				// the
+				// concept
+				// is
+				// already
+				// generated
 				if (movement == null) {
 
 					if (DebugMode!=null && DebugMode.equals("Y"))
@@ -879,7 +880,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 				if (movement == null) {
 					continue;
 					//throw new AdempiereException("Concept "
-//							+ concept.getValue() + " not created");
+					//							+ concept.getValue() + " not created");
 				}
 				movement.set_ValueOfColumn("SeqNo", pc.getSeqNo());
 			} // concept
@@ -898,8 +899,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 				}
 			}
 		} // for each employee
-			//
-			// Save period & finish
+		//
+		// Save period & finish
 		period.setProcessed(true);
 		period.saveEx();
 	} // createMovements
@@ -908,23 +909,23 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			boolean printed) {
 		log.info("Calculating concept " + concept.getValue());
 		m_columnType = concept.getColumnType();
-		
+
 		List<Object> params = new ArrayList<Object>();
 		StringBuilder whereClause = new StringBuilder();
 		whereClause
-				.append("? >= ValidFrom AND ( ? <= ValidTo OR ValidTo IS NULL)");
-		
+		.append("? >= ValidFrom AND ( ? <= ValidTo OR ValidTo IS NULL)");
+
 		params.add(m_scriptCtx.get("_From"));
 		params.add(m_scriptCtx.get("_To"));
 		whereClause.append(" AND HR_Concept_ID = ? ");
 		params.add(concept.getHR_Concept_ID());
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Concept conc WHERE conc.HR_Concept_ID = HR_Attribute.HR_Concept_ID )");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept conc WHERE conc.HR_Concept_ID = HR_Attribute.HR_Concept_ID )");
 
 		// Check the concept is within a valid range for the attribute
 		if (concept.isEmployee()) {
 			whereClause
-					.append(" AND C_BPartner_ID = ? AND (HR_Employee_ID = ? OR HR_Employee_ID IS NULL)");
+			.append(" AND C_BPartner_ID = ? AND (HR_Employee_ID = ? OR HR_Employee_ID IS NULL)");
 			params.add(m_employee.getC_BPartner_ID());
 			params.add(m_employee.get_ID());
 		}
@@ -938,13 +939,15 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			log.info("Skip concept " + concept + " - attribute not found");
 			MHRMovement dummymov = new MHRMovement(getCtx(), 0, get_TrxName());
 			dummymov.setIsRegistered(true); // to avoid landing on movement
-											// table
+			// table
 			m_movement.put(concept.getHR_Concept_ID(), dummymov);
 			return dummymov;
 		}
 
 		log.info("Concept - " + concept.getName());
 		MHRMovement movement = new MHRMovement(getCtx(), 0, get_TrxName());
+		
+		partner = new MBPartner(getCtx(), m_employee.getC_BPartner_ID(), get_TrxName());
 
 		movement.setC_BPartner_ID(m_C_BPartner_ID);
 		movement.setHR_Concept_ID(concept.getHR_Concept_ID());
@@ -959,6 +962,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		movement.setIsPrinted(printed);
 		movement.setIsRegistered(concept.isRegistered());
 		movement.setC_Activity_ID(m_employee.getC_Activity_ID());
+		movement.set_ValueOfColumn("EmployeeGroup", partner.get_Value("EmployeeGroup"));
 		if (MHRConcept.TYPE_RuleEngine.equals(concept.getType())) {
 			log.info("Executing rule for concept " + concept.getValue());
 			movement.setAccountSign(concept.getAccountSign());
@@ -977,7 +981,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 				return movement;
 			}
 			movement.setColumnValue(result); // double rounded in
-												// MHRMovement.setColumnValue
+			// MHRMovement.setColumnValue
 			if (m_description != null)
 				movement.setDescription(m_description.toString());
 		} else {
@@ -1006,9 +1010,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 
 		if (concept == null) { // red1 - return 0;
 			throw new AdempiereException(
-					"Oh no! "
-							+ pconcept
-							+ " does not exist. Please create it first in Payroll Concept");
+					pconcept
+					+ " does not exist. Please create it first in Payroll Concept");
 		}
 
 		MHRMovement m = m_movement.get(concept.get_ID());
@@ -1018,7 +1021,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		}
 		if (m == null) {
 			throw new AdempiereException("Concept " + concept.getValue()
-					+ " not created");
+			+ " not created");
 		}
 
 		String type = m.getColumnType();
@@ -1032,7 +1035,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		}
 	} // getConcept
 
-	/**
+	 /**
 	 * Helper Method : get the value of the concept string type
 	 * 
 	 * @param pconcept
@@ -1265,20 +1268,20 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		MHRConcept concept = MHRConcept.forValue(getCtx(), pConcept);
 		if (concept == null)
 			return 0;
-				
+
 		ArrayList<Object> params = new ArrayList<Object>();
 		StringBuilder whereClause = new StringBuilder();
 		// check ValidFrom:
 		whereClause.append(MHRAttribute.COLUMNNAME_ValidFrom + "<=?");
-		
+
 		params.add(m_dateFrom);
 		// check client
 		whereClause.append(" AND AD_Client_ID = ?");
 		params.add(getAD_Client_ID());
 		// check concept
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' "
-						+ " AND c.Value = ?)");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' "
+				+ " AND c.Value = ?)");
 		params.add(pConcept);
 		//
 		if (!concept.getType().equals(MHRConcept.TYPE_Information)) {
@@ -1328,7 +1331,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			return 0;
 		ArrayList<Object> params = new ArrayList<Object>();
 		Timestamp [] dates = null;
-							
+
 		StringBuilder whereClause = new StringBuilder();
 		// check ValidFrom:
 		whereClause.append(MHRAttribute.COLUMNNAME_ValidFrom + "<=?");
@@ -1338,8 +1341,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		params.add(getAD_Client_ID());
 		// check concept
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? "
-						+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? "
+				+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
 		params.add(pConcept);
 		params.add(date1);
 		//
@@ -1394,8 +1397,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		params.add(getAD_Client_ID());
 		// check concept
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? "
-						+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? "
+				+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
 		params.add(pConcept);
 		params.add(date1);
 		//
@@ -1426,7 +1429,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		return bd.doubleValue();
 
 	} // getAttribute Min
-		// LVE Localizacio n Venezuela - RTSC: 14/03/2011
+	// LVE Localizacio n Venezuela - RTSC: 14/03/2011
 
 	/**
 	 * Helper Method : Get Attribute [get Attribute to search key concept and
@@ -1442,14 +1445,14 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		if (concept == null)
 			return 0;
 		ArrayList<Object> params = new ArrayList<Object>();
-		
+
 		StringBuilder whereClause = new StringBuilder();
 		// check client
 		whereClause.append(" AD_Client_ID = ?");
 		params.add(getAD_Client_ID());
 		// check concept
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID  AND HR_Attribute.IsActive='Y' AND c.Value = ? AND ((? >= HR_Attribute.validfrom AND HR_Attribute.validto IS NULL) OR (? >= HR_Attribute.validfrom AND ? <= HR_Attribute.validto)))");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID  AND HR_Attribute.IsActive='Y' AND c.Value = ? AND ((? >= HR_Attribute.validfrom AND HR_Attribute.validto IS NULL) OR (? >= HR_Attribute.validfrom AND ? <= HR_Attribute.validto)))");
 		params.add(pConcept);
 		params.add(date);
 		params.add(date);
@@ -1502,7 +1505,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		MHRConcept concept = MHRConcept.forValue(getCtx(), pConcept);
 		if (concept == null)
 			return 0;
-		
+
 		ArrayList<Object> params = new ArrayList<Object>();
 		StringBuilder whereClause = new StringBuilder();
 		// check ValidFrom:
@@ -1513,8 +1516,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		params.add(getAD_Client_ID());
 		// check concept
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? "
-						+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? "
+				+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
 		params.add(pConcept);
 		params.add(date1);
 		//
@@ -1577,8 +1580,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		params.add(getAD_Client_ID());
 		// check concept
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? "
-						+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? "
+				+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
 		params.add(pConcept);
 		params.add(date1);
 		//
@@ -1637,20 +1640,20 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		MHRConcept concept = MHRConcept.forValue(getCtx(), pConcept);
 		if (concept == null)
 			return 0;
-		
+
 		ArrayList<Object> params = new ArrayList<Object>();
 		StringBuilder whereClause = new StringBuilder();
 		// check ValidFrom:
 		whereClause.append(MHRAttribute.COLUMNNAME_ValidFrom + "<=?");
-		
+
 		params.add(date2);
 		// check client
 		whereClause.append(" AND AD_Client_ID = ?");
 		params.add(getAD_Client_ID());
 		// check concept
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? "
-						+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? "
+				+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
 		params.add(pConcept);
 		params.add(date1);
 		//
@@ -1715,8 +1718,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		params.add(getAD_Client_ID());
 		// check concept
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' "
-						+ " AND c.Value = ? AND HR_Attribute.Description = ?)");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' "
+				+ " AND c.Value = ? AND HR_Attribute.Description = ?)");
 		params.add(pConcept);
 		params.add(pDescription);
 		//
@@ -1770,7 +1773,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		params.add(getAD_Client_ID());
 		// check concept
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND c.Value = ? AND ((? >= HR_Attribute.validfrom AND HR_Attribute.validto IS NULL) OR (? >= HR_Attribute.validfrom AND ? <= HR_Attribute.validto)))");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND c.Value = ? AND ((? >= HR_Attribute.validfrom AND HR_Attribute.validto IS NULL) OR (? >= HR_Attribute.validfrom AND ? <= HR_Attribute.validto)))");
 		params.add(conceptValue);
 		params.add(date);
 		params.add(date);
@@ -1818,8 +1821,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		params.add(getAD_Client_ID());
 		// check concept
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND c.Value = ? "
-						+ "AND HR_Region = ?)");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND c.Value = ? "
+				+ "AND HR_Region = ?)");
 		params.add(conceptValue);
 		params.add(pRegion);
 
@@ -1865,8 +1868,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		params.add(getAD_Client_ID());
 		// check concept
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID"
-						+ " AND c.Value = ?)");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID"
+				+ " AND c.Value = ?)");
 		params.add(conceptValue);
 		//
 		if (!concept.getType().equals(MHRConcept.TYPE_Information)) {
@@ -1910,8 +1913,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		params.add(getAD_Client_ID());
 		// check concept
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID"
-						+ " AND c.Value = ?)");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID"
+				+ " AND c.Value = ?)");
 		params.add(conceptValue);
 		//
 		if (!concept.getType().equals(MHRConcept.TYPE_Information)) {
@@ -1948,7 +1951,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		MHRConcept concept = MHRConcept.forValue(getCtx(), conceptValue);
 		if (concept == null)
 			return null;
-		
+
 		ArrayList<Object> params = new ArrayList<Object>();
 		StringBuilder whereClause = new StringBuilder();
 		// check client
@@ -1957,9 +1960,9 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		// check concept
 
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? "
-						+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) AND HR_Attribute.ValidFrom <=?"
-						+ " )");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? "
+				+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) AND HR_Attribute.ValidFrom <=?"
+				+ " )");
 		params.add(conceptValue);
 		params.add(from);
 		params.add(to);
@@ -1988,8 +1991,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		}
 		return attribute.getTextMsg();
 	} // getAttributeString
-	
-	
+
+
 	/**
 	 * Helper Method : Get the number of days between start and end, in
 	 * Timestamp format
@@ -2136,10 +2139,10 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		//
 		// check process and payroll
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Process p"
-						+ " INNER JOIN HR_Period pr ON (pr.HR_Period_id=p.HR_Period_ID)"
-						+ " WHERE HR_Movement.HR_Process_ID = p.HR_Process_ID"
-						+ " AND p.HR_Payroll_ID=?");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Process p"
+				+ " INNER JOIN HR_Period pr ON (pr.HR_Period_id=p.HR_Period_ID)"
+				+ " WHERE HR_Movement.HR_Process_ID = p.HR_Process_ID"
+				+ " AND p.HR_Payroll_ID=?");
 
 		params.add(payroll_id);
 		if (periodFrom < 0) {
@@ -2213,10 +2216,10 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		//
 		// check process and payroll
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Process p"
-						+ " INNER JOIN HR_Period pr ON (pr.HR_Period_id=p.HR_Period_ID)"
-						+ " WHERE HR_Movement.HR_Process_ID = p.HR_Process_ID"
-						+ " AND p.HR_Payroll_ID=?");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Process p"
+				+ " INNER JOIN HR_Period pr ON (pr.HR_Period_id=p.HR_Period_ID)"
+				+ " WHERE HR_Movement.HR_Process_ID = p.HR_Process_ID"
+				+ " AND p.HR_Payroll_ID=?");
 
 		params.add(payroll_id);
 
@@ -2304,10 +2307,10 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		// check process and payroll
 		if (payroll_id > 0) {
 			whereClause
-					.append(" AND EXISTS (SELECT 1 FROM HR_Process p"
-							+ " INNER JOIN HR_Period pr ON (pr.HR_Period_id=p.HR_Period_ID)"
-							+ " WHERE HR_Movement.HR_Process_ID = p.HR_Process_ID"
-							+ " AND p.HR_Payroll_ID=?");
+			.append(" AND EXISTS (SELECT 1 FROM HR_Process p"
+					+ " INNER JOIN HR_Period pr ON (pr.HR_Period_id=p.HR_Period_ID)"
+					+ " WHERE HR_Movement.HR_Process_ID = p.HR_Process_ID"
+					+ " AND p.HR_Payroll_ID=?");
 
 			params.add(payroll_id);
 			whereClause.append(")");
@@ -2349,13 +2352,13 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 				.getSQLValueBD(
 						null,
 						"SELECT COALESCE(SUM(cr.grandtotal),0) "
-						+ "FROM C_Commission c "
-						+ "JOIN c_CommissionRun cr on c.C_Commission_ID = cr.C_Commission_ID "
-						+ "WHERE c.AD_Client_ID = ? AND c.AD_ORG_ID = ? AND c.C_BPartner_ID = ? "
-						+ "AND startdate BETWEEN ? AND ? GROUP BY c.AD_Client_ID, c.AD_ORG_ID, "
-						+ "c.C_BPartner_ID",
-						e.getAD_Client_ID(), e.getAD_Org_ID(), m_C_BPartner_ID,
-						from, to);
+								+ "FROM C_Commission c "
+								+ "JOIN c_CommissionRun cr on c.C_Commission_ID = cr.C_Commission_ID "
+								+ "WHERE c.AD_Client_ID = ? AND c.AD_ORG_ID = ? AND c.C_BPartner_ID = ? "
+								+ "AND startdate BETWEEN ? AND ? GROUP BY c.AD_Client_ID, c.AD_ORG_ID, "
+								+ "c.C_BPartner_ID",
+								e.getAD_Client_ID(), e.getAD_Org_ID(), m_C_BPartner_ID,
+								from, to);
 
 		if (value == null)
 			value = Env.ZERO;
@@ -2464,8 +2467,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		params.add(getAD_Client_ID());
 		// check concept
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID"
-						+ " AND c.Value = ?)");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID"
+				+ " AND c.Value = ?)");
 		params.add(pConcept);
 		//
 		if (!MHRConcept.TYPE_Information.equals(concept.getType())) {
@@ -2515,8 +2518,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		params.add(getAD_Client_ID());
 		// check concept
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID"
-						+ " AND c.Value = ?)");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID"
+				+ " AND c.Value = ?)");
 		params.add(pConcept);
 		//
 		if (!MHRConcept.TYPE_Information.equals(concept.getType())) {
@@ -2819,20 +2822,20 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 								.setParameters(para).first();
 						if (periodTo != null) {
 
-//							MHRAttribute attribute = new MHRAttribute(getCtx(),
-//									0, get_TrxName());
-//							attribute.setHR_Concept_ID(conceptTo.get_ID());
-//							attribute.setDescription(Msg.translate(getCtx(),
-//									"Missing Credit From Last Period")
-//									+ " "
-//									+ conceptFrom.getName());
-//							attribute.setAmount(BigDecimal.valueOf(creditTotal
-//									- debitTotal));
-//							attribute.setValidFrom(periodTo.getStartDate());
-//							attribute.setValidTo(periodTo.getEndDate());
-//							attribute.setC_BPartner_ID(p_C_BPartner_ID);
-//							attribute.setColumnType(conceptTo.getColumnType());
-//							attribute.saveEx();
+							//							MHRAttribute attribute = new MHRAttribute(getCtx(),
+							//									0, get_TrxName());
+							//							attribute.setHR_Concept_ID(conceptTo.get_ID());
+							//							attribute.setDescription(Msg.translate(getCtx(),
+							//									"Missing Credit From Last Period")
+							//									+ " "
+							//									+ conceptFrom.getName());
+							//							attribute.setAmount(BigDecimal.valueOf(creditTotal
+							//									- debitTotal));
+							//							attribute.setValidFrom(periodTo.getStartDate());
+							//							attribute.setValidTo(periodTo.getEndDate());
+							//							attribute.setC_BPartner_ID(p_C_BPartner_ID);
+							//							attribute.setColumnType(conceptTo.getColumnType());
+							//							attribute.saveEx();
 							getaddAttributeAmt(
 									conceptFrom.getValue(),
 									conceptTo.getValue(),
@@ -2901,14 +2904,14 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		MHRPeriod periodFrom = MHRPeriod.get(getCtx(), p_currentPeriod_ID);
 		MHRPeriod periodTo = null;
 
-		
+
 		Timestamp dateAcctFrom = periodFrom.getDateAcct();
 		String where = MHRPayroll.COLUMNNAME_HR_Payroll_ID
 				+ " = ? AND DateAcct > ?";
 		Object[] para = new Object[] { periodFrom.getHR_Payroll_ID(),dateAcctFrom };
 		Timestamp DateAcctTo = new Query(getCtx(), MHRPeriod.Table_Name,
 				where, get_TrxName()).setParameters(para).aggregate("DateAcct",
-				"MIN",Timestamp.class);
+						"MIN",Timestamp.class);
 		if (DateAcctTo != null) {
 
 			where = MHRPayroll.COLUMNNAME_HR_Payroll_ID
@@ -2964,7 +2967,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		String where = " HR_Process_ID = ? AND HR_Concept_ID = ? AND C_BPartner_ID = ? AND HR_ConceptFrom_ID = ?";
 		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name,
 				where, get_TrxName()).setParameters(getHR_Process_ID(),
-				conceptTo.get_ID(), p_C_BPartner_ID, conceptFrom.get_ID())
+						conceptTo.get_ID(), p_C_BPartner_ID, conceptFrom.get_ID())
 				.firstOnly();
 
 		if (attribute == null)
@@ -2982,7 +2985,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		attribute.saveEx();
 
 	}// getaddAttributeAmt
-	
+
 	/**
 	 * Helper Method : Get Attribute [get Attribute to search key concept and
 	 * date ]
@@ -3007,8 +3010,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		params.add(getAD_Client_ID());
 		// check concept
 		whereClause
-				.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? "
-						+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND HR_Attribute.IsActive='Y' AND c.Value = ? "
+				+ " AND (HR_Attribute.validto IS NULL OR HR_Attribute.validto >= ?) )");
 		params.add(pConcept);
 		params.add(date1);
 		//
@@ -3035,12 +3038,12 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			if (attribute.getValidTo()!=null)
 				return getDays(attribute.getValidFrom(),attribute.getValidTo());
 		}
-			
+
 
 		// something else
 		return 0.0; // TODO throw exception ??
 	} // getAttribute
-	
+
 	/**
 	 * TODO QSS Reviewme Helper Method: gets Concept value of payrroll(s)
 	 * between 2 dates if payrollValue is null then sum all payrolls between 2
@@ -3107,21 +3110,21 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		params.add(from);
 		whereClause.append(" AND validTo <= ? ");
 		params.add(to);
-		
-//		if (from == null)
-//			from = getFirstDayOfPeriod(p.getHR_Period_ID());
-//		if (to == null)
-//			to = getLastDayOfPeriod(p.getHR_Period_ID());
-//		params.add(from);
-//		params.add(to);
+
+		//		if (from == null)
+		//			from = getFirstDayOfPeriod(p.getHR_Period_ID());
+		//		if (to == null)
+		//			to = getLastDayOfPeriod(p.getHR_Period_ID());
+		//		params.add(from);
+		//		params.add(to);
 		//
 		// check process and payroll
 		if (payroll_id > 0) {
 			whereClause
-					.append(" AND EXISTS (SELECT 1 FROM HR_Process p"
-							+ " INNER JOIN HR_Period pr ON (pr.HR_Period_id=p.HR_Period_ID)"
-							+ " WHERE HR_Movement.HR_Process_ID = p.HR_Process_ID"
-							+ " AND p.HR_Payroll_ID=?");
+			.append(" AND EXISTS (SELECT 1 FROM HR_Process p"
+					+ " INNER JOIN HR_Period pr ON (pr.HR_Period_id=p.HR_Period_ID)"
+					+ " WHERE HR_Movement.HR_Process_ID = p.HR_Process_ID"
+					+ " AND p.HR_Payroll_ID=?");
 
 			params.add(payroll_id);
 			whereClause.append(")");
@@ -3139,9 +3142,9 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			return 0;
 
 	} // getConceptRangeOfPeriod
-	
+
 	public Timestamp[] getDates2 (Timestamp DateFrom, Timestamp DateTo) {
-		
+
 		Integer cutDay = MSysConfig.getIntValue("CutDayPayrollEvents", 20, getAD_Client_ID());
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(m_dateFrom);
@@ -3153,8 +3156,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		calendar.setTime(m_dateFrom);
 		calendar.add(Calendar.DAY_OF_YEAR, cutDay-1);
 		Timestamp m_DateTo2 = Timestamp.valueOf(sdf.format(calendar.getTime()).toString());	
-		
+
 		return new Timestamp[] {m_DateFrom2, m_DateTo2};		
 	} //getDates2
-	
+
 } // MHRProcess

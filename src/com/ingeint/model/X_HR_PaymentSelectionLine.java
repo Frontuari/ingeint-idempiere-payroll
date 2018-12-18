@@ -32,7 +32,7 @@ public class X_HR_PaymentSelectionLine extends PO implements I_HR_PaymentSelecti
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20181004L;
+	private static final long serialVersionUID = 20181217L;
 
     /** Standard Constructor */
     public X_HR_PaymentSelectionLine (Properties ctx, int HR_PaymentSelectionLine_ID, String trxName)
@@ -163,6 +163,25 @@ public class X_HR_PaymentSelectionLine extends PO implements I_HR_PaymentSelecti
 	public String getDescription () 
 	{
 		return (String)get_Value(COLUMNNAME_Description);
+	}
+
+	/** Confidence Staff = 02 */
+	public static final String EMPLOYEEGROUP_ConfidenceStaff = "02";
+	/** Basic = 01 */
+	public static final String EMPLOYEEGROUP_Basic = "01";
+	/** Set EmployeeGroup.
+		@param EmployeeGroup EmployeeGroup	  */
+	public void setEmployeeGroup (String EmployeeGroup)
+	{
+
+		set_Value (COLUMNNAME_EmployeeGroup, EmployeeGroup);
+	}
+
+	/** Get EmployeeGroup.
+		@return EmployeeGroup	  */
+	public String getEmployeeGroup () 
+	{
+		return (String)get_Value(COLUMNNAME_EmployeeGroup);
 	}
 
 	public org.eevolution.model.I_HR_Department getHR_Department() throws RuntimeException

@@ -33,7 +33,7 @@ public class X_HR_PaymentSelection extends PO implements I_HR_PaymentSelection, 
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20181004L;
+	private static final long serialVersionUID = 20181217L;
 
     /** Standard Constructor */
     public X_HR_PaymentSelection (Properties ctx, int HR_PaymentSelection_ID, String trxName)
@@ -379,6 +379,25 @@ public class X_HR_PaymentSelection extends PO implements I_HR_PaymentSelection, 
 	public String getDocumentNo () 
 	{
 		return (String)get_Value(COLUMNNAME_DocumentNo);
+	}
+
+	/** Confidence Staff = 02 */
+	public static final String EMPLOYEEGROUP_ConfidenceStaff = "02";
+	/** Basic = 01 */
+	public static final String EMPLOYEEGROUP_Basic = "01";
+	/** Set EmployeeGroup.
+		@param EmployeeGroup EmployeeGroup	  */
+	public void setEmployeeGroup (String EmployeeGroup)
+	{
+
+		set_Value (COLUMNNAME_EmployeeGroup, EmployeeGroup);
+	}
+
+	/** Get EmployeeGroup.
+		@return EmployeeGroup	  */
+	public String getEmployeeGroup () 
+	{
+		return (String)get_Value(COLUMNNAME_EmployeeGroup);
 	}
 
 	/** Set GenLines.

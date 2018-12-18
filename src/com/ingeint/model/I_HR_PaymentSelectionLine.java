@@ -32,7 +32,7 @@ public interface I_HR_PaymentSelectionLine
     /** TableName=HR_PaymentSelectionLine */
     public static final String Table_Name = "HR_PaymentSelectionLine";
 
-    /** AD_Table_ID=1000107 */
+    /** AD_Table_ID=1000126 */
     public static final int Table_ID = MTable.getTable_ID(Table_Name);
 
     KeyNamePair Model = new KeyNamePair(Table_ID, Table_Name);
@@ -135,6 +135,15 @@ public interface I_HR_PaymentSelectionLine
 	  * Optional short description of the record
 	  */
 	public String getDescription();
+
+    /** Column name EmployeeGroup */
+    public static final String COLUMNNAME_EmployeeGroup = "EmployeeGroup";
+
+	/** Set EmployeeGroup	  */
+	public void setEmployeeGroup (String EmployeeGroup);
+
+	/** Get EmployeeGroup	  */
+	public String getEmployeeGroup();
 
     /** Column name HR_Department_ID */
     public static final String COLUMNNAME_HR_Department_ID = "HR_Department_ID";

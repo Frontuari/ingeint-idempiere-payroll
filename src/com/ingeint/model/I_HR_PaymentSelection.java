@@ -32,7 +32,7 @@ public interface I_HR_PaymentSelection
     /** TableName=HR_PaymentSelection */
     public static final String Table_Name = "HR_PaymentSelection";
 
-    /** AD_Table_ID=1000106 */
+    /** AD_Table_ID=1000125 */
     public static final int Table_ID = MTable.getTable_ID(Table_Name);
 
     KeyNamePair Model = new KeyNamePair(Table_ID, Table_Name);
@@ -230,6 +230,15 @@ public interface I_HR_PaymentSelection
 	  * Document sequence number of the document
 	  */
 	public String getDocumentNo();
+
+    /** Column name EmployeeGroup */
+    public static final String COLUMNNAME_EmployeeGroup = "EmployeeGroup";
+
+	/** Set EmployeeGroup	  */
+	public void setEmployeeGroup (String EmployeeGroup);
+
+	/** Get EmployeeGroup	  */
+	public String getEmployeeGroup();
 
     /** Column name GenLines */
     public static final String COLUMNNAME_GenLines = "GenLines";
