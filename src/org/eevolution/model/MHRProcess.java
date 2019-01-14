@@ -629,6 +629,9 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 						.replaceAll("\\bget", "process.get")
 						.replace(".process.get", ".get");
 			}
+			if (columnType ==null)
+				errorMsg = "El Tipo de columna no puede ser nulo "
+						+ "para el Concepto que tiene la regla:"+rulee.getName();
 			String resultType = "double result = 0;";
 			if (MHRAttribute.COLUMNTYPE_Text.equals(columnType))
 				resultType = "String result = null;";
