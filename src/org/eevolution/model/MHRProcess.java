@@ -17,8 +17,10 @@ package org.eevolution.model;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -91,7 +93,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 	/* stack of concepts executing rules - to check loop in recursion */
 	private List<MHRConcept> activeConceptRule = new ArrayList<MHRConcept>();
 	private MBPartner partner;
-	
+
 	/** Static Logger */
 	private static CLogger s_log = CLogger.getCLogger(MHRProcess.class);
 	public static final String CONCEPT_PP_COST_COLLECTOR_LABOR = "PP_COST_COLLECTOR_LABOR"; // HARDCODED
@@ -848,7 +850,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			{
 				m_HR_Concept_ID = pc.getHR_Concept_ID();
 				MHRConcept concept = MHRConcept.get(getCtx(), m_HR_Concept_ID);
-				
+
 				boolean printed = pc.isPrinted() || concept.isPrinted();
 				Boolean byDate = concept.get_ValueAsBoolean("IsApplyByDate");
 
@@ -949,7 +951,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 
 		log.info("Concept - " + concept.getName());
 		MHRMovement movement = new MHRMovement(getCtx(), 0, get_TrxName());
-		
+
 		partner = new MBPartner(getCtx(), m_employee.getC_BPartner_ID(), get_TrxName());
 
 		movement.setC_BPartner_ID(m_C_BPartner_ID);
@@ -1038,7 +1040,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		}
 	} // getConcept
 
-	 /**
+	/**
 	 * Helper Method : get the value of the concept string type
 	 * 
 	 * @param pconcept
@@ -1776,7 +1778,9 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		params.add(getAD_Client_ID());
 		// check concept
 		whereClause
-		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND c.Value = ? AND ((? >= HR_Attribute.validfrom AND HR_Attribute.validto IS NULL) OR (? >= HR_Attribute.validfrom AND ? <= HR_Attribute.validto)))");
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND c.Value = ?"
+				+ " AND ((? >= HR_Attribute.validfrom AND HR_Attribute.validto IS NULL) OR (? >= HR_Attribute.validfrom AND ? "
+				+ "<= HR_Attribute.validto)))");
 		params.add(conceptValue);
 		params.add(date);
 		params.add(date);
@@ -1812,6 +1816,64 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 	 * @Region pRegion
 	 * @return ServiceDate
 	 */
+
+	public double getAttributeOfPeriod(String conceptValue, Timestamp From, Timestamp To) {
+		MHRConcept concept = MHRConcept.forValue(getCtx(), conceptValue);
+		if (concept == null)
+			return 0;
+
+		ArrayList<Object> params = new ArrayList<Object>();
+		StringBuilder whereClause = new StringBuilder();
+		// check client
+		whereClause.append("AD_Client_ID = ?");
+		params.add(getAD_Client_ID());
+		// check concept
+		whereClause
+		.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID AND c.Value = ?"
+				+ " AND HR_Attribute.isActive = 'Y')");
+		params.add(conceptValue);
+
+		//
+		if (!concept.getType().equals(MHRConcept.TYPE_Information)) {
+			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID
+					+ " = ?");
+			params.add(m_C_BPartner_ID);
+		}
+
+		whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID
+				+ "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
+		params.add(getAD_Org_ID());
+
+		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name,
+				whereClause.toString(), get_TrxName()).setParameters(params)
+				.setOrderBy(MHRAttribute.COLUMNNAME_AD_Org_ID + " DESC")
+				.first();
+		if (attribute == null)
+			return 0;
+
+		if (attribute.getColumnType().equals(MHRAttribute.COLUMNTYPE_Quantity)) {
+
+			if (attribute.getValidTo().compareTo(To)>0) {
+
+				Date xFrom = new Date (attribute.getValidFrom().getTime());
+				Date xToPeriod = new Date (To.getTime());				
+				Integer days = DaysTotal(xToPeriod,xFrom);
+							
+				return days;
+
+			}else if (attribute.getValidTo().compareTo(From)>0) {				
+				Date xTo   = new Date (attribute.getValidTo().getTime());
+				Date xFromPeriod = new Date (From.getTime());
+				Integer days = DaysTotal(xTo, xFromPeriod);
+
+				return days;				
+			}
+		}	
+
+		return 0;
+	}
+
+
 	public Timestamp getAttributeDate(String conceptValue, String pRegion) {
 		MHRConcept concept = MHRConcept.forValue(getCtx(), conceptValue);
 		if (concept == null)
@@ -3162,5 +3224,11 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 
 		return new Timestamp[] {m_DateFrom2, m_DateTo2};		
 	} //getDates2
+
+	public static int DaysTotal(Date Major, Date Minor) {
+		long diferenciaEn_ms = Major.getTime() - Minor.getTime();
+		long dias = diferenciaEn_ms / (1000 * 60 * 60 * 24);
+		return (int) dias+1;
+	}	
 
 } // MHRProcess
