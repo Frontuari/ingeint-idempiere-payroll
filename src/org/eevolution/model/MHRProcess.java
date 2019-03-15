@@ -730,6 +730,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			mv.setHR_Job_ID(employee.getHR_Job_ID());
 			mv.setHR_Department_ID(employee.getHR_Department_ID());
 			mv.setC_Activity_ID(employee.getC_Activity_ID());
+			mv.setUser1_ID(employee.get_ValueAsInt("User1_ID"));
 			mv.setValidFrom(m_dateFrom);
 			mv.setValidTo(m_dateTo);
 			mv.setPP_Cost_Collector_ID(cc.getPP_Cost_Collector_ID());
@@ -967,6 +968,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		movement.setIsPrinted(printed);
 		movement.setIsRegistered(concept.isRegistered());
 		movement.setC_Activity_ID(m_employee.getC_Activity_ID());
+		movement.setUser1_ID(m_employee.get_ValueAsInt("User1_ID"));
 		movement.set_ValueOfColumn("EmployeeGroup", partner.get_Value("EmployeeGroup"));
 		if (MHRConcept.TYPE_RuleEngine.equals(concept.getType())) {
 			log.info("Executing rule for concept " + concept.getValue());
@@ -1130,6 +1132,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			m.setHR_Job_ID(employee.getHR_Job_ID());
 			m.setIsRegistered(c.isRegistered());
 			m.setC_Activity_ID(employee.getC_Activity_ID());
+			m.setUser1_ID(employee.get_ValueAsInt("User1_ID"));
 			// m.setProcessed(true); ??
 
 			m.saveEx();
@@ -1177,6 +1180,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			m.setHR_Job_ID(employee.getHR_Job_ID());
 			m.setIsRegistered(c.isRegistered());
 			m.setC_Activity_ID(employee.getC_Activity_ID());
+			m.setUser1_ID(employee.get_ValueAsInt("User1_ID"));
 			// m.setProcessed(true); ??
 
 			m.saveEx();
@@ -1850,10 +1854,14 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 				.first();
 		if (attribute == null)
 			return 0;
-
+		
 		if (attribute.getColumnType().equals(MHRAttribute.COLUMNTYPE_Quantity)) {
-
-			if (attribute.getValidTo().compareTo(To)>0) {
+			
+			if (attribute.getValidFrom().compareTo(attribute.getValidTo())==0) {
+				return 1;
+			
+			}else if (attribute.getValidTo().compareTo(To)>0 
+					|| attribute.getValidTo().compareTo(To)==0) {
 
 				Date xFrom = new Date (attribute.getValidFrom().getTime());
 				Date xToPeriod = new Date (To.getTime());				
@@ -1861,18 +1869,17 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 							
 				return days;
 
-			}else if (attribute.getValidTo().compareTo(From)>0) {				
-				Date xTo   = new Date (attribute.getValidTo().getTime());
+			}else if (attribute.getValidTo().compareTo(From)>0 
+					|| (attribute.getValidTo().compareTo(From)==0)) {				
+				Date xTo = new Date (attribute.getValidTo().getTime());
 				Date xFromPeriod = new Date (From.getTime());
 				Integer days = DaysTotal(xTo, xFromPeriod);
 
 				return days;				
 			}
-		}	
-
+		}
 		return 0;
 	}
-
 
 	public Timestamp getAttributeDate(String conceptValue, String pRegion) {
 		MHRConcept concept = MHRConcept.forValue(getCtx(), conceptValue);

@@ -21,7 +21,6 @@ import org.compiere.util.Util;
 import com.ingeint.utils.PayrollUtils;
 
 public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAction, DocOptions {
-
 	/**
 	 * 
 	 */

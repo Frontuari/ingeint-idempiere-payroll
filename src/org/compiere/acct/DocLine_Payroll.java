@@ -47,6 +47,7 @@ public class DocLine_Payroll extends DocLine
 		m_C_BPartner_ID    = C_BPartner_ID;
 		m_HR_Department_ID = line.getHR_Department_ID();
 		m_C_Activity_ID    = line.getC_Activity_ID();
+		m_User1_ID         = line.getUser1_ID();
 		m_C_BP_Group_ID    = bpartner.getC_BP_Group_ID();
 		m_AccountSign      = concept.getAccountSign();
 		m_Amount           = line.getAmount();
@@ -62,6 +63,7 @@ public class DocLine_Payroll extends DocLine
 	private BigDecimal m_Amount  = Env.ZERO;
 	private int m_HR_Department_ID = 0;
 	private int m_C_BP_Group_ID = 0;
+	private int m_User1_ID = 0;
 	
 	public int getHR_Process_ID(){
 		return m_HR_Process_ID;
@@ -94,6 +96,10 @@ public class DocLine_Payroll extends DocLine
 
 	public int getC_BP_Group_ID()	{
 		return m_C_BP_Group_ID;
+	}
+	
+	public int getUser1_ID() {
+		return m_User1_ID;
 	}
 
 }   //  DocLine_Payroll
