@@ -247,7 +247,7 @@ public class MHREmployee extends X_HR_Employee
 			whereClause.append(" AND m.C_BPartner_ID =? ");
 			params.add(p.getC_BPartner_ID());
 		}
-		whereClause.append(" AND p.Docstatus in ('CO'))");
+		whereClause.append(" AND p.Docstatus in ('CO', 'CL'))");
 		
 		List<MBPartner> list = new Query(p.getCtx(), MBPartner.Table_Name, whereClause.toString(), p.get_TrxName())
 								.setParameters(params)

@@ -1000,6 +1000,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		movement.setProcessed(true);
 		movement.setAD_Org_ID(getAD_Org_ID());
 		m_movement.put(concept.getHR_Concept_ID(), movement);
+		movement.saveEx();
 		return movement;
 	}
 
