@@ -229,25 +229,26 @@ public class MHREmployee extends X_HR_Employee
 		
 		List<Object> params = new ArrayList<Object>();
 		StringBuilder whereClause = new StringBuilder();
-		MHRPeriod period = new MHRPeriod(p.getCtx(), p.getHR_Period_ID(), p.get_TrxName());
 		
-		whereClause.append(" C_BPartner.C_BPartner_ID IN "
-						+ " (SELECT DISTINCT(m.C_BPartner_ID) FROM HR_Movement m");
-		whereClause.append(" JOIN HR_Process p on p.HR_Process_ID = m.HR_Process_ID ");
-		whereClause.append(" WHERE m.ValidFrom >= ? and m.ValidTo <= ? ");
-		params.add(period.getStartDate());
-		params.add(period.getEndDate());
+		whereClause.append(" IsEmployee = 'Y' AND AD_Client_ID = ?  ");
+		//				+ " (SELECT DISTINCT(m.C_BPartner_ID) FROM HR_Movement m");
+		//whereClause.append(" JOIN HR_Process p on p.HR_Process_ID = m.HR_Process_ID ");
+		//whereClause.append(" WHERE m.ValidFrom >= ? and m.ValidTo <= ? ");
+		//params.add(period.getStartDate());
+		//params.add(period.getEndDate());
+		
+		params.add(p.getAD_Client_ID());
 		
 		if (!hr_allorg){
-			whereClause.append(" AND p.AD_Org_ID = ? ");
+			whereClause.append(" AND AD_Org_ID = ? ");
 			params.add(p.getAD_Org_ID());
 		}
 		if (p.getC_BPartner_ID() != 0)
 		{
-			whereClause.append(" AND m.C_BPartner_ID =? ");
+			whereClause.append(" AND C_BPartner_ID =? ");
 			params.add(p.getC_BPartner_ID());
 		}
-		whereClause.append(" AND p.Docstatus in ('CO', 'CL'))");
+		//whereClause.append(" AND p.Docstatus in ('CO', 'CL'))");
 		
 		List<MBPartner> list = new Query(p.getCtx(), MBPartner.Table_Name, whereClause.toString(), p.get_TrxName())
 								.setParameters(params)
