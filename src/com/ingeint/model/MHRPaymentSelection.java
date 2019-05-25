@@ -9,6 +9,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 
 import org.compiere.model.MDocType;
+import org.compiere.model.MPayment;
 import org.compiere.model.MPeriod;
 import org.compiere.model.ModelValidationEngine;
 import org.compiere.model.ModelValidator;
@@ -103,7 +104,7 @@ public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAct
 
 			// If the document is already completed, we also want to be able to reactivate or void it instead of only closing it
 		} else if (docStatus.equals(DocumentEngine.STATUS_Completed)) {
-			options[index++] = DocumentEngine.ACTION_Void;
+			options[index++] = DocumentEngine.ACTION_Reverse_Correct;
 			options[index++] = DocumentEngine.ACTION_ReActivate;
 		}
 
@@ -205,8 +206,24 @@ public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAct
 
 	@Override
 	public boolean reverseCorrectIt() {
-		// TODO Auto-generated method stub
-		return false;
+		
+		MHRPaymentSelectionLine[] plines = getLines();
+		
+		for (MHRPaymentSelectionLine pline : plines) {
+			
+			MPayment payment = new MPayment(getCtx(), pline.getC_Payment_ID(), get_TrxName());
+			if (payment.getDocStatus().equals(DOCSTATUS_Drafted)) {
+				pline.setC_Payment_ID(-1);
+				pline.saveEx();
+				payment.deleteEx(true);				
+			}else {
+			payment.reverseCorrectIt();
+			payment.saveEx();
+			}
+		}		
+		setDocStatus(STATUS_Reversed);
+		saveEx();
+		return true;
 	}
 
 	@Override

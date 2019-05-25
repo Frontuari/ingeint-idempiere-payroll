@@ -3,6 +3,7 @@ package com.ingeint.utils;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
+import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.MBankAccount;
 import org.compiere.model.MPayment;
 import org.compiere.util.DB;
@@ -33,7 +34,9 @@ public class PayrollUtils {
 		payment.setDateAcct(now());
 		payment.setC_BPartner_ID(psline.get_ValueAsInt("C_BPartner_ID"));
 		payment.setC_BankAccount_ID(ps.getC_BankAccount_ID());
-		payment.setTenderType(C_BP_BankAccount_ID==-1 ? "K":"A");
+		if (psline.getC_BPartner().getPaymentRulePO()==null)
+			throw new AdempiereException("Debe especificar el tipo de pago para el empleado "+psline.getC_BPartner().getTaxID()+"_"+psline.getC_BPartner().getName());
+		payment.setTenderType(psline.getC_BPartner().getPaymentRulePO());
 		payment.setDateTrx(payment.getDateAcct());
 		payment.setC_DocType_ID(ps.getC_DocTypePayment_ID());
 		payment.setDescription(psline.getDescription());
@@ -41,7 +44,13 @@ public class PayrollUtils {
 		
 		payment.setPayAmt(psline.getAmount());
 		payment.setC_Charge_ID(ps.getC_Charge_ID());
-		payment.saveEx();	
+		payment.saveEx();
+		
+		if (!psline.getC_BPartner().getPaymentRulePO().equals("K")) {
+			payment.processIt("CO");
+			payment.setProcessed(true);
+			payment.saveEx();			
+		}
 		
 		psline.setC_Payment_ID(payment.get_ID());
 		psline.saveEx();
