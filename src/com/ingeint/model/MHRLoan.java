@@ -45,6 +45,7 @@ public class MHRLoan extends X_HR_Loan implements DocAction, DocOptions {
 	protected boolean		m_justPrepared = false;
 
 	public static MHRLoan createLoan(MOrder order) {
+		int HRLoanFeeNumbers = MSysConfig.getIntValue("HRLoanFeeNumbers", 4,order.getAD_Client_ID());
 		
 		MHRLoan loan = new MHRLoan(order.getCtx(), 0, order.get_TrxName());
 		
@@ -52,7 +53,7 @@ public class MHRLoan extends X_HR_Loan implements DocAction, DocOptions {
 		loan.setC_BPartner_ID(order.getC_BPartner_ID());
 		loan.setDocStatus(DOCSTATUS_Drafted);
 		loan.setC_DocTypeTarget_ID(MSysConfig.getIntValue("C_DocTypeForLoanOrder", 0, loan.getAD_Client_ID()));
-		loan.setFeeNumbers(4);
+		loan.setFeeNumbers(HRLoanFeeNumbers);
 		loan.setDateStart(order.getDateOrdered());
 		loan.setAD_User_ID(order.getCreatedBy());
 		loan.setC_Order_ID(order.getC_Order_ID());
