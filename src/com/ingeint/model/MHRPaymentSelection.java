@@ -101,11 +101,9 @@ public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAct
 			options[index++] = DocumentEngine.ACTION_Complete;
 			options[index++] = DocumentEngine.ACTION_Prepare;
 			options[index++] = DocumentEngine.ACTION_Reject;
-
 			// If the document is already completed, we also want to be able to reactivate or void it instead of only closing it
 		} else if (docStatus.equals(DocumentEngine.STATUS_Completed)) {
 			options[index++] = DocumentEngine.ACTION_Reverse_Correct;
-			options[index++] = DocumentEngine.ACTION_ReActivate;
 		}
 
 		return index;
@@ -217,8 +215,8 @@ public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAct
 				pline.saveEx();
 				payment.deleteEx(true);				
 			}else {
-			payment.reverseCorrectIt();
-			payment.saveEx();
+				payment.reverseCorrectIt();
+				payment.saveEx();
 			}
 		}		
 		setDocStatus(STATUS_Reversed);
