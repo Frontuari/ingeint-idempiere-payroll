@@ -37,7 +37,7 @@ public class PayrollUtils {
 		payment.setC_BPartner_ID(psline.get_ValueAsInt("C_BPartner_ID"));
 		payment.setC_BankAccount_ID(ps.getC_BankAccount_ID());
 		if (employee.get_Value("TenderType")==null)
-			throw new AdempiereException("Debe especificar el tipo de pago para el empleado "+psline.getC_BPartner().getTaxID()+"_"+psline.getC_BPartner().getName());
+			throw new AdempiereException("@FillTenderType@"+psline.getC_BPartner().getTaxID()+"_"+psline.getC_BPartner().getName());
 		payment.setTenderType(employee.get_ValueAsString("TenderType"));
 		payment.setDateTrx(payment.getDateAcct());
 		payment.setC_DocType_ID(ps.getC_DocTypePayment_ID());
