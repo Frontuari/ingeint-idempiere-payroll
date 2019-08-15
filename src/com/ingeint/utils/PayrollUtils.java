@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 
 import org.adempiere.exceptions.AdempiereException;
+import org.compiere.model.MBPartner;
 import org.compiere.model.MBankAccount;
 import org.compiere.model.MPayment;
 import org.compiere.util.DB;
@@ -24,6 +25,7 @@ public class PayrollUtils {
 				+ "WHERE C_BPartner_ID = ? AND C_Bank_ID = ? ", new Object[] {psline.getC_BPartner_ID(),psline.get_Value("C_BankAccountTo_ID")});
 		
 		MPayment payment = new MPayment(null, 0, psline.get_TrxName());
+		MBPartner employee = new MBPartner(psline.getCtx(), psline.getC_BPartner_ID(), psline.get_TrxName());
 		
 		if (C_BP_BankAccount_ID>0) {
 			ba = new MBankAccount(psline.getCtx(), C_BP_BankAccount_ID, psline.get_TrxName());
@@ -34,9 +36,9 @@ public class PayrollUtils {
 		payment.setDateAcct(now());
 		payment.setC_BPartner_ID(psline.get_ValueAsInt("C_BPartner_ID"));
 		payment.setC_BankAccount_ID(ps.getC_BankAccount_ID());
-		if (psline.getC_BPartner().getPaymentRulePO()==null)
+		if (employee.get_Value("TenderType")==null)
 			throw new AdempiereException("Debe especificar el tipo de pago para el empleado "+psline.getC_BPartner().getTaxID()+"_"+psline.getC_BPartner().getName());
-		payment.setTenderType(psline.getC_BPartner().getPaymentRulePO());
+		payment.setTenderType(employee.get_ValueAsString("TenderType"));
 		payment.setDateTrx(payment.getDateAcct());
 		payment.setC_DocType_ID(ps.getC_DocTypePayment_ID());
 		payment.setDescription(psline.getDescription());
@@ -46,7 +48,7 @@ public class PayrollUtils {
 		payment.setC_Charge_ID(ps.getC_Charge_ID());
 		payment.saveEx();
 		
-		if (!psline.getC_BPartner().getPaymentRulePO().equals("K")) {
+		if (!employee.get_Value("TenderType").equals("K")) {
 			payment.processIt("CO");
 			payment.setProcessed(true);
 			payment.saveEx();			
