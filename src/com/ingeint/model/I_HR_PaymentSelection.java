@@ -32,7 +32,7 @@ public interface I_HR_PaymentSelection
     /** TableName=HR_PaymentSelection */
     public static final String Table_Name = "HR_PaymentSelection";
 
-    /** AD_Table_ID=1000125 */
+    /** AD_Table_ID=1000024 */
     public static final int Table_ID = MTable.getTable_ID(Table_Name);
 
     KeyNamePair Model = new KeyNamePair(Table_ID, Table_Name);
@@ -64,21 +64,6 @@ public interface I_HR_PaymentSelection
 	  */
 	public int getAD_Org_ID();
 
-    /** Column name C_BPartner_ID */
-    public static final String COLUMNNAME_C_BPartner_ID = "C_BPartner_ID";
-
-	/** Set Business Partner .
-	  * Identifies a Business Partner
-	  */
-	public void setC_BPartner_ID (int C_BPartner_ID);
-
-	/** Get Business Partner .
-	  * Identifies a Business Partner
-	  */
-	public int getC_BPartner_ID();
-
-	public org.compiere.model.I_C_BPartner getC_BPartner() throws RuntimeException;
-
     /** Column name C_BankAccount_ID */
     public static final String COLUMNNAME_C_BankAccount_ID = "C_BankAccount_ID";
 
@@ -94,6 +79,21 @@ public interface I_HR_PaymentSelection
 
 	public org.compiere.model.I_C_BankAccount getC_BankAccount() throws RuntimeException;
 
+    /** Column name C_BPartner_ID */
+    public static final String COLUMNNAME_C_BPartner_ID = "C_BPartner_ID";
+
+	/** Set Business Partner .
+	  * Identifies a Business Partner
+	  */
+	public void setC_BPartner_ID (int C_BPartner_ID);
+
+	/** Get Business Partner .
+	  * Identifies a Business Partner
+	  */
+	public int getC_BPartner_ID();
+
+	public org.compiere.model.I_C_BPartner getC_BPartner() throws RuntimeException;
+
     /** Column name C_Charge_ID */
     public static final String COLUMNNAME_C_Charge_ID = "C_Charge_ID";
 
@@ -108,6 +108,21 @@ public interface I_HR_PaymentSelection
 	public int getC_Charge_ID();
 
 	public org.compiere.model.I_C_Charge getC_Charge() throws RuntimeException;
+
+    /** Column name C_DocType_ID */
+    public static final String COLUMNNAME_C_DocType_ID = "C_DocType_ID";
+
+	/** Set Document Type.
+	  * Document type or rules
+	  */
+	public void setC_DocType_ID (int C_DocType_ID);
+
+	/** Get Document Type.
+	  * Document type or rules
+	  */
+	public int getC_DocType_ID();
+
+	public org.compiere.model.I_C_DocType getC_DocType() throws RuntimeException;
 
     /** Column name C_DocTypePayment_ID */
     public static final String COLUMNNAME_C_DocTypePayment_ID = "C_DocTypePayment_ID";
@@ -134,21 +149,6 @@ public interface I_HR_PaymentSelection
 	public int getC_DocTypeTarget_ID();
 
 	public org.compiere.model.I_C_DocType getC_DocTypeTarget() throws RuntimeException;
-
-    /** Column name C_DocType_ID */
-    public static final String COLUMNNAME_C_DocType_ID = "C_DocType_ID";
-
-	/** Set Document Type.
-	  * Document type or rules
-	  */
-	public void setC_DocType_ID (int C_DocType_ID);
-
-	/** Get Document Type.
-	  * Document type or rules
-	  */
-	public int getC_DocType_ID();
-
-	public org.compiere.model.I_C_DocType getC_DocType() throws RuntimeException;
 
     /** Column name Created */
     public static final String COLUMNNAME_Created = "Created";
@@ -249,6 +249,19 @@ public interface I_HR_PaymentSelection
 	/** Get GenLines	  */
 	public String getGenLines();
 
+    /** Column name Help */
+    public static final String COLUMNNAME_Help = "Help";
+
+	/** Set Comment/Help.
+	  * Comment or Hint
+	  */
+	public void setHelp (String Help);
+
+	/** Get Comment/Help.
+	  * Comment or Hint
+	  */
+	public String getHelp();
+
     /** Column name HR_Department_ID */
     public static final String COLUMNNAME_HR_Department_ID = "HR_Department_ID";
 
@@ -300,19 +313,6 @@ public interface I_HR_PaymentSelection
 
 	public org.eevolution.model.I_HR_Process getHR_Process() throws RuntimeException;
 
-    /** Column name Help */
-    public static final String COLUMNNAME_Help = "Help";
-
-	/** Set Comment/Help.
-	  * Comment or Hint
-	  */
-	public void setHelp (String Help);
-
-	/** Get Comment/Help.
-	  * Comment or Hint
-	  */
-	public String getHelp();
-
     /** Column name IsActive */
     public static final String COLUMNNAME_IsActive = "IsActive";
 
@@ -360,6 +360,19 @@ public interface I_HR_PaymentSelection
 
 	/** Get Process Now	  */
 	public boolean isProcessing();
+
+    /** Column name RoutingNo */
+    public static final String COLUMNNAME_RoutingNo = "RoutingNo";
+
+	/** Set Routing No.
+	  * Bank Routing Number
+	  */
+	public void setRoutingNo (String RoutingNo);
+
+	/** Get Routing No.
+	  * Bank Routing Number
+	  */
+	public String getRoutingNo();
 
     /** Column name TotalAmt */
     public static final String COLUMNNAME_TotalAmt = "TotalAmt";

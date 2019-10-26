@@ -46,6 +46,7 @@ public class PayrollUtils {
 		
 		payment.setPayAmt(psline.getAmount());
 		payment.setC_Charge_ID(ps.getC_Charge_ID());
+		payment.setRoutingNo(psline.getHR_PaymentSelection().getRoutingNo());
 		payment.saveEx();
 		
 		if (!employee.get_Value("TenderType").equals("K")) {

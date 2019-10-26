@@ -25,8 +25,11 @@
 package com.ingeint.component;
 
 import org.adempiere.base.event.IEventTopics;
+import org.compiere.model.MFactAcct;
+import org.eevolution.model.MHRProcess;
 
 import com.ingeint.base.CustomEventManager;
+import com.ingeint.event.Acct_Payroll;
 import com.ingeint.event.EmployeeLoans;
 import com.ingeint.event.HRGAP_EventHandler;
 
@@ -41,5 +44,6 @@ public class EventManager extends CustomEventManager {
 		registerTableEvent(IEventTopics.PO_AFTER_CHANGE, "HR_GAP_Sector", HRGAP_EventHandler.class);
 		registerTableEvent(IEventTopics.PO_AFTER_NEW, "HR_GAP_Sector", HRGAP_EventHandler.class);
 		registerTableEvent(IEventTopics.PO_AFTER_CHANGE, "HR_Loan", EmployeeLoans.class);
+		registerTableEvent(IEventTopics.DOC_AFTER_POST, MHRProcess.Table_Name, Acct_Payroll.class);
 	}
 }

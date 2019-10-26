@@ -33,7 +33,7 @@ public class X_HR_PaymentSelection extends PO implements I_HR_PaymentSelection, 
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20181217L;
+	private static final long serialVersionUID = 20191026L;
 
     /** Standard Constructor */
     public X_HR_PaymentSelection (Properties ctx, int HR_PaymentSelection_ID, String trxName)
@@ -41,7 +41,17 @@ public class X_HR_PaymentSelection extends PO implements I_HR_PaymentSelection, 
       super (ctx, HR_PaymentSelection_ID, trxName);
       /** if (HR_PaymentSelection_ID == 0)
         {
+			setC_BankAccount_ID (0);
+			setC_Charge_ID (0);
+			setC_DocType_ID (0);
+// 0
+			setC_DocTypePayment_ID (0);
+			setC_DocTypeTarget_ID (0);
+			setDateDoc (new Timestamp( System.currentTimeMillis() ));
+// @#Date@
 			setHR_PaymentSelection_ID (0);
+			setHR_Process_ID (0);
+// -1
         } */
     }
 
@@ -73,34 +83,6 @@ public class X_HR_PaymentSelection extends PO implements I_HR_PaymentSelection, 
       return sb.toString();
     }
 
-	public org.compiere.model.I_C_BPartner getC_BPartner() throws RuntimeException
-    {
-		return (org.compiere.model.I_C_BPartner)MTable.get(getCtx(), org.compiere.model.I_C_BPartner.Table_Name)
-			.getPO(getC_BPartner_ID(), get_TrxName());	}
-
-	/** Set Business Partner .
-		@param C_BPartner_ID 
-		Identifies a Business Partner
-	  */
-	public void setC_BPartner_ID (int C_BPartner_ID)
-	{
-		if (C_BPartner_ID < 1) 
-			set_Value (COLUMNNAME_C_BPartner_ID, null);
-		else 
-			set_Value (COLUMNNAME_C_BPartner_ID, Integer.valueOf(C_BPartner_ID));
-	}
-
-	/** Get Business Partner .
-		@return Identifies a Business Partner
-	  */
-	public int getC_BPartner_ID () 
-	{
-		Integer ii = (Integer)get_Value(COLUMNNAME_C_BPartner_ID);
-		if (ii == null)
-			 return 0;
-		return ii.intValue();
-	}
-
 	public org.compiere.model.I_C_BankAccount getC_BankAccount() throws RuntimeException
     {
 		return (org.compiere.model.I_C_BankAccount)MTable.get(getCtx(), org.compiere.model.I_C_BankAccount.Table_Name)
@@ -129,6 +111,34 @@ public class X_HR_PaymentSelection extends PO implements I_HR_PaymentSelection, 
 		return ii.intValue();
 	}
 
+	public org.compiere.model.I_C_BPartner getC_BPartner() throws RuntimeException
+    {
+		return (org.compiere.model.I_C_BPartner)MTable.get(getCtx(), org.compiere.model.I_C_BPartner.Table_Name)
+			.getPO(getC_BPartner_ID(), get_TrxName());	}
+
+	/** Set Business Partner .
+		@param C_BPartner_ID 
+		Identifies a Business Partner
+	  */
+	public void setC_BPartner_ID (int C_BPartner_ID)
+	{
+		if (C_BPartner_ID < 1) 
+			set_Value (COLUMNNAME_C_BPartner_ID, null);
+		else 
+			set_Value (COLUMNNAME_C_BPartner_ID, Integer.valueOf(C_BPartner_ID));
+	}
+
+	/** Get Business Partner .
+		@return Identifies a Business Partner
+	  */
+	public int getC_BPartner_ID () 
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_C_BPartner_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
+
 	public org.compiere.model.I_C_Charge getC_Charge() throws RuntimeException
     {
 		return (org.compiere.model.I_C_Charge)MTable.get(getCtx(), org.compiere.model.I_C_Charge.Table_Name)
@@ -152,6 +162,34 @@ public class X_HR_PaymentSelection extends PO implements I_HR_PaymentSelection, 
 	public int getC_Charge_ID () 
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_C_Charge_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
+
+	public org.compiere.model.I_C_DocType getC_DocType() throws RuntimeException
+    {
+		return (org.compiere.model.I_C_DocType)MTable.get(getCtx(), org.compiere.model.I_C_DocType.Table_Name)
+			.getPO(getC_DocType_ID(), get_TrxName());	}
+
+	/** Set Document Type.
+		@param C_DocType_ID 
+		Document type or rules
+	  */
+	public void setC_DocType_ID (int C_DocType_ID)
+	{
+		if (C_DocType_ID < 0) 
+			set_Value (COLUMNNAME_C_DocType_ID, null);
+		else 
+			set_Value (COLUMNNAME_C_DocType_ID, Integer.valueOf(C_DocType_ID));
+	}
+
+	/** Get Document Type.
+		@return Document type or rules
+	  */
+	public int getC_DocType_ID () 
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_C_DocType_ID);
 		if (ii == null)
 			 return 0;
 		return ii.intValue();
@@ -205,34 +243,6 @@ public class X_HR_PaymentSelection extends PO implements I_HR_PaymentSelection, 
 	public int getC_DocTypeTarget_ID () 
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_C_DocTypeTarget_ID);
-		if (ii == null)
-			 return 0;
-		return ii.intValue();
-	}
-
-	public org.compiere.model.I_C_DocType getC_DocType() throws RuntimeException
-    {
-		return (org.compiere.model.I_C_DocType)MTable.get(getCtx(), org.compiere.model.I_C_DocType.Table_Name)
-			.getPO(getC_DocType_ID(), get_TrxName());	}
-
-	/** Set Document Type.
-		@param C_DocType_ID 
-		Document type or rules
-	  */
-	public void setC_DocType_ID (int C_DocType_ID)
-	{
-		if (C_DocType_ID < 0) 
-			set_Value (COLUMNNAME_C_DocType_ID, null);
-		else 
-			set_Value (COLUMNNAME_C_DocType_ID, Integer.valueOf(C_DocType_ID));
-	}
-
-	/** Get Document Type.
-		@return Document type or rules
-	  */
-	public int getC_DocType_ID () 
-	{
-		Integer ii = (Integer)get_Value(COLUMNNAME_C_DocType_ID);
 		if (ii == null)
 			 return 0;
 		return ii.intValue();
@@ -414,6 +424,23 @@ public class X_HR_PaymentSelection extends PO implements I_HR_PaymentSelection, 
 		return (String)get_Value(COLUMNNAME_GenLines);
 	}
 
+	/** Set Comment/Help.
+		@param Help 
+		Comment or Hint
+	  */
+	public void setHelp (String Help)
+	{
+		set_Value (COLUMNNAME_Help, Help);
+	}
+
+	/** Get Comment/Help.
+		@return Comment or Hint
+	  */
+	public String getHelp () 
+	{
+		return (String)get_Value(COLUMNNAME_Help);
+	}
+
 	public org.eevolution.model.I_HR_Department getHR_Department() throws RuntimeException
     {
 		return (org.eevolution.model.I_HR_Department)MTable.get(getCtx(), org.eevolution.model.I_HR_Department.Table_Name)
@@ -523,23 +550,6 @@ public class X_HR_PaymentSelection extends PO implements I_HR_PaymentSelection, 
 		return ii.intValue();
 	}
 
-	/** Set Comment/Help.
-		@param Help 
-		Comment or Hint
-	  */
-	public void setHelp (String Help)
-	{
-		set_Value (COLUMNNAME_Help, Help);
-	}
-
-	/** Get Comment/Help.
-		@return Comment or Hint
-	  */
-	public String getHelp () 
-	{
-		return (String)get_Value(COLUMNNAME_Help);
-	}
-
 	/** Set Approved.
 		@param IsApproved 
 		Indicates if this document requires approval
@@ -607,6 +617,23 @@ public class X_HR_PaymentSelection extends PO implements I_HR_PaymentSelection, 
 			return "Y".equals(oo);
 		}
 		return false;
+	}
+
+	/** Set Routing No.
+		@param RoutingNo 
+		Bank Routing Number
+	  */
+	public void setRoutingNo (String RoutingNo)
+	{
+		set_Value (COLUMNNAME_RoutingNo, RoutingNo);
+	}
+
+	/** Get Routing No.
+		@return Bank Routing Number
+	  */
+	public String getRoutingNo () 
+	{
+		return (String)get_Value(COLUMNNAME_RoutingNo);
 	}
 
 	/** Set Total Amount.
