@@ -33,7 +33,7 @@ public class PayrollUtils {
 			payment.setC_BP_BankAccount_ID(C_BP_BankAccount_ID);
 		}
 		payment.setAD_Org_ID(psline.getAD_Org_ID());
-		payment.setDateAcct(now());
+		payment.setDateAcct(ps.getDateDoc());
 		payment.setC_BPartner_ID(psline.get_ValueAsInt("C_BPartner_ID"));
 		payment.setC_BankAccount_ID(ps.getC_BankAccount_ID());
 		if (employee.get_Value("TenderType")==null)
@@ -42,7 +42,7 @@ public class PayrollUtils {
 		payment.setDateTrx(payment.getDateAcct());
 		payment.setC_DocType_ID(ps.getC_DocTypePayment_ID());
 		payment.setDescription(psline.getDescription());
-		payment.setC_Currency_ID(100);
+		payment.setC_Currency_ID(payment.getC_BankAccount().getC_Currency_ID());
 		
 		payment.setPayAmt(psline.getAmount());
 		payment.setC_Charge_ID(ps.getC_Charge_ID());
@@ -60,8 +60,4 @@ public class PayrollUtils {
 		
 		return payment;
 	}
-	
-	public static Timestamp now() {
-		return new Timestamp(Calendar.getInstance().getTimeInMillis());
-	}	
 }

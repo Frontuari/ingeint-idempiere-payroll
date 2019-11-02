@@ -1,6 +1,5 @@
 package com.ingeint.model;
 
-
 import java.io.File;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -25,50 +24,48 @@ public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAct
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -7827181203737421447L;	
+	private static final long serialVersionUID = -7827181203737421447L;
 
 	public MHRPaymentSelection(Properties ctx, int HR_PaymentSelection_ID, String trxName) {
 		super(ctx, HR_PaymentSelection_ID, trxName);
-		if (HR_PaymentSelection_ID==0) {
+		if (HR_PaymentSelection_ID == 0) {
 			setDocStatus(DOCSTATUS_Drafted);
-			setDocAction (DOCACTION_Prepare);
-		}			
+			setDocAction(DOCACTION_Prepare);
+		}
 	}
-	
+
 	public MHRPaymentSelection(Properties ctx, ResultSet rs, String trxName) {
 		super(ctx, rs, trxName);
 		// TODO Auto-generated constructor stub
 	}
-		
-	/**	Process Message 			*/
-	private String		m_processMsg = null;
-	/**	Just Prepared Flag			*/
-	private boolean		m_justPrepared = false;	
-	
+
+	/** Process Message */
+	private String m_processMsg = null;
+	/** Just Prepared Flag */
+	private boolean m_justPrepared = false;
+
 	/** Load Lines */
 	protected MHRPaymentSelectionLine[] t_lines = null;
-	
-	MHRPaymentSelectionLine[] getLines (String whereClause, String orderClause)
-	{
-		StringBuilder whereClauseFinal = new StringBuilder(MHRPaymentSelectionLine.COLUMNNAME_HR_PaymentSelection_ID+"=? ");
+
+	MHRPaymentSelectionLine[] getLines(String whereClause, String orderClause) {
+		StringBuilder whereClauseFinal = new StringBuilder(
+				MHRPaymentSelectionLine.COLUMNNAME_HR_PaymentSelection_ID + "=? ");
 		if (!Util.isEmpty(whereClause, true))
 			whereClauseFinal.append(whereClause);
 		if (orderClause.length() == 0)
 			orderClause = MHRPaymentSelectionLine.COLUMNNAME_Line;
 		//
-		List<MHRPaymentSelectionLine> list = new Query(getCtx(), MHRPaymentSelectionLine.Table_Name, whereClauseFinal.toString(), get_TrxName())
-										.setParameters(get_ID())
-										.setOrderBy(orderClause)
-										.list();
+		List<MHRPaymentSelectionLine> list = new Query(getCtx(), MHRPaymentSelectionLine.Table_Name,
+				whereClauseFinal.toString(), get_TrxName()).setParameters(get_ID()).setOrderBy(orderClause).list();
+
 		for (MHRPaymentSelectionLine ol : list) {
 			ol.setHeaderInfo(this);
 		}
 		//
-		return list.toArray(new MHRPaymentSelectionLine[list.size()]);		
-	}	//	getLines
-	
-	public MHRPaymentSelectionLine[] getLines (boolean requery, String orderBy)
-	{
+		return list.toArray(new MHRPaymentSelectionLine[list.size()]);
+	} // getLines
+
+	public MHRPaymentSelectionLine[] getLines(boolean requery, String orderBy) {
 		if (t_lines != null && !requery) {
 			set_TrxName(t_lines, get_TrxName());
 			return t_lines;
@@ -81,66 +78,67 @@ public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAct
 			orderClause += "Line";
 		t_lines = getLines(null, orderClause);
 		return t_lines;
-	}	//	getLines
-	
+	} // getLines
+
 	public MHRPaymentSelectionLine[] getLines() {
 		return getLines(false, null);
-	}	//	getLines
-	
-	
+	} // getLines
+
 	@Override
-	public int customizeValidActions(String docStatus, Object processing, String orderType, String isSOTrx, int AD_Table_ID,
-			String[] docAction, String[] options, int index) {
+	public int customizeValidActions(String docStatus, Object processing, String orderType, String isSOTrx,
+			int AD_Table_ID, String[] docAction, String[] options, int index) {
 		if (options == null)
 			throw new IllegalArgumentException("Option array parameter is null");
 		if (docAction == null)
 			throw new IllegalArgumentException("Doc action array parameter is null");
 
-		// If a document is drafted or invalid, the users are able to complete, prepare or void
+		// If a document is drafted or invalid, the users are able to complete, prepare
+		// or void
 		if (docStatus.equals(DocumentEngine.STATUS_Drafted) || docStatus.equals(DocumentEngine.STATUS_Invalid)) {
 			options[index++] = DocumentEngine.ACTION_Complete;
 			options[index++] = DocumentEngine.ACTION_Prepare;
 			options[index++] = DocumentEngine.ACTION_Reject;
-			// If the document is already completed, we also want to be able to reactivate or void it instead of only closing it
+			// If the document is already completed, we also want to be able to reactivate
+			// or void it instead of only closing it
 		} else if (docStatus.equals(DocumentEngine.STATUS_Completed)) {
 			options[index++] = DocumentEngine.ACTION_Reverse_Correct;
 		}
 
 		return index;
 	}
-	
+
 	@Override
 	public String prepareIt() {
-		if (log.isLoggable(Level.INFO)) log.info(toString());
+		if (log.isLoggable(Level.INFO))
+			log.info(toString());
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_BEFORE_PREPARE);
 		if (m_processMsg != null)
 			return DocAction.STATUS_Invalid;
 		MDocType dt = MDocType.get(getCtx(), getC_DocTypeTarget_ID());
 
-		//	Std Period open?
-		if (!MPeriod.isOpen(getCtx(), getDateDoc(), dt.getDocBaseType(), getAD_Org_ID()))
-		{
+		// Std Period open?
+		if (!MPeriod.isOpen(getCtx(), getDateDoc(), dt.getDocBaseType(), getAD_Org_ID())) {
 			m_processMsg = "@PeriodClosed@";
 			return DocAction.STATUS_Invalid;
 		}
-		
+
 		MHRPaymentSelectionLine[] lines = getLines(true, null);
-		if (lines.length == 0)
-		{
+		if (lines.length == 0) {
 			m_processMsg = "@NoLines@";
 			return DocAction.STATUS_Invalid;
-		}		
-		setC_DocType_ID(getC_DocTypeTarget_ID());		
+		}
+		setC_DocType_ID(getC_DocTypeTarget_ID());
 		return DocAction.STATUS_InProgress;
-	}	//	prepareIt	
-	
+	} // prepareIt
+
 	@Override
 	public boolean processIt(String action) throws Exception {
-		log.warning("Processing Action=" + action + " - DocStatus=" + getDocStatus() + " - DocAction=" + getDocAction());
+		log.warning(
+				"Processing Action=" + action + " - DocStatus=" + getDocStatus() + " - DocAction=" + getDocAction());
 		DocumentEngine engine = new DocumentEngine(this, getDocStatus());
 		return engine.processIt(action, getDocAction());
 	}
-		
+
 	@Override
 	public String completeIt() {
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_BEFORE_COMPLETE);
@@ -149,20 +147,19 @@ public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAct
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_AFTER_COMPLETE);
 		if (m_processMsg != null)
 			return DocAction.STATUS_Invalid;
-		
-		//Generate Payments
-		
-		MHRPaymentSelectionLine[] plines = getLines();
-				
-		for (MHRPaymentSelectionLine pline:plines) {
-			PayrollUtils.createPayment(pline);			
-		}		
-		setProcessed(true);
-		setDocAction(DOCACTION_Close);		
-		return DocAction.STATUS_Completed;
-	}	//	completeIt
 
-	
+		// Generate Payments
+
+		MHRPaymentSelectionLine[] plines = getLines();
+
+		for (MHRPaymentSelectionLine pline : plines) {
+			PayrollUtils.createPayment(pline);
+		}
+		setProcessed(true);
+		setDocAction(DOCACTION_Close);
+		return DocAction.STATUS_Completed;
+	} // completeIt
+
 	@Override
 	public boolean unlockIt() {
 		// TODO Auto-generated method stub
@@ -175,7 +172,6 @@ public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAct
 		return false;
 	}
 
-	
 	@Override
 	public boolean approveIt() {
 		// TODO Auto-generated method stub
@@ -187,8 +183,6 @@ public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAct
 		// TODO Auto-generated method stub
 		return false;
 	}
-
-	
 
 	@Override
 	public boolean voidIt() {
@@ -204,21 +198,21 @@ public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAct
 
 	@Override
 	public boolean reverseCorrectIt() {
-		
+
 		MHRPaymentSelectionLine[] plines = getLines();
-		
+
 		for (MHRPaymentSelectionLine pline : plines) {
-			
+
 			MPayment payment = new MPayment(getCtx(), pline.getC_Payment_ID(), get_TrxName());
 			if (payment.getDocStatus().equals(DOCSTATUS_Drafted)) {
 				pline.setC_Payment_ID(-1);
 				pline.saveEx();
-				payment.deleteEx(true);				
-			}else {
+				payment.deleteEx(true);
+			} else {
 				payment.reverseCorrectIt();
 				payment.saveEx();
 			}
-		}		
+		}
 		setDocStatus(STATUS_Reversed);
 		saveEx();
 		return true;
@@ -276,5 +270,5 @@ public class MHRPaymentSelection extends X_HR_PaymentSelection implements DocAct
 	public BigDecimal getApprovalAmt() {
 		// TODO Auto-generated method stub
 		return null;
-	}	
+	}
 }
