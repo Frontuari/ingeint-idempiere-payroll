@@ -1,8 +1,5 @@
 package com.ingeint.utils;
 
-import java.sql.Timestamp;
-import java.util.Calendar;
-
 import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.MBPartner;
 import org.compiere.model.MBankAccount;
@@ -44,7 +41,7 @@ public class PayrollUtils {
 		payment.setDescription(psline.getDescription());
 		payment.setC_Currency_ID(payment.getC_BankAccount().getC_Currency_ID());
 		
-		payment.setPayAmt(psline.getAmount());
+		payment.setPayAmt(psline.getPayAmt());
 		payment.setC_Charge_ID(ps.getC_Charge_ID());
 		payment.setRoutingNo(psline.getHR_PaymentSelection().getRoutingNo());
 		payment.saveEx();
