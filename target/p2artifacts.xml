@@ -1,16 +1,16 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?artifactRepository version='1.1.0'?>
 <artifacts size='2'>
-  <artifact classifier='osgi.bundle' id='com.ingeint.idempierePayroll' version='7.1.0.202001042159'>
+  <artifact classifier='osgi.bundle' id='com.ingeint.idempierePayroll' version='7.1.0.202001050247'>
     <properties size='5'>
-      <property name='artifact.size' value='993260'/>
-      <property name='download.size' value='993260'/>
+      <property name='artifact.size' value='993261'/>
+      <property name='download.size' value='993261'/>
       <property name='maven-groupId' value='org.idempiere'/>
       <property name='maven-artifactId' value='com.ingeint.idempierePayroll'/>
       <property name='maven-version' value='7.1.0-SNAPSHOT'/>
     </properties>
   </artifact>
-  <artifact classifier='osgi.bundle' id='com.ingeint.idempierePayroll.source' version='7.1.0.202001042159'>
+  <artifact classifier='osgi.bundle' id='com.ingeint.idempierePayroll.source' version='7.1.0.202001050247'>
     <properties size='6'>
       <property name='artifact.size' value='147490'/>
       <property name='download.size' value='147490'/>
