@@ -20,7 +20,8 @@ Require-Bundle: org.adempiere.base;bundle-version="7.1.0",
  zkbind;bundle-version="0.0.0",
  zkplus;bundle-version="0.0.0",
  zul;bundle-version="0.0.0",
- zweb;bundle-version="0.0.0"
+ zweb;bundle-version="0.0.0",
+ org.globalqss.idempiere.LCO.detailednames;bundle-version="7.1.0"
 Service-Component: OSGI-INF/org.idempiere.component.HRDocFactory.xml,OSGI-INF/com.ingeint.component.ZKFormFactory.xml,OSGI-INF/com.ingeint.component.ModelFactory.xml,OSGI-INF/com.ingeint.component.EventManager.xml,
  OSGI-INF/com.ingeint.component.ProcessFactory.xml, OSGI-INF/com.ingeint.component.CalloutFactory.xml
 Export-Package: com.ingeint.model,
