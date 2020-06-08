@@ -44,8 +44,7 @@ public class PaymentSelection extends CustomProcess {
 		Integer HR_Concept_ID = payroll.get_ValueAsInt("PaymentConcept_ID");
 		
 		if (HR_Concept_ID == null | HR_Concept_ID == 0 )
-			throw new AdempiereException("Debe especificar el concepto de seleccion de pago en la definicion de nomina");
-		
+			throw new AdempiereException("@PaySelConcept@");
 		//DB.getSQLValue(get_TrxName(), "DELETE FROM HR_PaymentSelectionLine WHERE HR_PaymentSelection_ID = ? "
 		//		+ "AND ");
 
