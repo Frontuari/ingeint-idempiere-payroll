@@ -30,4 +30,5 @@ Import-Package: org.adempiere.report.jasper,
  org.osgi.service.event
 Bundle-ActivationPolicy: lazy
 Automatic-Module-Name: com.ingeint.idempierePayroll
+Bundle-RequiredExecutionEnvironment: JavaSE-11
 
