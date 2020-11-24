@@ -16,9 +16,11 @@
 package org.eevolution.model;
 
 import java.sql.ResultSet;
+import java.util.List;
 import java.util.Properties;
 
 import org.compiere.model.MCalendar;
+import org.compiere.model.PO;
 import org.compiere.model.Query;
 import org.compiere.util.CCache;
 import org.compiere.util.Env;
@@ -42,6 +44,8 @@ public class MHRPayroll extends X_HR_Payroll
 	private static CCache<Integer, MHRPayroll> s_cache = new CCache<Integer, MHRPayroll>(Table_Name, 10);
 	/** Cache */
 	private static CCache<String, MHRPayroll> s_cacheValue = new CCache<String, MHRPayroll>(Table_Name+"_Value", 10);
+	/** Lines					*/
+	private MHRPayrollConcept[]		m_lines 	 = null;
 	
 	/**
 	 * Get Payroll by Value
@@ -139,4 +143,63 @@ public class MHRPayroll extends X_HR_Payroll
 		setClientOrg(calendar);
 		//setC_Calendar_ID(calendar.getC_Calendar_ID());
 	}	//	HRPayroll
+	
+	/**
+	 * Copy Lines of Payroll
+	 * @author <a href="mailto:dixon.22martinez@gmail.com">Dixon Martinez</a> 22/03/2014, 16:28:06
+	 * @param from
+	 * @param to
+	 * @return
+	 * @return int
+	 */
+	public int copyFrom (MHRPayroll from, MHRPayroll to){
+		
+		int count = 0;
+		MHRPayrollConcept[] concepts;
+		
+		/* Lines from payroll to copy*/
+		concepts = from.getLines(false);
+		
+		/* Loop from concepts to copy*/
+		for (MHRPayrollConcept line : concepts) {
+			MHRPayrollConcept m_HR_PayrollConcept = new MHRPayrollConcept(getCtx(), 0, get_TrxName());
+			
+			/*Copy values*/
+			PO.copyValues(line,m_HR_PayrollConcept, line.getAD_Client_ID(), line.getAD_Org_ID());
+
+			/*	set payroll*/
+			m_HR_PayrollConcept.setHR_Payroll_ID(getHR_Payroll_ID());
+
+			/* save payroll concept*/
+	 		//
+			m_HR_PayrollConcept.saveEx();
+	 			count++;			
+		}
+		return count;
+	}
+	
+	/**
+	 * Get Lines
+	 * @author <a href="mailto:dixon.22martinez@gmail.com">Dixon Martinez</a> 22/03/2014, 16:28:06
+	 * @param requery
+	 * @return
+	 * @return MHRPayrollConcept[]
+	 */
+	private MHRPayrollConcept[] getLines(boolean requery) {
+		
+		if (m_lines != null && !requery)
+		{
+			set_TrxName(m_lines, get_TrxName());
+			return m_lines;
+		}
+		List<MHRPayrollConcept> list = new Query(getCtx(), X_HR_PayrollConcept.Table_Name, "HR_Payroll_ID = ?",get_TrxName()
+				).setParameters(getHR_Payroll_ID())
+				.list();
+		
+		
+		m_lines = new MHRPayrollConcept[list.size ()];
+		list.toArray (m_lines);
+		return m_lines;
+	}//Get Lines
+	
 }	//	MPayroll

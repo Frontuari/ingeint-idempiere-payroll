@@ -28,6 +28,9 @@ import com.ingeint.base.CustomCalloutFactory;
 import com.ingeint.callout.UpdateAmtPaymentSel;
 import com.ingeint.model.MHRPaymentSelectionLine;
 
+import net.frontuari.callout.CalloutLVEHRProcessReport;
+import net.frontuari.model.MLVEHRProcessReportLine;
+
 /**
  * Callout Factory
  */
@@ -45,6 +48,7 @@ public class CalloutFactory extends CustomCalloutFactory {
 	@Override
 	protected void initialize() {
 		registerCallout(MHRPaymentSelectionLine.Table_Name, MHRPaymentSelectionLine.COLUMNNAME_PayAmt, UpdateAmtPaymentSel.class);
+		registerCallout(MLVEHRProcessReportLine.Table_Name, MLVEHRProcessReportLine.COLUMNNAME_HR_Concept_ID, CalloutLVEHRProcessReport.class);
 	}
 
 }

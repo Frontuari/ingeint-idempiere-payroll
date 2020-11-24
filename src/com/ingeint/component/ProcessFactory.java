@@ -18,5 +18,10 @@ public class ProcessFactory extends CustomProcessFactory{
 
 		registerProcess(com.ingeint.process.RecalculateLoan.class);
 		registerProcess(com.ingeint.process.PaymentSelection.class);
+		//	Added by Jorge Colmenarez, 2020-11-23 23:38
+		registerProcess(net.frontuari.process.PrintProcessReport.class);
+		registerProcess(net.frontuari.process.CreateConcepts.class);
+		registerProcess(net.frontuari.process.CopyFrom.class);
+		registerProcess(net.frontuari.process.PrintHRContract.class);
 	}
 }

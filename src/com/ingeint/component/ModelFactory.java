@@ -30,6 +30,7 @@ import org.eevolution.model.MHRConcept;
 import org.eevolution.model.MHRConceptCategory;
 import org.eevolution.model.MHRDepartment;
 import org.eevolution.model.MHREmployee;
+import org.eevolution.model.MHRJob;
 import org.eevolution.model.MHRMovement;
 import org.eevolution.model.MHRPayroll;
 import org.eevolution.model.MHRPayrollConcept;
@@ -45,6 +46,12 @@ import com.ingeint.model.MHRPaymentSelectionLine;
 import com.ingeint.model.MHRSectorCode;
 import com.ingeint.model.MHR_Basic_Factor_Type;
 import com.ingeint.model.MHR_GAP;
+
+import net.frontuari.model.MFTUCalendar;
+import net.frontuari.model.MLVEHRProcessReport;
+import net.frontuari.model.MLVEHRProcessReportLine;
+import net.frontuari.model.MLVERVHRProcessDetail;
+import net.frontuari.model.MNonBusinessDay;
 
 
 /**
@@ -73,5 +80,12 @@ public class ModelFactory extends CustomModelFactory {
 		registerTableModel(MHRPaymentSelection.Table_Name, MHRPaymentSelection.class);
 		registerTableModel(MHRPaymentSelectionLine.Table_Name, MHRPaymentSelectionLine.class);
 		registerTableModel (MHRSectorCode.Table_Name, MHRSectorCode.class);
+		//	Added by Jorge Colmenarez 2020-11-23 21:16
+		registerTableModel (MFTUCalendar.Table_Name, MFTUCalendar.class);
+		registerTableModel (MNonBusinessDay.Table_Name, MNonBusinessDay.class);
+		registerTableModel (MHRJob.Table_Name, MHRJob.class);
+		registerTableModel (MLVEHRProcessReport.Table_Name, MLVEHRProcessReport.class);
+		registerTableModel (MLVEHRProcessReportLine.Table_Name, MLVEHRProcessReportLine.class);
+		registerTableModel (MLVERVHRProcessDetail.Table_Name, MLVERVHRProcessDetail.class);
 	}
 }

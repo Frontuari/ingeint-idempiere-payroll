@@ -18,6 +18,7 @@ package org.eevolution.model;
 import java.io.File;
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -31,8 +32,11 @@ import java.util.Properties;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.MBPartner;
+import net.frontuari.model.MFTUCalendar;
+import org.compiere.model.MCurrency;
 import org.compiere.model.MDocType;
 import org.compiere.model.MFactAcct;
+import org.compiere.model.MOrg;
 import org.compiere.model.MPeriod;
 import org.compiere.model.MPeriodControl;
 import org.compiere.model.MRule;
@@ -47,8 +51,10 @@ import org.compiere.process.DocumentEngine;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
+import org.compiere.util.Language;
 import org.compiere.util.Msg;
 import org.compiere.util.TimeUtil;
+import net.frontuari.utils.FactorMovement;
 
 /**
  * HR Process Model
@@ -69,6 +75,8 @@ import org.compiere.util.TimeUtil;
  * 
  * @contributor Orlando Curieles - orlando.curieles@ingeint.com - INGEINT SA
  * 				https://www.ingeint.com
+ * @contributor Jorge Colmenarez - jcolmenarez@frontuari.net - FRONTUARI CA
+ * 				http://frontuari.net
  */
 public class MHRProcess extends X_HR_Process implements DocAction {
 	/**
@@ -92,6 +100,19 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 	/* stack of concepts executing rules - to check loop in recursion */
 	private List<MHRConcept> activeConceptRule = new ArrayList<MHRConcept>();
 	private MBPartner partner;
+	
+	//	Added by Jorge Colmenarez, 2020-11-23 10:03 Customfield for LVE Payroll
+	private String 		m_PayrollValue = null;
+	private int 		m_C_Activity_ID = 0;
+	private BigDecimal 	m_SSDiscountRate = null;
+	private BigDecimal 	m_SSClientDiscountRate = null;
+	private int 		m_Precision = 0;
+	public int 			m_HR_Payroll_ID = 0;
+	public int 			m_HR_Department_ID = 0;
+	public int 			m_HR_Job_ID = 0;
+	private Timestamp 	m_E_VFrom = null;
+	private Timestamp 	m_E_VTo = null;
+	//	End Jorge Colmenarez
 
 	/** Static Logger */
 	private static CLogger s_log = CLogger.getCLogger(MHRProcess.class);
@@ -776,6 +797,36 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 			m_scriptCtx.put("_From", period.getStartDate());
 			m_scriptCtx.put("_To", period.getEndDate());
 		}
+		
+		//	Added by Jorge Colmenarez, 2020-11-23 10:04 
+		//	Get Organization Info
+		if(getAD_Org_ID() != 0) {
+			MOrg org = MOrg.get(getCtx(), getAD_Org_ID());
+			m_SSDiscountRate = (BigDecimal) org.get_Value("SSDiscountRate");
+			m_SSClientDiscountRate = (BigDecimal) org.get_Value("SSClientDiscountRate");
+			if(m_SSDiscountRate == null)
+				m_SSDiscountRate = Env.ZERO;
+			if(m_SSClientDiscountRate == null)
+				m_SSClientDiscountRate = Env.ZERO;
+		}
+		//	Get Presicion
+		m_Precision = MCurrency.getStdPrecision(getCtx(), Env.getContextAsInt(getCtx(), "$C_Currency_ID"));
+		//	Get Payroll ID
+		if(getHR_Payroll_ID() > 0)
+		{
+			m_HR_Payroll_ID=getHR_Payroll_ID();
+		}
+		//	Get Department ID
+		if(getHR_Department_ID() > 0)
+		{
+			m_HR_Department_ID=getHR_Department_ID();
+		}
+		//	Get Job ID
+		if(getHR_Job_ID() > 0)
+		{
+			m_HR_Job_ID=getHR_Job_ID();	
+		}
+		//	End Jorge Colmenarez
 
 		// RE-Process, delete movement except concept type Incidence
 		int no = DB
@@ -792,6 +843,15 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		}
 		linesConcept = MHRPayrollConcept.getPayrollConcepts(this);
 
+		//	Jorge Colmenarez 2020-11-23, 10:20
+		//	Add Payroll Value
+		MHRPayroll payroll = MHRPayroll.get(getCtx(), m_HR_Payroll_ID);
+		if(payroll != null) {
+			m_PayrollValue = payroll.getValue();
+			m_scriptCtx.put("_PayrollValue", payroll.getValue());
+		}
+		//	End Jorge Colmenarez
+		
 		//
 		int count = 1;
 		for (MBPartner bp : linesEmployee) // ===============================================================
@@ -825,6 +885,45 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 				}
 
 			}
+			//	Added by Jorge Colmenarez, 2020-11-23 16:01
+			//	Get Activity
+			//	From Employee
+			if(m_employee.getC_Activity_ID() > 0) {
+				m_C_Activity_ID = m_employee.getC_Activity_ID();
+			}
+			//	From Job
+			if(m_C_Activity_ID <= 0) {
+				MHRJob job = (MHRJob) m_employee.getHR_Job();
+				m_C_Activity_ID = job.get_ValueAsInt("C_Activity_ID");
+			}
+			//	From Department
+			if(m_C_Activity_ID <= 0) {
+				MHRDepartment department = (MHRDepartment) m_employee.getHR_Department();
+				m_C_Activity_ID = department.getC_Activity_ID();
+			}
+			//	Add support to employee attributes
+			//	For Department
+			if(m_employee.getHR_Department_ID() > 0) {
+				m_HR_Department_ID = m_employee.getHR_Department_ID();
+			}
+			//	For Job
+			if(m_employee.getHR_Job_ID() > 0) {
+				m_HR_Job_ID = m_employee.getHR_Job_ID();	
+			}
+			//	Get Social Security Discount Rate
+			BigDecimal m_SSDiscountRate_E = (BigDecimal) m_employee.get_Value("SSDiscountRate");
+			BigDecimal m_SSClientDiscountRate_E = (BigDecimal) m_employee.get_Value("SSClientDiscountRate");
+
+			//	Remove Values
+			m_scriptCtx.remove("_BPartner");
+			m_scriptCtx.remove("_Employee");
+			m_scriptCtx.remove("_E_VFrom");
+			m_scriptCtx.remove("_E_VTo");
+			m_scriptCtx.remove("_E_PValue");
+			m_scriptCtx.remove("_E_HR_Department_ID");
+			m_scriptCtx.remove("_E_HR_Job_ID");
+			m_scriptCtx.remove("_SSDiscountRate");
+			//	End Jorge Colmenarez
 
 			m_scriptCtx.remove("_DateStart");
 			m_scriptCtx.remove("_DateEnd");
@@ -841,6 +940,37 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 							period.getStartDate(), period.getEndDate()) + 1);
 			m_scriptCtx.put("_C_BPartner_ID", bp.getC_BPartner_ID());
 			m_scriptCtx.put("_JobEmployee", m_employee.getHR_Job_ID());
+			//	Added by Jorge Colmenarez, 2020-11-23 16:05
+			//	Add Business Partner and Employee
+			m_scriptCtx.put("_BPartner", bp);
+			m_scriptCtx.put("_Employee", m_employee);
+			m_scriptCtx.put("_E_HR_Department_ID", m_employee.getHR_Department_ID());
+			m_scriptCtx.put("_E_HR_Job_ID", m_employee.getHR_Job_ID());
+			m_scriptCtx.put("_SSDiscountRate", (m_SSDiscountRate_E != null && m_SSDiscountRate_E.doubleValue() > 0
+													? m_SSDiscountRate_E.doubleValue()
+															: m_SSDiscountRate.doubleValue()));
+			m_scriptCtx.put("_SSClientDiscountRate", (m_SSClientDiscountRate_E != null && m_SSClientDiscountRate_E.doubleValue() > 0
+													? m_SSClientDiscountRate_E.doubleValue()
+															: m_SSClientDiscountRate.doubleValue()));
+			if(m_employee.getHR_Payroll_ID() != 0){
+				MHRPayroll m_ePayroll = MHRPayroll.get(getCtx(), m_employee.getHR_Payroll_ID());
+				m_scriptCtx.put("_E_PValue", m_ePayroll.getValue());
+			} else
+				m_scriptCtx.put("_E_PValue", null);
+
+			//	Add Valid From and Valid To
+			m_E_VFrom = m_dateFrom;
+			m_E_VTo = m_dateTo;
+			//  Valid Employee Start Date
+			if(m_employee.getStartDate() != null && m_dateFrom != null && m_employee.getStartDate().getTime() > m_dateFrom.getTime())
+			  m_E_VFrom = m_employee.getStartDate();
+			//  Valid Employee End Date
+			if(m_employee.getEndDate() != null && m_dateTo != null && m_employee.getEndDate().getTime() < m_dateTo.getTime())
+			  m_E_VTo = m_employee.getEndDate();
+			//	Add Values to Context
+			m_scriptCtx.put("_E_VFrom", m_E_VFrom);
+			m_scriptCtx.put("_E_VTo", m_E_VTo);
+			//	End Jorge Colmenarez
 
 			m_movement.clear();
 			loadMovements(m_movement, m_C_BPartner_ID);
@@ -924,6 +1054,19 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		params.add(m_scriptCtx.get("_To"));
 		whereClause.append(" AND HR_Concept_ID = ? ");
 		params.add(concept.getHR_Concept_ID());
+		//	Jorge Colmenarez Support to multiple groovy
+		if(m_HR_Payroll_ID > 0){
+			whereClause.append(" AND (HR_Payroll_ID=? OR HR_Payroll_ID IS NULL)");
+			params.add(m_HR_Payroll_ID);
+		}
+		if(m_HR_Department_ID > 0){
+			whereClause.append(" AND (HR_Department_ID=? OR HR_Department_ID IS NULL)");
+			params.add(m_HR_Department_ID);	}
+		if(m_HR_Job_ID > 0){
+			whereClause.append(" AND (HR_Job_ID=? OR HR_Job_ID IS NULL)");
+			params.add(m_HR_Job_ID);
+		}
+		//	End Jorge Colmenarez
 		whereClause
 		.append(" AND EXISTS (SELECT 1 FROM HR_Concept conc WHERE conc.HR_Concept_ID = HR_Attribute.HR_Concept_ID )");
 
@@ -938,7 +1081,10 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		MHRAttribute att = new Query(getCtx(), MHRAttribute.Table_Name,
 				whereClause.toString(), get_TrxName()).setParameters(params)
 				.setOnlyActiveRecords(true)
-				.setOrderBy(MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+				.setOrderBy(I_HR_Attribute.COLUMNNAME_HR_Payroll_ID + ", " 
+						+ I_HR_Attribute.COLUMNNAME_HR_Department_ID + ", " 
+						+ I_HR_Attribute.COLUMNNAME_HR_Job_ID + ", "
+						+ MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
 				.first();
 		if (att == null || concept.isRegistered()) {
 			log.info("Skip concept " + concept + " - attribute not found");
@@ -969,6 +1115,11 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		movement.setC_Activity_ID(m_employee.getC_Activity_ID());
 		movement.setUser1_ID(m_employee.get_ValueAsInt("User1_ID"));
 		movement.set_ValueOfColumn("EmployeeGroup", partner.get_Value("EmployeeGroup"));
+		//	Jorge Colmenarez, 2020-11-23 19:27
+		//	Add movement to context
+		m_scriptCtx.remove("currentMovement");
+		m_scriptCtx.put("currentMovement", movement);
+		//	End Jorge Colmenarez
 		if (MHRConcept.TYPE_RuleEngine.equals(concept.getType())) {
 			log.info("Executing rule for concept " + concept.getValue());
 			movement.setAccountSign(concept.getAccountSign());
@@ -3328,6 +3479,1056 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		long diferenciaEn_ms = Major.getTime() - Minor.getTime();
 		long dias = diferenciaEn_ms / (1000 * 60 * 60 * 24);
 		return (int) dias+1;
-	}	
+	}
+	
+	/**
+	 * 	Helper Method : Get Months, Date in Format Timestamp
+	 *  @param start
+	 *  @param end
+	 *  @return no. of month between two dates
+	 */ 
+	public int getMonthsOld(Timestamp startParam, Timestamp endParam)
+	{
+		boolean negative = false;
+		Timestamp start = startParam;
+		Timestamp end = endParam;
+		if (end.before(start))
+		{
+			negative = true;
+			Timestamp temp = start;
+			start = end;
+			end = temp;
+		}
+
+		GregorianCalendar cal = new GregorianCalendar();
+		cal.setTime(start);
+		cal.set(Calendar.HOUR_OF_DAY, 0);
+		cal.set(Calendar.MINUTE, 0);
+		cal.set(Calendar.SECOND, 0);
+		cal.set(Calendar.MILLISECOND, 0);
+		GregorianCalendar calEnd = new GregorianCalendar();
+
+		calEnd.setTime(end);
+		calEnd.set(Calendar.HOUR_OF_DAY, 0);
+		calEnd.set(Calendar.MINUTE, 0);
+		calEnd.set(Calendar.SECOND, 0);
+		calEnd.set(Calendar.MILLISECOND, 0);
+
+		if (cal.get(Calendar.YEAR) == calEnd.get(Calendar.YEAR))
+		{
+			int months = 0;
+			if (negative) {
+				months = (calEnd.get(Calendar.MONTH) - cal.get(Calendar.MONTH)) * -1;
+				if(((calEnd.get(Calendar.DAY_OF_MONTH) - cal.get(Calendar.DAY_OF_MONTH)) * -1) < 0)
+					months--;
+			} else {
+				months = calEnd.get(Calendar.MONTH) - cal.get(Calendar.MONTH);
+				if(calEnd.get(Calendar.DAY_OF_MONTH) - cal.get(Calendar.DAY_OF_MONTH) < 0)
+					months--;
+			}
+			//	Return Months
+			return months;
+		}
+
+		//	not very efficient, but correct
+		int counter = 0;
+		while (calEnd.after(cal))
+		{
+			cal.add (Calendar.MONTH, 1);
+			counter++;
+		}
+		if (negative) {
+			counter *= -1;
+			if(((calEnd.get(Calendar.DAY_OF_MONTH) - cal.get(Calendar.DAY_OF_MONTH)) * -1) < 0)
+				counter --;
+		} else {
+			if(calEnd.get(Calendar.DAY_OF_MONTH) - cal.get(Calendar.DAY_OF_MONTH) < 0)
+				counter--;
+		}
+		return counter;
+	} // getMonths
+
+	/**
+	 * Is Month Last Week
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 17/07/2014, 15:44:17
+	 * @param date
+	 * @return
+	 * @return boolean
+	 */
+	public boolean isMonthLastWeek(Timestamp date) {
+		if(date == null)
+			return false;
+		//	
+		GregorianCalendar cal = new GregorianCalendar();
+		cal.setTimeInMillis(date.getTime());
+		//	Set to Zero Hours...
+		cal.set(Calendar.HOUR_OF_DAY, 0);
+		cal.set(Calendar.MINUTE, 0);
+		cal.set(Calendar.SECOND, 0);
+		cal.set(Calendar.MILLISECOND, 0);
+		//	Get Current Day
+		int currentDay = cal.get(Calendar.DAY_OF_MONTH);
+		//	Set to last day
+		// cal.set(Calendar.DAY_OF_MONTH, cal.getMaximum(Calendar.DAY_OF_MONTH));
+		// Raul Muñoz
+		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+		//	Get Month Last Day
+		int monthLastDay = cal.get(Calendar.DAY_OF_MONTH);
+		//	Return
+		return (monthLastDay - currentDay) < 7;
+	} // 
+	
+	/**
+	 * Get Days with non Business Days
+	 * <li> Calendar.SUNDAY
+	 * <li> Calendar.MONDAY
+	 * <li> Calendar.TUESDAY
+	 * <li> Calendar.WEDNESDAY
+	 * <li> Calendar.THURSDAY
+	 * <li> Calendar.FRIDAY
+	 * <li> Calendar.SATURDAY
+	 * <li>getDays(_From, _To, nonBusinessDayRef, new int [] {Calendar.SATURDAY, Calendar.SUNDAY})
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 18/09/2013, 08:56:03
+	 * @param p_From
+	 * @param p_To
+	 * @param nonBusinessDayRef
+	 * @param nonBusinessDay
+	 * @param onlyNonBusinessDays
+	 * @param substractNonBusinessDay
+	 * @return
+	 * @return int
+	 */
+	public int getDays(Timestamp p_From, Timestamp p_To, boolean nonBusinessDayRef, 
+			int [] nonBusinessDay, boolean onlyNonBusinessDays, boolean substractNonBusinessDay) {
+		Calendar d_From = Calendar.getInstance();
+		Calendar d_To = Calendar.getInstance();
+		//	Valid From .. To
+		if(p_From == null
+				|| p_To == null)
+			return 0;
+		
+		int businessDays = 0;
+		int nonBusinessDays = 0;
+		
+		d_From.setTimeInMillis(p_From.getTime());
+	    d_To.setTimeInMillis(p_To.getTime());
+		//	Get Calendar
+	    MFTUCalendar calendar = MFTUCalendar.getDefault(getCtx());
+	    //	
+	    while (d_From.compareTo(d_To) <= 0) {
+	    	boolean weekNonBD = nonBusinessDay(d_From.get(Calendar.DAY_OF_WEEK), nonBusinessDay);
+	    	boolean calendarNonBD = calendar.isNonBusinessDay(d_From.getTime(), m_employee.getAD_Org_ID());
+	    	if (weekNonBD
+	    			|| (calendarNonBD && nonBusinessDayRef)) {
+	    		nonBusinessDays++;
+	    	} if(weekNonBD && calendarNonBD 
+	    			&& substractNonBusinessDay) {
+	    		nonBusinessDays--;
+	    	} if(!weekNonBD && (!calendarNonBD || !nonBusinessDayRef)) {
+	    		businessDays++;
+	    	}
+	    	//	Add Days
+	    	d_From.add(Calendar.DATE, 1);
+	    }
+	    if(businessDays < 0)
+	    	businessDays = 0;
+	    //	
+	    if(onlyNonBusinessDays)
+	    	return nonBusinessDays;
+	    //	Return
+	    return businessDays;
+	}
+	
+	/**
+	 * Get Days with non Business Days
+	 * <li> Calendar.SUNDAY
+	 * <li> Calendar.MONDAY
+	 * <li> Calendar.TUESDAY
+	 * <li> Calendar.WEDNESDAY
+	 * <li> Calendar.THURSDAY
+	 * <li> Calendar.FRIDAY
+	 * <li> Calendar.SATURDAY
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> Oct 13, 2016, 6:09:30 PM
+	 * @param p_From
+	 * @param p_To
+	 * @param nonBusinessDayRef
+	 * @param nonBusinessDay
+	 * @param onlyNonBusinessDays
+	 * @return
+	 * @return int
+	 */
+	public int getDays(Timestamp p_From, Timestamp p_To, boolean nonBusinessDayRef, 
+			int [] nonBusinessDay, boolean onlyNonBusinessDays) {
+		return getDays(p_From, p_To, nonBusinessDayRef, nonBusinessDay, onlyNonBusinessDays, false);
+	}
+	
+	/**
+	 * Get Days, only Business days
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 25/03/2014, 20:06:39
+	 * @param p_From
+	 * @param p_To
+	 * @param nonBusinessDayRef
+	 * @param nonBusinessDay
+	 * @return
+	 * @return int
+	 */
+	public int getDays(Timestamp p_From, Timestamp p_To, boolean nonBusinessDayRef, int [] nonBusinessDay){
+		return getDays(p_From, p_To, nonBusinessDayRef, nonBusinessDay, false);
+	}
+	
+	/**
+	 * Get Date To from Days
+	 * <li> Calendar.SUNDAY
+	 * <li> Calendar.MONDAY
+	 * <li> Calendar.TUESDAY
+	 * <li> Calendar.WEDNESDAY
+	 * <li> Calendar.THURSDAY
+	 * <li> Calendar.FRIDAY
+	 * <li> Calendar.SATURDAY
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 19/09/2013, 15:26:28
+	 * @param p_From
+	 * @param days
+	 * @param nonBusinessDayRef
+	 * @param nonBusinessDay
+	 * @return
+	 * @return Timestamp
+	 */
+	public Timestamp getDaysTo(Timestamp p_From, int days, boolean nonBusinessDayRef, int [] nonBusinessDay){
+		Calendar d_From = Calendar.getInstance();
+		//	Valid From .. To
+		if(p_From == null)
+			return p_From;
+		
+		int businessDays = 0;
+		int nonBusinessDays = 0;
+		
+		d_From.setTimeInMillis(p_From.getTime());
+		//	Get Calendar
+	    MFTUCalendar calendar = MFTUCalendar.getDefault(getCtx());
+		//	Get Business Days
+	    while (businessDays < days
+	    		|| (businessDays == days 
+	    			&& (nonBusinessDay(d_From.get(Calendar.DAY_OF_WEEK), nonBusinessDay)) 
+	    				|| (calendar.isNonBusinessDay(d_From.getTime(), m_employee.getAD_Org_ID()) && nonBusinessDayRef))) {
+	    	boolean weekNonBD = nonBusinessDay(d_From.get(Calendar.DAY_OF_WEEK), nonBusinessDay);
+	    	boolean calendarNonBD = calendar.isNonBusinessDay(d_From.getTime(), m_employee.getAD_Org_ID());
+	    	if (weekNonBD
+	    			|| (calendarNonBD && nonBusinessDayRef)) {
+	    		nonBusinessDays++;
+	    	} if(weekNonBD && calendarNonBD) {
+	    		nonBusinessDays--;
+	    	} if(!weekNonBD && (!calendarNonBD || !nonBusinessDayRef)) {
+	    		businessDays++;
+	    	}
+	    	//	Add Day
+	    	d_From.add(Calendar.DATE, 1);
+	    }
+	    //	log
+	    log.info("getDaysTo = [NonBusinessDays=" + nonBusinessDays + ", businessDays=" + businessDays + "]");
+	    return new Timestamp(d_From.getTimeInMillis());
+	}
+	
+	/**
+	 * Get Persistence Object Attribute before Process
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 18/09/2013, 17:08:52
+	 * @param pConcept
+	 * @return
+	 * @return MHRAttribute
+	 */
+	public MHRAttribute getAttributePO (String pConcept)
+	{
+		MHRConcept concept = MHRConcept.forValue(getCtx(), pConcept);
+		if (concept == null)
+			return null;
+
+		ArrayList<Object> params = new ArrayList<Object>();
+		StringBuffer whereClause = new StringBuffer();
+		// check ValidFrom:
+		whereClause.append(MHRAttribute.COLUMNNAME_ValidFrom + "<=?");
+		params.add(m_dateFrom);
+		//check client
+		whereClause.append(" AND AD_Client_ID = ?");
+		params.add(getAD_Client_ID());
+
+		//check concept
+		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Concept c WHERE c.HR_Concept_ID=HR_Attribute.HR_Concept_ID" 
+				+ " AND c.Value = ?)");
+		params.add(pConcept);
+		//
+		if (!concept.getType().equals(MHRConcept.TYPE_Information))
+		{
+			whereClause.append(" AND " + MHRAttribute.COLUMNNAME_C_BPartner_ID + " = ?");
+			params.add(m_C_BPartner_ID);
+		}
+
+		MHRAttribute attribute = new Query(getCtx(), MHRAttribute.Table_Name, whereClause.toString(), get_TrxName())
+		.setParameters(params)
+		.setOrderBy(I_HR_Attribute.COLUMNNAME_HR_Payroll_ID + ", " + MHRAttribute.COLUMNNAME_ValidFrom + " DESC")
+		.first();
+		
+		return attribute;
+		
+	} // getAttribute
+	
+	/**
+	 * Get List with Attribute
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 18/09/2013, 21:30:34
+	 * @param p_ConceptValue
+	 * @param p_From
+	 * @param p_To
+	 * @param addBeforeProcess
+	 * @return
+	 * @return MHRAttribute[]
+	 */
+	public MHRAttribute [] getAttributes(String p_ConceptValue, Timestamp p_From, Timestamp p_To, boolean addBeforeProcess){
+		MHRConcept concept = MHRConcept.forValue(getCtx(), p_ConceptValue);
+		if (concept == null)
+			return null;
+		
+		boolean isInformation = concept.getType()
+									.equals(MHRConcept.TYPE_Information);
+		//	
+		ArrayList<MHRAttribute> attributeList = null;
+		try {
+			StringBuffer sql = new StringBuffer("SELECT ca.* " +
+					"FROM HR_Concept c " +
+					"INNER JOIN HR_Attribute ca ON(ca.HR_Concept_ID = c.HR_Concept_ID) " +
+					"WHERE c.Value = ? " +
+					"AND ca.ValidFrom BETWEEN ? AND ? ");
+			
+			if (!isInformation){
+				sql.append("AND ca.C_BPartner_ID = ? ");
+			}
+			//	Order By
+			sql.append("ORDER BY ca.ValidFrom");
+			
+			PreparedStatement pstmt = null;
+			pstmt = DB.prepareStatement(sql.toString(), get_TrxName());
+			
+			//	Add Parameters
+			pstmt.setString(1, p_ConceptValue);
+			pstmt.setTimestamp(2, p_From);
+			pstmt.setTimestamp(3, p_To);
+			//	Valid
+			if (!isInformation){
+				pstmt.setInt(4, m_C_BPartner_ID);
+			}
+			ResultSet rs = pstmt.executeQuery();
+			if(rs != null){
+				attributeList = new ArrayList<MHRAttribute>();
+				MHRAttribute att = null;
+				if(addBeforeProcess){
+					att = getAttributePO(p_ConceptValue);
+					if(att != null)
+						attributeList.add(att);
+				}
+				while(rs.next()){
+					att = new MHRAttribute(getCtx(), rs, get_TrxName());
+					attributeList.add(att);
+				}
+			}
+			//	Close DB
+			DB.close(rs, pstmt);	
+		} catch(Exception e) {
+			s_log.warning(e.getMessage());
+		}
+		
+		return attributeList.toArray(new MHRAttribute[attributeList.size()]);
+	}
+	
+	/**
+	 * Add Days from change concept
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 30/01/2014, 16:59:44
+	 * @param p_AValue
+	 * @param p_From
+	 * @param p_To
+	 * @param nonBusinessDayRef
+	 * @param nonBusinessDays
+	 * @param p_Pos
+	 * @param p_Movement
+	 * @return
+	 * @return int
+	 */
+	public int getCrossDays(String p_AValue, Timestamp p_From, Timestamp p_To, boolean nonBusinessDayRef, int [] nonBusinessDays, int p_Pos, MHRMovement p_Movement){
+		MHRAttribute [] attArray = getAttributes(p_AValue, p_From, p_To, true);
+		Timestamp validFrom = null;
+		Timestamp validTo = null;
+		//  Loop over Array
+		if(attArray != null){
+			//  Loop over attribute change
+			for (int i = 0, ii = 1; i< attArray.length; i++, ii++) {
+				MHRAttribute m_Attribute = attArray[i];
+				validFrom = m_Attribute.getValidFrom();
+				//	Valid just >=
+				if(validFrom.before(p_From))
+					validFrom = p_From;
+				//  Set Valid To
+				if(ii < attArray.length)
+					validTo = TimeUtil.addDays(attArray[ii].getValidFrom(), -1);
+				else if(ii == attArray.length 
+						&& ii > 1)
+					validTo = p_To;
+				//	Add Days
+				if(i == p_Pos){
+					//	Set Valid
+					if(p_Movement != null) {
+						p_Movement.setValidFrom(validFrom);
+						p_Movement.setValidTo(validTo);
+					}
+					return getDays(validFrom, validTo, nonBusinessDayRef, nonBusinessDays);
+				}
+			}
+		}
+		return 0;
+	}
+	
+	/**
+	 * Add Days from change concept with reference to non Business Days
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 12/05/2014, 22:57:36
+	 * @param p_AValue
+	 * @param p_From
+	 * @param p_To
+	 * @param nonBusinessDays
+	 * @param p_Pos
+	 * @param p_Movement
+	 * @return
+	 * @return int
+	 */
+	public int getCrossDays(String p_AValue, Timestamp p_From, Timestamp p_To, int [] nonBusinessDays, int p_Pos, MHRMovement p_Movement){
+		return getCrossDays(p_AValue, p_From, p_To, true, nonBusinessDays, p_Pos, p_Movement);
+	}
+	
+	/**
+	 * Add Days from change concept
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 31/01/2014, 14:04:10
+	 * @param p_AValue
+	 * @param p_From
+	 * @param p_To
+	 * @param p_Pos
+	 * @return
+	 * @return int
+	 */
+	public int getCrossDays(String p_AValue, Timestamp p_From, Timestamp p_To, int [] nonBusinessDays, int p_Pos){
+		return getCrossDays(p_AValue, p_From, p_To, nonBusinessDays, p_Pos, null);
+	}
+	
+	/**
+	 * Add Year to Date
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 20/09/2013, 09:42:35
+	 * @param p_From
+	 * @param years
+	 * @return
+	 * @return Timestamp
+	 */
+	public Timestamp getYearTo(Timestamp p_From, int years){
+		if(p_From == null)
+			return p_From;
+		
+		Calendar d_From = Calendar.getInstance();
+		d_From.setTime(p_From);
+		//	Add Yeas
+		d_From.add(Calendar.YEAR, years);
+		
+		return new Timestamp(d_From.getTimeInMillis());
+	}
+	
+	/**
+	 * Add Month to Date
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 20/09/2013, 09:42:35
+	 * @param p_From
+	 * @param months
+	 * @return
+	 * @return Timestamp
+	 */
+	public Timestamp getMonthTo(Timestamp p_From, int months){
+		if(p_From == null)
+			return p_From;
+		
+		Calendar d_From = Calendar.getInstance();
+		d_From.setTime(p_From);
+		//	Add Yeas
+		d_From.add(Calendar.MONTH, months);
+		
+		return new Timestamp(d_From.getTimeInMillis());
+	}
+	
+	/**
+	 * Get Month First Date
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 13/12/2014, 16:54:06
+	 * @param day
+	 * @return
+	 * @return Timestamp
+	 */
+	public Timestamp getMonthFirstDay(Timestamp day) {
+		if (day == null)
+			day = new Timestamp(System.currentTimeMillis());
+		GregorianCalendar cal = new GregorianCalendar(Language.getLoginLanguage().getLocale());
+		cal.setTimeInMillis(day.getTime());
+		cal.set(Calendar.HOUR_OF_DAY, 0);
+		cal.set(Calendar.MINUTE, 0);
+		cal.set(Calendar.SECOND, 0);
+		cal.set(Calendar.MILLISECOND, 0);
+		//
+		cal.set(Calendar.DAY_OF_MONTH, 1);	//	first
+		return new Timestamp (cal.getTimeInMillis());
+	}	//	getNextDay
+	
+	/**
+	 * Valid Non Business Day
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 18/09/2013, 10:10:06
+	 * @param day
+	 * @param nonBusinessDays
+	 * @return
+	 * @return boolean
+	 */
+	private boolean nonBusinessDay(int day, int [] nonBusinessDays){
+		if(nonBusinessDays == null)
+			return false;
+		for (int i = 0; i < nonBusinessDays.length; i++) {
+			if(day == nonBusinessDays[i])
+				return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Get Years from two date
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 19/09/2013, 16:05:50
+	 * @param p_From
+	 * @param p_To
+	 * @return
+	 * @return int
+	 */
+	public int getYearDiff(Timestamp p_From, Timestamp p_To){
+		//	Set Date From
+		Calendar dateFrom=Calendar.getInstance();
+		dateFrom.setTime(p_From);
+        //	Set Date To
+		Calendar dateTo = Calendar.getInstance();
+        dateTo.setTime(p_To);
+        //	Calculate Difference
+        int yearDiff = dateTo.get(Calendar.YEAR) - dateFrom.get(Calendar.YEAR);
+        int diferMes = dateTo.get(Calendar.MONTH) - dateFrom.get(Calendar.MONTH);
+        int diferDia = dateTo.get(Calendar.DAY_OF_MONTH) - dateFrom.get(Calendar.DAY_OF_MONTH);
+        if (diferMes < 0 ||(diferMes == 0 && diferDia < 0)){
+            yearDiff -= 1;
+        }
+        //	Value
+        return yearDiff;
+	}
+	
+	/**
+	 * Verify if exists changes in concept
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 29/01/2014, 16:28:12
+	 * @param p_ConceptValue
+	 * @param p_From
+	 * @param p_To
+	 * @return
+	 * @return boolean
+	 */
+	public boolean getExistsConceptChanges(String p_ConceptValue, Timestamp p_From, Timestamp p_To){
+		MHRConcept concept = MHRConcept.forValue(getCtx(), p_ConceptValue);
+		if (concept == null)
+			return false;
+		//	Parameters
+		ArrayList<Object> params = new ArrayList<Object>();
+		params.add(p_ConceptValue);
+		params.add(p_From);
+		params.add(p_To);
+		StringBuffer sql = new StringBuffer("SELECT COUNT(ca.HR_Attribute_ID) " +
+				"FROM HR_Concept c " + 
+				"INNER JOIN HR_Attribute ca ON(ca.HR_Concept_ID = c.HR_Concept_ID) " +
+				"WHERE c.Value = ? " +
+				"AND ca.ValidFrom > ? AND ca.ValidFrom <= ? ");
+		if (!concept.getType().equals(MHRConcept.TYPE_Information)){
+			sql.append("AND ca.C_BPartner_ID = ? ");
+			params.add(m_C_BPartner_ID);
+		}
+		//	Get Result
+		int result = DB.getSQLValue(get_TrxName(), sql.toString(), params);
+		return (result > 0);
+	}
+	
+	/**
+	 * Get AVG From Concept with limit
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 24/09/2013, 17:59:35
+	 * @param conceptValue
+	 * @param payrollValue
+	 * @param p_From
+	 * @param p_To
+	 * @param limit
+	 * @return
+	 * @return double
+	 */
+	public double getConceptAVG (String conceptValue, String payrollValue, Timestamp p_From, Timestamp p_To, int limit) {
+		
+		BigDecimal value = Env.ZERO;
+		
+		try {
+			int payroll_id;
+			if (payrollValue == null)
+			{
+				payroll_id = getHR_Payroll_ID();
+			}
+			else
+			{
+				MHRPayroll payroll = MHRPayroll.forValue(getCtx(), payrollValue);
+				if(payroll == null)
+					return 0.0;
+				//	
+				payroll_id = payroll.get_ID();
+			}
+			
+			MHRConcept concept = MHRConcept.forValue(getCtx(), conceptValue);
+			if (concept == null)
+				return 0.0;
+			//
+			// Detect field name
+			final String fieldName;
+			if (MHRConcept.COLUMNTYPE_Quantity.equals(concept.getColumnType()))
+			{
+				fieldName = MHRMovement.COLUMNNAME_Qty;
+			}
+			else if (MHRConcept.COLUMNTYPE_Amount.equals(concept.getColumnType()))
+			{
+				fieldName = MHRMovement.COLUMNNAME_Amount;
+			}
+			else
+			{
+				return 0; // TODO: throw exception?
+			}
+			
+			StringBuffer sql = new StringBuffer("SELECT m." + fieldName + " " + 
+					"FROM HR_Payroll prl " +
+					"INNER JOIN HR_Process pr ON(pr.HR_Payroll_ID = prl.HR_Payroll_ID) " +
+					"INNER JOIN HR_Movement m ON(m.HR_Process_ID = pr.HR_Process_ID) ");
+			//	Where
+			sql.append("WHERE prl.AD_Client_ID = ? " +
+					"AND prl.HR_Payroll_ID = ? " +
+					"AND m.HR_Concept_ID = ? " +
+					"AND m.C_BPartner_ID = ? " +
+					"AND m.ValidTo BETWEEN ? AND ? ");
+			//	Order By
+			sql.append(" ORDER BY m.ValidFrom DESC");
+			
+			PreparedStatement pstmt = null;
+			pstmt = DB.prepareStatement(sql.toString(), get_TrxName());
+				
+			//	Add Parameters
+			pstmt.setInt(1, getAD_Client_ID());
+			pstmt.setInt(2, payroll_id);
+			pstmt.setInt(3, concept.get_ID());
+			pstmt.setInt(4, m_C_BPartner_ID);
+			pstmt.setTimestamp(5, p_From);
+			pstmt.setTimestamp(6, p_To);
+				
+			ResultSet rs = pstmt.executeQuery();
+			
+			if(rs != null){
+				int qty = 0;
+				while(rs.next()
+						&& (qty < limit
+								|| limit == 0)){
+					value = value.add(rs.getBigDecimal(fieldName));
+					qty += 1;
+				}
+				//	Average
+				if(qty != 0)
+					value = value.divide(new BigDecimal(qty), m_Precision, BigDecimal.ROUND_HALF_UP);
+			}
+				//	Close DB
+			DB.close(rs, pstmt);	
+		} catch(Exception e) {
+			s_log.warning(e.getMessage());
+		}
+		//	
+		return value.doubleValue();
+		
+	} // getConcept
+	
+	/**
+	 * Get AVG From Concept
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 24/09/2013, 18:02:19
+	 * @param conceptValue
+	 * @param payrollValue
+	 * @param p_From
+	 * @param p_To
+	 * @return
+	 * @return double
+	 */
+	public double getConceptAVG (String conceptValue, String payrollValue, Timestamp p_From, Timestamp p_To) {
+		return getConceptAVG(conceptValue, payrollValue, p_From, p_To, 0);
+	}
+	
+	/**
+	 * Get Cross Concept
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 12/10/2013, 15:52:46
+	 * @param p_MValue
+	 * @param p_AValue
+	 * @param p_From
+	 * @param p_To
+	 * @param p_Pos
+	 * @return
+	 * @return FactorMovement
+	 */
+	public FactorMovement getCrossConcept(String p_MValue, String p_AValue, Timestamp p_From, Timestamp p_To, int p_Pos){
+		return getCrossConcept(p_MValue, p_AValue, p_From, p_To, p_Pos, false);
+	}
+	
+	/**
+	 * Get a Movement from Payroll (From .. To) with cache
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 18/09/2013, 11:39:31
+	 * @param p_ConceptValue
+	 * @param p_From
+	 * @param p_To
+	 * @return
+	 * @return MHRMovement[]
+	 */
+	public MHRMovement[] getMovements(String p_ConceptValue, Timestamp p_From, Timestamp p_To, boolean isCache){
+		MHRConcept concept = MHRConcept.forValue(getCtx(), p_ConceptValue);
+		if (concept == null)
+			return null;
+		//	
+		ArrayList<MHRMovement> movementList = null;
+		//	Verify Cache
+		if(isCache) {
+			MHRMovement m = m_movement.get(concept.get_ID());
+			if(TimeUtil.isValid(p_From, p_To, m.getValidFrom()))
+				return new MHRMovement [] {m};
+			else return null;
+		}
+		//	
+		boolean isInformation = concept.getType()
+									.equals(MHRConcept.TYPE_Information);
+		try {
+			StringBuffer sql = new StringBuffer("SELECT m.* " +
+					"FROM HR_Concept c " +
+					"INNER JOIN HR_Movement m ON(m.HR_Concept_ID = c.HR_Concept_ID) " +
+					"WHERE m.HR_Process_ID = ? " +
+					"AND c.Value = ? " +
+					"AND m.ValidFrom BETWEEN ? AND ? ");
+			//	Valid
+			if (!isInformation){
+				sql.append("AND m.C_BPartner_ID = ? ");
+			}
+			//	Order By
+			sql.append("ORDER BY m.ValidFrom");
+			
+			PreparedStatement pstmt = null;
+			pstmt = DB.prepareStatement(sql.toString(), get_TrxName());
+			
+			//	Add Parameters
+			pstmt.setInt(1, getHR_Process_ID());
+			pstmt.setString(2, p_ConceptValue);
+			pstmt.setTimestamp(3, p_From);
+			pstmt.setTimestamp(4, p_To);
+			//	Valid
+			if (!isInformation){
+				pstmt.setInt(5, m_C_BPartner_ID);
+			}
+			
+			ResultSet rs = pstmt.executeQuery();
+			if(rs != null){
+				movementList = new ArrayList<MHRMovement>();
+				while(rs.next()){
+					MHRMovement movement = new MHRMovement(getCtx(), rs, get_TrxName());
+					movementList.add(movement);
+				}
+			}
+			//	Close DB
+			DB.close(rs, pstmt);	
+		} catch(Exception e) {
+			s_log.warning(e.getMessage());
+		}
+		return movementList.toArray(new MHRMovement[movementList.size()]);
+	}
+	
+	/**
+	 * Get a Movement from Payroll (From .. To)
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 31/01/2014, 16:29:05
+	 * @param p_ConceptValue
+	 * @param p_From
+	 * @param p_To
+	 * @return
+	 * @return MHRMovement[]
+	 */
+	public MHRMovement[] getMovements(String p_ConceptValue, Timestamp p_From, Timestamp p_To){		
+		return getMovements(p_ConceptValue, p_From, p_To, false);
+	}
+	
+	/**
+	 * Get Cross Concept
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 31/01/2014, 16:26:18
+	 * @param p_MValue
+	 * @param p_AValue
+	 * @param p_From
+	 * @param p_To
+	 * @param p_Pos
+	 * @param isCache
+	 * @return
+	 * @return FactorMovement
+	 */
+	public FactorMovement getCrossConcept(String p_MValue, String p_AValue, Timestamp p_From, Timestamp p_To, int p_Pos, boolean isCache){
+		MHRAttribute [] attArray = getAttributes(p_AValue, p_From, p_To, true);
+		MHRMovement [] movArray = getMovements(p_MValue, p_From, p_To, isCache);
+		Timestamp validFrom = null;
+		Timestamp validTo = null;
+		int pos = 0;
+		//  Loop over Array
+		if(attArray != null && movArray != null){
+			//  Loop over attribute change
+			for (int i = 0, ii = 1; i< attArray.length; i++, ii++) {
+				MHRAttribute m_Attribute = attArray[i];
+				validFrom = m_Attribute.getValidFrom();
+				//  Set Valid To
+				if(ii < attArray.length)
+					validTo = TimeUtil.addDays(attArray[ii].getValidFrom(), -1);
+				else if(ii == attArray.length 
+						&& ii > 1)
+					validTo = p_To;
+				//  Loop over Array
+				for(int j = 0; j < movArray.length; j++) {
+					MHRMovement m_Movement = movArray[j];
+					Timestamp mov = m_Movement.getValidFrom();
+					//  Verify if Action Notice is own range
+					if(TimeUtil.isValid(validFrom, validTo, mov)){
+						if(pos == p_Pos)
+							return new FactorMovement(m_Movement, m_Attribute);
+						pos ++;
+					}
+				}
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Get Last Concept with Valid From
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 07/05/2014, 21:28:43
+	 * @param conceptValue
+	 * @param payrollValue
+	 * @return
+	 * @return double
+	 */
+	public double getLastConcept (String conceptValue, String payrollValue){
+		return getLastConcept (conceptValue, payrollValue, m_dateFrom);
+	}
+	
+	public Timestamp getLastConceptDate (String conceptValue, String payrollValue){
+		return getLastConceptDate (conceptValue, payrollValue, m_dateFrom);
+	}
+	/**
+	 * Get Last Concept
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 07/05/2014, 21:27:41
+	 * @param conceptValue
+	 * @param payrollValue
+	 * @param breakDate
+	 * @return double
+	 */
+	public double getLastConcept (String conceptValue, String payrollValue, Timestamp breakDate){
+		int payroll_id;
+		if (payrollValue == null)
+		{
+			payroll_id = getHR_Payroll_ID();
+		}
+		else
+		{
+			MHRPayroll payroll = MHRPayroll.forValue(getCtx(), payrollValue);
+			if(payroll == null)
+				return 0.0;
+			//	
+			payroll_id = payroll.get_ID();
+		}
+		
+		MHRConcept concept = MHRConcept.forValue(getCtx(), conceptValue);
+		if (concept == null)
+			return 0.0;
+		//
+		// Detect field name
+		final String fieldName;
+		if (MHRConcept.COLUMNTYPE_Quantity.equals(concept.getColumnType()))
+		{
+			fieldName = MHRMovement.COLUMNNAME_Qty;
+		}
+		else if (MHRConcept.COLUMNTYPE_Amount.equals(concept.getColumnType()))
+		{
+			fieldName = MHRMovement.COLUMNNAME_Amount;
+		}
+		else
+		{
+			return 0; // TODO: throw exception?
+		}
+		//
+		ArrayList<Object> params = new ArrayList<Object>();
+		StringBuffer whereClause = new StringBuffer();
+		//check client
+		whereClause.append("AD_Client_ID = ?");
+		params.add(getAD_Client_ID());
+		//check concept
+		whereClause.append(" AND " + MHRMovement.COLUMNNAME_HR_Concept_ID + "=?");
+		params.add(concept.get_ID());
+		//check partner
+		whereClause.append(" AND " + MHRMovement.COLUMNNAME_C_BPartner_ID  + "=?");
+		params.add(m_C_BPartner_ID);
+		//Adding dates 
+		whereClause.append(" AND validTo <= ?");
+		params.add(breakDate);
+		
+		// LVE Localizacion Venezuela
+		// when is employee, it is necessary to check if the organization of the
+		// employee is equal to that of the attribute
+		whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID
+				+ "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
+		params.add(getAD_Org_ID());
+		
+		//
+		//check process and payroll
+		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Process p"
+							+" WHERE HR_Movement.HR_Process_ID = p.HR_Process_ID" 
+							+" AND p.HR_Payroll_ID=?");
+
+		params.add(payroll_id);
+		
+		whereClause.append(")");
+		//
+		StringBuffer sql = new StringBuffer("SELECT COALESCE(").append(fieldName).append(", 0) FROM ").append(MHRMovement.Table_Name)
+								.append(" WHERE ").append(whereClause).append(" ORDER BY " + I_HR_Movement.COLUMNNAME_ValidFrom + " DESC");
+		BigDecimal value = DB.getSQLValueBDEx(get_TrxName(), sql.toString(), params);
+		if(value != null)
+			return value.doubleValue();
+		//	Default
+		return 0.0;
+		
+	} // getConcept
+		
+	
+	public Timestamp getLastConceptDate (String conceptValue, String payrollValue, Timestamp breakDate){
+		int payroll_id;
+		if (payrollValue == null)
+		{
+			payroll_id = getHR_Payroll_ID();
+		}
+		else
+		{
+			MHRPayroll payroll = MHRPayroll.forValue(getCtx(), payrollValue);
+			if(payroll == null)
+				return null;
+			//	
+			payroll_id = payroll.get_ID();
+		}
+		
+		MHRConcept concept = MHRConcept.forValue(getCtx(), conceptValue);
+		if (concept == null)
+			return null;
+		//
+		// Detect field name
+		final String fieldName;
+		if (MHRConcept.COLUMNTYPE_Date.equals(concept.getColumnType()))
+		{
+			fieldName = MHRMovement.COLUMNTYPE_Date;
+		}
+		else
+		{
+			return null; // TODO: throw exception?
+		}
+		//
+		ArrayList<Object> params = new ArrayList<Object>();
+		StringBuffer whereClause = new StringBuffer();
+		//check client
+		whereClause.append("AD_Client_ID = ?");
+		params.add(getAD_Client_ID());
+		//check concept
+		whereClause.append(" AND " + MHRMovement.COLUMNNAME_HR_Concept_ID + "=?");
+		params.add(concept.get_ID());
+		//check partner
+		whereClause.append(" AND " + MHRMovement.COLUMNNAME_C_BPartner_ID  + "=?");
+		params.add(m_C_BPartner_ID);
+		//Adding dates 
+		whereClause.append(" AND validTo <= ?");
+		params.add(breakDate);
+		// LVE Localizacion Venezuela
+		// when is employee, it is necessary to check if the organization of the
+		// employee is equal to that of the attribute
+		whereClause.append(" AND ( " + MHRAttribute.COLUMNNAME_AD_Org_ID
+				+ "=? OR " + MHRAttribute.COLUMNNAME_AD_Org_ID + "= 0 )");
+		params.add(getAD_Org_ID());
+		//
+		//check process and payroll
+		whereClause.append(" AND EXISTS (SELECT 1 FROM HR_Process p"
+							+" WHERE HR_Movement.HR_Process_ID = p.HR_Process_ID"
+							+" AND p.HR_Payroll_ID=?");
+
+		params.add(payroll_id);
+		
+		whereClause.append(")");
+		//
+		StringBuffer sql = new StringBuffer("SELECT MAX(ServiceDate) ServiceDate FROM ").append(MHRMovement.Table_Name)
+				.append(" WHERE ").append(whereClause);	
+		
+		Timestamp serviceDate = DB.getSQLValueTSEx(get_TrxName(), sql.toString(), params);
+		
+		if(serviceDate != null)
+		return serviceDate;
+		
+		return null;
+	}
+	
+	/**
+	 * Is Same Month
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 2020-11-23, 20:40
+	 * @param one
+	 * @param two
+	 * @return boolean
+	 */
+	public boolean isSameMonth (Timestamp one, Timestamp two) {
+		GregorianCalendar calOne = new GregorianCalendar();
+		if (one != null)
+			calOne.setTimeInMillis(one.getTime());
+		GregorianCalendar calTwo = new GregorianCalendar();
+		if (two != null)
+			calTwo.setTimeInMillis(two.getTime());
+		if (calOne.get(Calendar.YEAR) == calTwo.get(Calendar.YEAR)
+			&& calOne.get(Calendar.MONTH) == calTwo.get(Calendar.MONTH))
+			return true;
+		return false;
+	}	//	isSameDay
+	
+	/**
+	 * Get Employee Valid From
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 2020-11-23, 20:40
+	 * @return Timestamp
+	 */
+	public Timestamp getEmployeeValidFrom() {
+		return m_E_VFrom;
+	}
+	
+	/**
+	 * Get Employee Valid To
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 2020-11-23, 20:40
+	 * @return Timestamp
+	 */
+	public Timestamp getEmployeeValidTo() {
+		return m_E_VTo;
+	}
+	
+	/**
+	 * Set Employe Valid From
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 2020-11-23, 20:40
+	 * @param m_E_VFrom
+	 * @return void
+	 */
+	public void setEmployeeValidFrom(Timestamp m_E_VFrom) {
+		this.m_E_VFrom = m_E_VFrom;
+	}
+	
+	/**
+	 * Set Employee Valid To
+	 * @author <a href="mailto:jcolmenarez@frontuari.net">Jorge Colmenarez</a> 2020-11-23, 20:40
+	 * @param m_E_VTo
+	 * @return void
+	 */
+	public void setEmployeeValidTo(Timestamp m_E_VTo) {
+		this.m_E_VFrom = m_E_VTo;
+	}
 
 } // MHRProcess
