@@ -78,7 +78,7 @@ public class MHREmployee extends X_HR_Employee
 		MHRPayroll Payroll = MHRPayroll.get(Env.getCtx(),p.getHR_Payroll_ID());
 		
 		if (Payroll !=null || !Payroll.equals(null)){
-			IsPayrollApplicableToEmployee = Payroll.get_ValueAsBoolean("IsemployeeApplicable");
+			IsPayrollApplicableToEmployee = Payroll.get_ValueAsBoolean("IsEmployeeApplicable");
 		}
 		// This payroll not content periods, NOT IS a Regular Payroll > ogi-cd 28Nov2007
 		if(p.getHR_Payroll_ID() != 0 && p.getHR_Period_ID() != 0 && IsPayrollApplicableToEmployee)

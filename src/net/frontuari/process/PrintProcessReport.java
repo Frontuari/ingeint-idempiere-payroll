@@ -1,6 +1,8 @@
 package net.frontuari.process;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -9,8 +11,6 @@ import java.util.logging.Level;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.adempiere.webui.apps.WProcessCtl;
-import org.adempiere.webui.component.Panel;
-import org.adempiere.webui.window.FDialog;
 import org.compiere.model.MQuery;
 import org.compiere.model.PrintInfo;
 import org.compiere.print.MPrintFormat;
@@ -23,6 +23,8 @@ import org.compiere.util.Ini;
 import org.compiere.util.Msg;
 import org.eevolution.model.MHRPayroll;
 import org.eevolution.model.MHRProcess;
+import org.zkoss.zul.Filedownload;
+
 import net.frontuari.model.I_LVE_HR_ProcessReport;
 import net.frontuari.model.MLVEHRProcessReport;
 import net.frontuari.model.MLVERVHRProcessDetail;
@@ -63,7 +65,6 @@ public class PrintProcessReport extends CustomProcess {
 	private String 							m_FileExportClass			= null;
 	/**	Window No								*/
 	public int         		                m_WindowNo                  = 0;
-	private Panel panel = new Panel();
 
 	public PrintProcessReport() {
 	}
@@ -106,7 +107,7 @@ public class PrintProcessReport extends CustomProcess {
 					jasperPrintParams.add(pip);
 					//	Get Standard Parameters
 				}
-			}
+			}			
 			//	For Rpt Process
 			if(p_HR_Process_ID == 0
 					&& getTable_ID() == MHRProcess.Table_ID
@@ -227,7 +228,7 @@ public class PrintProcessReport extends CustomProcess {
 		m_FileExportClass=pReport.getFileExportClass();
 		if (m_FileExportClass == null) 
 		{
-			m_FileExportClass = "org.spin.util.GenericReportExport";
+			m_FileExportClass = "net.frontuari.utils.GenericReportExport";
 		}
 		//	Add Where Clause
 		ArrayList<Object> params = new ArrayList<Object>();
@@ -289,14 +290,20 @@ public class PrintProcessReport extends CustomProcess {
 		if(m_details == null
 				|| m_details.length == 0)
 			return "Ok";
-		//	
+		//
+		File tempFile = null;
+		String filenameForDownload = "";
 		try
 		{
 			//	
 			Class<?> clazz = Class.forName(m_FileExportClass);
 			custom = (HRReportExport)clazz.newInstance();
+			//  Get File Info
+			tempFile = File.createTempFile(custom.getFilenamePrefix(), custom.getFilenameSuffix());
+			filenameForDownload = custom.getFilenamePrefix() + custom.getFilenameSuffix();
+			
 			//	Generate File
-			no = custom.exportToFile(m_details, new File(p_FileName), err);
+			no = custom.exportToFile(m_details, tempFile, err);
 		}
 		catch (ClassNotFoundException e)
 		{
@@ -312,13 +319,19 @@ public class PrintProcessReport extends CustomProcess {
 		}
 		//	
 		if (no >= 0) {
-			FDialog.info(m_WindowNo, panel, "Saved",
-					p_FileName + "\n"
+			FileInputStream fis = null;
+			try {
+				fis = new FileInputStream(tempFile);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+//			Filedownload.save(fis, custom.getContentType(), filenameForDownload);
+			addLog(getAD_PInstance_ID(), new Timestamp(System.currentTimeMillis()), null, Msg.translate(getCtx(), "Saved")+": "+p_FileName + "\n"
 					+ Msg.getMsg(Env.getCtx(), "NoOfLines") + "=" + no);
+			return custom.getNameFile();
 		} else {
-			FDialog.error(m_WindowNo, panel, "Error", err.toString());
+			addLog(getAD_PInstance_ID(), new Timestamp(System.currentTimeMillis()), null,Msg.translate(getCtx(), "Error")+": "+err.toString());
+			return err.toString();
 		}
-		//	Return
-		return err.toString();
 	}
 }

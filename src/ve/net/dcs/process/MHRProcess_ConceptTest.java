@@ -15,7 +15,6 @@
  *****************************************************************************/
 package ve.net.dcs.process;
 
-import java.io.File;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
@@ -30,29 +29,18 @@ import java.util.Properties;
 import java.util.logging.Level;
 
 import org.adempiere.exceptions.AdempiereException;
-import org.compiere.model.MBPartner;
-import org.compiere.model.MDocType;
-import org.compiere.model.MFactAcct;
-import org.compiere.model.MPeriod;
-import org.compiere.model.MPeriodControl;
 import org.compiere.model.MRule;
-import org.compiere.model.ModelValidationEngine;
-import org.compiere.model.ModelValidator;
 import org.compiere.model.Query;
 import org.compiere.model.Scriptlet;
-import org.compiere.print.ReportEngine;
 import org.compiere.process.DocAction;
-import org.compiere.process.DocumentEngine;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.TimeUtil;
 import org.eevolution.model.*;
-import org.eevolution.process.*;
 
 import bsh.EvalError;
 import bsh.Interpreter;
-import bsh.NameSpace;
 /**
  * HR Process Model
  *
@@ -353,7 +341,6 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			activeConceptRule.remove(concept);
 			if (result == null)
 			{
-				// TODO: throw exception ???
 				log.warning("Variable (result) is null");
 				return 0;
 			}
@@ -398,7 +385,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			MHRConcept c = MHRConcept.forValue(getCtx(), conceptValue); 
 			if (c == null)
 			{
-				return; // TODO throw exception
+				return;
 			}
 			MHRMovement m = new MHRMovement(getCtx(), 0, get_TrxName());
 			MHREmployee employee = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID, get_TrxName());
@@ -408,7 +395,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			m.setHR_Process_ID(getHR_Process_ID());
 			m.setHR_Concept_ID(m_HR_Concept_ID);
 			m.setC_BPartner_ID(m_C_BPartner_ID);
-			m.setDescription("Added From Rule"); // TODO: translate
+			m.setDescription("Added From Rule");
 			m.setValidFrom(m_dateTo);
 			m.setValidTo(m_dateTo);
 
@@ -439,7 +426,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			MHRConcept c = MHRConcept.forValue(getCtx(), conceptValue); 
 			if (c == null)
 			{
-				return; // TODO throw exception
+				return;
 			}
 			MHRMovement m = new MHRMovement(Env.getCtx(),0,get_TrxName());
 			MHREmployee employee = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID, get_TrxName());
@@ -453,7 +440,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			m.setHR_Process_ID(getHR_Process_ID());
 			m.setHR_Concept_ID(c.getHR_Concept_ID());
 			m.setC_BPartner_ID(m_C_BPartner_ID);
-			m.setDescription("Added From Rule"); // TODO: translate
+			m.setDescription("Added From Rule");
 			m.setValidFrom(m_dateTo);
 			m.setValidTo(m_dateTo);
 			m.setIsRegistered(isRegistered);
@@ -549,7 +536,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			return attribute.getAmount().doubleValue();
 
 		//something else
-		return 0.0; //TODO throw exception ?? 
+		return 0.0; 
 	} // getAttribute
 
 
@@ -601,7 +588,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			return attribute.getAmount().doubleValue();
 
 		//something else
-		return 0.0; //TODO throw exception ?? 
+		return 0.0;
 	} // getAttribute
 	// LVE Localización Venezuela - RTSC: 14/03/2011
 	/**
@@ -659,7 +646,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			return attribute.getAmount().doubleValue();
 
 		//something else
-		return 0.0; //TODO throw exception ?? 
+		return 0.0;	
 	} // getAttribute
 
 	// LVE Localización Venezuela - JCRA: 14/03/2011
@@ -717,7 +704,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			return attribute.getAmount().doubleValue();
 	
 		//something else
-		return 0.0; //TODO throw exception ?? 
+		return 0.0; 
 	} // getAttribute
 	
 	/**
@@ -779,7 +766,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			return attribute.getAmount().doubleValue();
 	
 		//something else
-		return 0.0; //TODO throw exception ?? 
+		return 0.0;  
 	} // getAttribute
 	
     /**
@@ -849,7 +836,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 				return amount.doubleValue();
 		}
 		//something else
-		return 0.0; //TODO throw exception ?? 
+		return 0.0;  
 	} // getAttribute	
 	
 	
@@ -1029,7 +1016,6 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			
 			return null;
 		}
-		System.out.println(params.toString());
 		return attribute.getTextMsg();
 	} // getAttributeString
 	
@@ -1076,7 +1062,6 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 		.setOrderBy(MHRAttribute.COLUMNNAME_AD_Org_ID + " DESC")
 		.first();
 		if (attribute == null){
-			System.out.println(whereClause.toString()+",Parmeter"+params.toString());
 			return null;
 		}
 		return attribute.getTextMsg();
@@ -1210,7 +1195,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 		}
 		else
 		{
-			return 0; // TODO: throw exception?
+			return 0; 
 		}
 		//
 		MHRPeriod p = MHRPeriod.get(getCtx(), getHR_Period_ID());
@@ -1287,7 +1272,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 		}
 		else
 		{
-			return 0; // TODO: throw exception?
+			return 0; 
 		}
 		//
 		ArrayList<Object> params = new ArrayList<Object>();
@@ -1328,7 +1313,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 		final MHRConceptCategory category = MHRConceptCategory.forValue(getCtx(), pconcept);
 		if (category == null)
 		{
-			return 0.0; // TODO: need to throw exception ?
+			return 0.0; 
 		}
 		//
 		double value = 0.0;
@@ -1343,7 +1328,8 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 		}
 		return value;
 	} // getConceptGroup
-	/** TODO QSS Reviewme
+	
+	/** QSS Reviewme
 	 * Helper Method: gets Concept value of payrroll(s) between 2 dates
 	 * if payrollValue is null then sum all payrolls between 2 dates
 	 * if dates range are null then set them based on first and last day of period
@@ -1390,7 +1376,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 		}
 		else
 		{
-			return 0; // TODO: throw exception?
+			return 0; 
 		}
 		//
 		MHRPeriod p = MHRPeriod.get(getCtx(), getHR_Period_ID());
@@ -1446,7 +1432,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 		MHRPeriod p = MHRPeriod.get(getCtx(), getHR_Period_ID());
 		MHREmployee e = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID, get_TrxName());
 		
-		// TODO: throw exception?
+		
 		if (from == null)
 			from = p.getStartDate();
 		if (to == null)
@@ -1481,7 +1467,6 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			params.add(m_C_BPartner_ID);
 		}
 		whereClause.append(" AND IsInPayroll = 'Y' AND IsActive = 'Y'");
-		// TODO Needed for Sismode customisation
 		// whereClause.append(" AND IsFamilyCharge = 'Y'");		
 		StringBuffer sql = new StringBuffer("SELECT COUNT(*) FROM AD_User ").append(" WHERE ").append(whereClause);
 		
@@ -1507,7 +1492,6 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 	 */
 	public double getAttribute (Properties ctx, String vAttribute, Timestamp dateFrom, Timestamp dateTo)
 	{
-		// TODO ???
 		log.warning("not implemented yet -> getAttribute (Properties, String, Timestamp, Timestamp)");
 		return 0;
 	} // getAttribute
@@ -1532,7 +1516,6 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 	public double getAttribute (Properties ctx, String vAttribute, int periodFrom,int periodTo,
 			String pFrom,String pTo)
 	{
-		// TODO ???
 		log.warning("not implemented yet -> getAttribute (Properties, String, int, int, String, String)");
 		return 0;
 	} // getAttribute
@@ -1746,7 +1729,6 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 	 */
 	public double getDays (int period)
 	{
-		/* TODO: This getter could have an error as it's not using the parameter, and it doesn't what is specified in help */
 		log.warning("instead of using getDays in the formula it's recommended to use _DaysPeriod+1");
 		return Env.getContextAsInt(getCtx(), "_DaysPeriod") + 1;
 	} // getDays
@@ -2107,7 +2089,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			
 
 		// something else
-		return 0.0; // TODO throw exception ??
+		return 0.0;
 	} // getAttribute
 	
 	/**
@@ -2136,7 +2118,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 			return null;
 	} // getConcept
 	
-	 /* TODO QSS Reviewme Helper Method: gets Concept value of payrroll(s)
+	 /* QSS Reviewme Helper Method: gets Concept value of payrroll(s)
 	 * between 2 dates if payrollValue is null then sum all payrolls between 2
 	 * dates if dates range are null then set them based on first and last day
 	 * of period
@@ -2175,7 +2157,7 @@ public class MHRProcess_ConceptTest extends MHRProcess implements DocAction
 		} else if (MHRConcept.COLUMNTYPE_Amount.equals(concept.getColumnType())) {
 			fieldName = MHRMovement.COLUMNNAME_Amount;
 		} else {
-			return 0; // TODO: throw exception?
+			return 0; 
 		}
 		//
 		MHRPeriod p = MHRPeriod.get(getCtx(), getHR_Period_ID());

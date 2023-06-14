@@ -11,14 +11,12 @@ import java.util.List;
 import java.util.logging.Level;
 
 import org.compiere.model.MBPartner;
-import org.compiere.model.MCurrency;
 import org.compiere.model.MPayment;
 import org.compiere.model.Query;
 import org.compiere.process.ProcessInfoParameter;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
-import org.compiere.util.Env;
 import org.eevolution.model.MHREmployee;
 import org.eevolution.model.MHRMovement;
 

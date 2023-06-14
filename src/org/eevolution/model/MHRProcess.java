@@ -37,6 +37,7 @@ import org.compiere.model.MCurrency;
 import org.compiere.model.MDocType;
 import org.compiere.model.MFactAcct;
 import org.compiere.model.MOrg;
+import org.compiere.model.MOrgInfo;
 import org.compiere.model.MPeriod;
 import org.compiere.model.MPeriodControl;
 import org.compiere.model.MRule;
@@ -641,6 +642,8 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 	 */
 	private Object executeScript(int AD_Rule_ID, String columnType) {
 		MRule rulee = MRule.get(getCtx(), AD_Rule_ID);
+		if(AD_Rule_ID == 4239780)
+			System.out.println("Revisa");
 		Object result = null;
 		m_description = null;
 		String errorMsg = "";
@@ -684,7 +687,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 
 		} catch (Exception e) {
 			throw new AdempiereException("Execution error - @AD_Rule_ID@="
-					+ rulee.getValue() + " \n " + errorMsg);
+					+ rulee.getValue() + " \n " + errorMsg +"\n"+e.getMessage());
 		}
 		if (rulee.get_Value("ctxVariable")!=null)
 			m_scriptCtx.put((String) rulee.get_Value("ctxVariable"), result);
@@ -777,7 +780,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		boolean allOrg = Payroll.get_ValueAsBoolean("HR_AllOrg");
 		if (Payroll != null || !Payroll.equals(null))
 			IsPayrollApplicableToEmployee = Payroll
-			.get_ValueAsBoolean("IsemployeeApplicable");
+			.get_ValueAsBoolean("IsEmployeeApplicable");
 
 		m_scriptCtx.clear();
 		m_scriptCtx.put("process", this);
@@ -801,7 +804,7 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 		//	Added by Jorge Colmenarez, 2020-11-23 10:04 
 		//	Get Organization Info
 		if(getAD_Org_ID() != 0) {
-			MOrg org = MOrg.get(getCtx(), getAD_Org_ID());
+			MOrgInfo org = MOrgInfo.get(getCtx(), getAD_Org_ID(), get_TrxName());
 			m_SSDiscountRate = (BigDecimal) org.get_Value("SSDiscountRate");
 			m_SSClientDiscountRate = (BigDecimal) org.get_Value("SSClientDiscountRate");
 			if(m_SSDiscountRate == null)
@@ -2209,7 +2212,6 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 				.setOrderBy(MHRAttribute.COLUMNNAME_AD_Org_ID + " DESC")
 				.first();
 		if (attribute == null) {
-			// System.out.println(whereClause.toString()+",Parmeter"+params.toString());
 			return null;
 		}
 		return attribute.getTextMsg();
@@ -4529,6 +4531,185 @@ public class MHRProcess extends X_HR_Process implements DocAction {
 	 */
 	public void setEmployeeValidTo(Timestamp m_E_VTo) {
 		this.m_E_VFrom = m_E_VTo;
+	}
+	
+	/**
+	 * Set Concept from Rule
+	 * @author <a href="mailto:yamelsenih@gmail.com">Yamel Senih</a> 20/07/2014, 11:27:48
+	 * @param conceptValue
+	 * @param value
+	 * @return void
+	 */
+	public void setConcept (String conceptValue, Object value) {
+		setConcept(conceptValue, value, null);
+	}
+	
+	/**
+	 * Set Concept from Rule
+	 * @author <a href="mailto:yamelsenih@gmail.com">Yamel Senih</a> 31/05/2014, 12:25:06
+	 * @param conceptValue
+	 * @param p_Description
+	 * @param value
+	 * @return void
+	 */
+	public void setConcept (String conceptValue, Object value, String p_Description) {
+		try {
+			MHRConcept c = MHRConcept.forValue(getCtx(), conceptValue); 
+			//	
+			if (c == null) {
+				return;
+			}
+			MHRMovement m = new MHRMovement(this, c);
+			MHREmployee employee = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID, getAD_Org_ID(), get_TrxName());
+			m.setColumnValue(value);
+			m.setAD_Org_ID(getAD_Org_ID());
+			m.setC_BPartner_ID(m_C_BPartner_ID);
+			//	
+			m.setDescription(p_Description);
+			m.setValidFrom(m_dateTo);
+			m.setValidTo(m_dateTo);
+			
+			m.setHR_Department_ID(employee.getHR_Department_ID());
+			m.setHR_Job_ID(employee.getHR_Job_ID());
+			m.setIsRegistered(c.isRegistered());
+			m.setC_Activity_ID(employee.getC_Activity_ID() > 0 ?  employee.getC_Activity_ID() : employee.getHR_Department().getC_Activity_ID());		
+			m.setProcessed(true);
+			
+			m.saveEx();
+		} catch(Exception e) {
+			s_log.warning(e.getMessage());
+		}
+	} // setConcept
+	
+	
+	/**
+	 * Set Concept with Valid From
+	 * @author <a href="mailto:yamelsenih@gmail.com">Yamel Senih</a> 17/09/2013, 14:23:42
+	 * @param conceptValue
+	 * @param value
+	 * @param isManual
+	 * @param validFrom
+	 * @param validTo
+	 * @return void
+	 */
+	public void setConcept (String conceptValue, Object value, boolean isManual, 
+			Timestamp validFrom, Timestamp validTo)
+	{
+		try
+		{
+			MHRConcept c = MHRConcept.forValue(getCtx(), conceptValue); 
+			if (c == null)
+			{
+				return; // TODO throw exception
+			}
+			MHRMovement m = new MHRMovement(this, c);
+			MHREmployee employee = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID, getAD_Org_ID(), get_TrxName());
+			m.setAD_Org_ID(getAD_Org_ID());
+			m.setColumnValue(value);
+			m.setC_BPartner_ID(m_C_BPartner_ID);
+			m.setValidTo(validTo);
+			m.setIsRegistered(isManual);
+			//	Is Printed
+			m.setIsPrinted(c.isPrinted());
+			
+			m.setHR_Department_ID(employee.getHR_Department_ID());
+			m.setHR_Job_ID(employee.getHR_Job_ID());
+			//	Yamel Senih 2013-09-25 16:07:20 Bad Line
+			//m.setIsManual(c.isManual());
+			//	End Yamel Senih
+			m.setC_Activity_ID(employee.getC_Activity_ID() > 0 ? employee.getC_Activity_ID() : employee.getHR_Department().getC_Activity_ID());	
+			m.setProcessed(true);
+			
+			m.saveEx();
+		} 
+		catch(Exception e)
+		{
+			s_log.warning(e.getMessage());
+		}
+	} // setConcept
+	
+	/**
+	 * Set concept with ID
+	 * @author <a href="mailto:yamelsenih@gmail.com">Yamel Senih</a> 11/06/2014, 22:38:59
+	 * @param m_HR_Concept_ID
+	 * @param value
+	 * @param isManual
+	 * @param validFrom
+	 * @param validTo
+	 * @return void
+	 */
+	public void setConcept (int m_HR_Concept_ID, Object value, boolean isManual, 
+			Timestamp validFrom, Timestamp validTo)
+	{
+		try
+		{
+			MHRConcept c = MHRConcept.get(getCtx(), m_HR_Concept_ID); 
+			if (c == null)
+			{
+				return; // TODO throw exception
+			}
+			MHRMovement m = new MHRMovement(this, c);
+			MHREmployee employee = MHREmployee.getActiveEmployee(getCtx(), m_C_BPartner_ID, getAD_Org_ID(), get_TrxName());
+			m.setAD_Org_ID(getAD_Org_ID());
+			m.setColumnValue(value);
+			m.setC_BPartner_ID(m_C_BPartner_ID);
+			m.setValidFrom(validFrom);
+			m.setValidTo(validTo);
+			m.setIsRegistered(isManual);
+			//	Is Printed
+			m.setIsPrinted(c.isPrinted());
+			
+			m.setHR_Department_ID(employee.getHR_Department_ID());
+			m.setHR_Job_ID(employee.getHR_Job_ID());
+			m.setC_Activity_ID(employee.getC_Activity_ID() > 0 ? employee.getC_Activity_ID() : employee.getHR_Department().getC_Activity_ID());	
+			m.setProcessed(true);
+			
+			m.saveEx();
+		} 
+		catch(Exception e)
+		{
+			s_log.warning(e.getMessage());
+		}
+	} // setConcept
+	
+	/**
+	 * Set Concept with Valid From
+	 * @author <a href="mailto:yamelsenih@gmail.com">Yamel Senih</a> 17/09/2013, 14:25:02
+	 * @param conceptValue
+	 * @param value
+	 * @param isManual
+	 * @param validFrom
+	 * @return void
+	 */
+	public void setConcept(String conceptValue, Object value, boolean isManual, Timestamp validFrom){
+		setConcept(conceptValue, value, isManual, validFrom, null);
+	}
+	
+	/**
+	 * Set Concept with value
+	 * @author <a href="mailto:yamelsenih@gmail.com">Yamel Senih</a> 11/06/2014, 22:41:32
+	 * @param m_HR_Concept_ID
+	 * @param value
+	 * @param isManual
+	 * @param validFrom
+	 * @return void
+	 */
+	public void setConcept(int m_HR_Concept_ID, Object value, boolean isManual, Timestamp validFrom){
+		setConcept(m_HR_Concept_ID, value, isManual, validFrom, null);
+	}
+	
+	/**
+	 * Get First Employee
+	 * @author <a href="mailto:yamelsenih@gmail.com">Yamel Senih</a> 20/09/2013, 08:50:24
+	 * @param C_BPartner_ID
+	 * @return
+	 * @return MHREmployee
+	 */
+	public MHREmployee getFirstEmployee(int C_BPartner_ID){
+		return new Query(getCtx(), I_HR_Employee.Table_Name, I_HR_Employee.COLUMNNAME_C_BPartner_ID+"=?", get_TrxName())
+							.setParameters(new Object[]{C_BPartner_ID})
+							.setOrderBy(I_HR_Employee.COLUMNNAME_StartDate+" ASC") // just in case...
+							.first();
 	}
 
 } // MHRProcess

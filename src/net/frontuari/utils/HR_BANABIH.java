@@ -85,30 +85,18 @@ public class HR_BANABIH implements HRReportExport {
 		if (details == null || details.length == 0)
 			return 0;
 		MLVERVHRProcessDetail pdl = details[0];
+		
 		//  delete if exists
-		try {
-			//	Set new File Name
-			StringBuffer pathName = new StringBuffer(file.isFile() || !file.exists()
-												? file.getParent()
-														: file.getAbsolutePath());
-			//	Add Separator
-			pathName.append(File.separator)
-				//	
-				.append(PAYROLL_CONSTANT)
-				//	Payroll Account
-				.append(PAYROLL_ACCOUNT)
-				//	Accounting Date in format MM YYYY
-				.append(new SimpleDateFormat("MMyyyy").format(pdl.getDateAcct()))
-				//	Extension
-				.append(FILE_EXTENSION);
-			
-			file = new File(pathName.toString());
-			//	Delete if Exists
+		try
+		{
 			if (file.exists())
 				file.delete();
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			s_log.log(Level.WARNING, "Could not delete - " + file.getAbsolutePath(), e);
 		}
+		
 		//	Number Format
 		m_NumberFormatt = new DecimalFormat("000000000.00");
 		//	Date Format
@@ -314,6 +302,29 @@ public class HR_BANABIH implements HRReportExport {
 		return m_NameFile;
 	}
 
+	@Override
+	public String getFilenamePrefix() {
+		//Set new File Name
+		StringBuffer pathName = new StringBuffer();
+		//	Add Separator
+		pathName.append(PAYROLL_CONSTANT)
+			//	Payroll Account
+			.append(PAYROLL_ACCOUNT)
+			//	Accounting Date in format MM YYYY
+			.append(new SimpleDateFormat("MMyyyy").format(System.currentTimeMillis()));
+		return pathName.toString();
+	}
+	
+	@Override
+	public String getFilenameSuffix() {
+		return FILE_EXTENSION;
+	}
+
+	@Override
+	public String getContentType() {
+		return "text/plain";
+	}
+	
 	
 }
 

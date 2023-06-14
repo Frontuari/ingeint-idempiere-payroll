@@ -41,4 +41,31 @@ public interface HRReportExport {
 	 *  @return Name File
 	 */
 	public String getNameFile();
+	
+	/**
+	 * Get the filename prefix from plugin
+	 * e.g. "SEPA-Credit-Transfer-"
+	 * @return prefix for filename 
+	 */
+	public default String getFilenamePrefix() {
+		return "payrollExport";
+	}
+
+	/**
+	 * Get the filename suffix from plugin
+	 * e.g. ".xml" 
+	 * @return suffix for filename
+	 */
+	public default String getFilenameSuffix() {
+		return ".txt";
+	}
+
+	/**
+	 * Get the content type from plugin
+	 * e.g. "text/xml" or "text/csv"
+	 * @return content type delivered to browser
+	 */
+	public default String getContentType() {
+		return "text/plain";
+	}
 }

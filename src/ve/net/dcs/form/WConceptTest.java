@@ -17,31 +17,19 @@
 
 package ve.net.dcs.form;
 
-import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Vector;
 import java.util.logging.Level;
 
 import org.adempiere.webui.apps.AEnv;
 import org.adempiere.webui.component.Button;
-import org.adempiere.webui.component.Checkbox;
 import org.adempiere.webui.component.ConfirmPanel;
 import org.adempiere.webui.component.Grid;
 import org.adempiere.webui.component.GridFactory;
 import org.adempiere.webui.component.Label;
-import org.adempiere.webui.component.ListItem;
-import org.adempiere.webui.component.ListModelTable;
-import org.adempiere.webui.component.Listbox;
-import org.adempiere.webui.component.ListboxFactory;
 import org.adempiere.webui.component.Panel;
 import org.adempiere.webui.component.Row;
 import org.adempiere.webui.component.Rows;
 import org.adempiere.webui.component.Textbox;
-import org.adempiere.webui.component.WListbox;
-import org.adempiere.webui.editor.WDateEditor;
 import org.adempiere.webui.editor.WSearchEditor;
 import org.adempiere.webui.editor.WStringEditor;
 import org.adempiere.webui.editor.WTableDirEditor;
@@ -53,8 +41,6 @@ import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.panel.IFormController;
 import org.adempiere.webui.session.SessionManager;
-import org.compiere.apps.form.FactReconcile;
-import org.compiere.model.MClient;
 import org.compiere.model.MLookup;
 import org.compiere.model.MLookupFactory;
 import org.compiere.model.MRule;
@@ -63,13 +49,11 @@ import org.compiere.model.SystemIDs;
 import org.compiere.util.CLogger;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
-import org.compiere.util.KeyNamePair;
 import org.compiere.util.Msg;
 import org.eevolution.model.MHRAttribute;
 import org.eevolution.model.MHRConcept;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
-import org.zkoss.zk.ui.event.Events;
 import org.zkoss.zul.Borderlayout;
 import org.zkoss.zul.Center;
 import org.zkoss.zul.North;
@@ -156,7 +140,6 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 	private Textbox m_txbSqlField = new Textbox();
 	private Textbox m_evalField = new Textbox();
 	
-	private boolean loading = false;
 	private Label resultLabel = new Label();
 	private Textbox resultField = new Textbox();
 	private Label descriptionLabel = new Label();
@@ -388,8 +371,6 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 	
 	@Override
 	public void valueChange(ValueChangeEvent evt) {
-		// TODO Auto-generated method stub
-		
 		if (evt.getSource().equals(fieldBPartner)) {
 			if (evt.getNewValue()!=null){
 				m_C_BPartner_ID = Integer.valueOf(evt.getNewValue().toString());
@@ -409,7 +390,6 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 				try {
 					lookupP = MLookupFactory.get (Env.getCtx(), form.getWindowNo(), 54872, DisplayType.TableDir, Env.getLanguage(Env.getCtx()), "HR_Period_ID", 0, false, "(HR_Period.HR_Payroll_ID = "+m_HRPayroll_ID+")");
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				//fieldHRPeriod = new WTableDirEditor("HR_Period_ID", true, true, true, lookupP);
@@ -520,7 +500,6 @@ implements IFormController,EventListener<Event>, WTableModelListener,  ValueChan
 
 	@Override
 	public void tableChanged(WTableModelEvent event) {
-		// TODO Auto-generated method stub
 		
 	}
 
